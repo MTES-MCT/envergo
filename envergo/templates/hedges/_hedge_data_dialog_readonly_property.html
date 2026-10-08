@@ -1,4 +1,4 @@
-<li v-show="{% if unset %}'{{ name }}' in selectedHedge.additionalData && !{% endif %}selectedHedge.additionalData.{{ name }}">
+<li v-show="selectedHedge.{{ visibility_check }}('{{ name }}')">
   <strong>{{ field.display_label|default:field.label }}</strong> :
   {% if unset %}
     {% if field.choices %}

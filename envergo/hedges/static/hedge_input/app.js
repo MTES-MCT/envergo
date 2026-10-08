@@ -58,16 +58,12 @@ const hedgeDefaults = {
 
 const isDialogReadonly = (dialogMode) => mode === READ_ONLY_MODE || dialogMode !== mode;
 
-const closeHedgeDialog = (dialogMode) => {
-  dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
-};
-
 // Save the dialog form data into the hedge object
 const saveHedgeData = (dialogMode) => {
   for (const property in hedgeDefaults[dialogMode]) {
     selectedHedge.value.additionalData[property] = hedgeDraft[property];
   }
-  closeHedgeDialog(dialogMode);
+  dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
 };
 
 // Show the "description de la haie" modal
@@ -233,6 +229,23 @@ class Hedge {
     const { type_haie } = this.additionalData;
 
     return type_haie !== undefined && type_haie && (!("position" in this.additionalData) || this.additionalData.position);
+  }
+
+  // A property is "set" when it has a truthy value, "unset" when it is present but empty
+  isPropertySet(name) {
+    return Boolean(this.additionalData[name]);
+  }
+
+  isPropertyUnset(name) {
+    return name in this.additionalData && !this.additionalData[name];
+  }
+
+  hasSetProperties() {
+    return Object.keys(this.additionalData).some((name) => name !== "type_haie" && this.isPropertySet(name));
+  }
+
+  hasUnsetProperties() {
+    return Object.keys(this.additionalData).some((name) => name !== "type_haie" && this.isPropertyUnset(name));
   }
 
   category() {
@@ -852,7 +865,6 @@ createApp({
       selectedHedge,
       hedgeDraft,
       saveHedgeData,
-      closeHedgeDialog,
       invalidHedges,
       conditions,
       hedgeBeingDrawn,
