@@ -4,7 +4,6 @@ from django.contrib import admin, messages
 from django.contrib.admin.utils import unquote
 from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.core.files.uploadedfile import TemporaryUploadedFile
 from django.db.models import Q
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -15,27 +14,24 @@ from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import Department, Line, Map, Zone
 from envergo.geodata.tasks import generate_map_preview, process_map
-from envergo.geodata.utils import count_features, extract_map
+from envergo.geodata.utils import InvalidMapFile, open_map_file
 
 
 class MapForm(forms.ModelForm):
     def clean_file(self):
-        """Check that the given file is a valid map.
+        """Check that a newly uploaded file is a readable map, and count its features.
 
-        We handle two formats : shapefile and geopackage.
-
-        The official shapefile format is just a bunch of files with
-        the same name and different extensions.
-
-        To make things easier, we require to pass those files in a zip archive
-        with all the files at the archive root.
+        A shapefile is a set of files, so it must be uploaded as a zip archive
+        with all its files at the archive root.
         """
         file = self.cleaned_data["file"]
-        try:
-            with extract_map(file):
-                pass  # This file is valid, yeah \o/
-        except Exception as e:
-            raise ValidationError(_(f"This file does not seem valid ({e})"))
+        if "file" in self.changed_data:
+            try:
+                with open_map_file(file) as data_source:
+                    self.instance.expected_geometries = len(data_source[0])
+            except InvalidMapFile as error:
+                message = _("This file does not seem valid ({e})")
+                raise ValidationError(message.format(e=error))
         return file
 
 
@@ -97,14 +93,6 @@ class MapAdmin(gis_admin.GISModelAdmin):
         )
         queryset = queryset.defer("geometry")
         return queryset, may_have_duplicates
-
-    def save_model(self, request, obj, form, change):
-        # Django's DataSource seems to only be able to open local files
-        # So we only can (and need) to extract the file to count the expected features
-        # if a new file is uploaded and is currently being processed on the server
-        if isinstance(obj.file.file, TemporaryUploadedFile):
-            obj.expected_geometries = count_features(obj.file.file)
-        super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

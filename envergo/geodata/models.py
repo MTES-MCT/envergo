@@ -99,9 +99,11 @@ class Map(models.Model):
     # GIST index → seq scans).
     geometry = gis_models.GeometryField(
         _("Simplified geometry"),
-        help_text=_("""DO NOT EDIT! We cannot easily deactivate this edition widget,
+        help_text=_(
+            """DO NOT EDIT! We cannot easily deactivate this edition widget,
             but if you use it, you will break Envergo.
-            """),
+            """
+        ),
         geography=True,
         null=True,
         blank=True,
@@ -257,9 +259,11 @@ class Zone(gis_models.Model):
     # GIST index → seq scans).
     geometry = gis_models.MultiPolygonField(
         geography=True,
-        help_text=_("""DO NOT EDIT! We cannot easily deactivate this edition widget,
+        help_text=_(
+            """DO NOT EDIT! We cannot easily deactivate this edition widget,
             but if you use it, you will break Envergo.
-            """),
+            """
+        ),
     )
     area = models.BigIntegerField(_("Area"), null=True, blank=True)
     npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
@@ -297,9 +301,11 @@ class Line(gis_models.Model):
     # GIST index → seq scans).
     geometry = gis_models.MultiLineStringField(
         geography=True,
-        help_text=_("""DO NOT EDIT! We cannot easily deactivate this edition widget,
+        help_text=_(
+            """DO NOT EDIT! We cannot easily deactivate this edition widget,
             but if you use it, you will break Envergo.
-            """),
+            """
+        ),
     )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)

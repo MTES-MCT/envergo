@@ -49,9 +49,7 @@ def notify(msg, site: Literal["haie", "amenagement"]):
                 endpoint, json=payload, timeout=settings.DEFAULT_HTTP_TIMEOUT
             )
             r.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            logger.warning(
-                "Could not send the Tchap notification", extra={"exception": e}
-            )
+        except requests.exceptions.RequestException:
+            logger.exception("Could not send the Tchap notification")
 
     mattermost.notify(msg, site)
