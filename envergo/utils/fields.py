@@ -90,7 +90,25 @@ class EnrichedChoicesMeta(ChoicesType):
                 extra = dict(value)
                 label = extra.pop("label")
                 dict.__setitem__(classdict, key, (key, extra, label))
+            elif isinstance(value, str):
+                label = value
+                dict.__setitem__(classdict, key, (key, {}, label))
         return super().__new__(metacls, classname, bases, classdict, **kwds)
+
+    @property
+    def choices(cls):
+        # override default behaviour to return the whole member as label, instead of member.label
+        # The template will display label.label and possibly label.help_text
+        empty = [(None, cls.__empty__)] if hasattr(cls, "__empty__") else []
+        return empty + [(member.value, member) for member in cls]
+
+    def get_display_value(cls, value):
+        if value not in cls:
+            return None
+        if hasattr(cls[value], "display_label"):
+            return cls[value].display_label
+        else:
+            return cls[value].label
 
 
 class EnrichedChoices(TextChoices, metaclass=EnrichedChoicesMeta):

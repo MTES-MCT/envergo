@@ -11,6 +11,7 @@ from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HedgeCategory
+from envergo.moulinette.forms import DisplayChoiceField
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
@@ -22,7 +23,7 @@ from envergo.petitions.models import (
 )
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.urlmappings.utils import resolve_consultation_url
-from envergo.utils.fields import ProjectStageField
+from envergo.utils.fields import EnrichedChoices, ProjectStageField
 from envergo.utils.urls import remove_from_qs
 from envergo.utils.validators import validate_mime
 
@@ -608,27 +609,20 @@ class SimulationForm(forms.ModelForm):
         return moulinette_url.url
 
 
-INVITEE_CHOICES = (
-    (
-        "service",
-        {
-            "label": "Un service en charge de l'urbanisme (mairie, collectivité…)",
-            "help_text": mark_safe(
-                '<span class="fr-message fr-message--warning fr-mt-0">'
-                "Pour ces services, <strong>le silence vaut refus</strong>. "
-                "La mention sera ajoutée au message."
-                "</span>"
-            ),
-        },
-    ),
-    (
-        "other",
-        {
-            "label": "Une autre personne ou un autre service",
-            "help_text": "Pour les autres destinataires, le silence vaut accord.",
-        },
-    ),
-)
+class InviteeChoices(EnrichedChoices):
+    service = {
+        "label": "Un service en charge de l'urbanisme (mairie, collectivité…)",
+        "help_text": mark_safe(
+            '<span class="fr-message fr-message--warning fr-mt-0">'
+            "Pour ces services, <strong>le silence vaut refus</strong>. "
+            "La mention sera ajoutée au message."
+            "</span>"
+        ),
+    }
+    other = {
+        "label": "Une autre personne ou un autre service",
+        "help_text": "Pour les autres destinataires, le silence vaut accord.",
+    }
 
 
 class BaseInvitationForm(forms.Form):
@@ -636,7 +630,7 @@ class BaseInvitationForm(forms.Form):
 
     invitee = forms.ChoiceField(
         label="Qui invitez-vous ?",
-        choices=INVITEE_CHOICES,
+        choices=InviteeChoices,
         widget=forms.RadioSelect,
     )
 
@@ -648,7 +642,7 @@ class RuInvitationForm(BaseInvitationForm):
 class HruInvitationForm(BaseInvitationForm):
     """For HRU dossiers, there is no invitee choice."""
 
-    invitee = forms.ChoiceField(
+    invitee = DisplayChoiceField(
         label="Qui invitez-vous ?",
         choices=(("other", "other"),),
         widget=forms.HiddenInput,
