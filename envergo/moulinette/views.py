@@ -170,13 +170,13 @@ class MoulinetteMixin:
             settings.VISITOR_COOKIE_NAME, ""
         )
 
-        context["expand_optional_forms"] = (
-            self.request.user.is_staff
-            and self.request.user.groups.filter(name="Staff ops").exists()
-        )
         optional_forms = self.moulinette.optional_forms
         if not is_staff:
             optional_forms = [f for f in optional_forms if not f.is_staff_only]
+        context["expand_optional_forms"] = (
+            self.request.user.is_staff
+            and self.request.user.groups.filter(name="Staff ops").exists()
+        ) or any(form.errors for form in optional_forms)
         context["optional_forms"] = optional_forms
         context["triage_form"] = self.moulinette.triage_form
 
