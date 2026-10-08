@@ -4,6 +4,7 @@ import pytest
 from django.urls import reverse
 
 from envergo.users.models import User
+from envergo.users.tests.utils import signed_display_time
 
 pytestmark = pytest.mark.django_db
 
@@ -38,6 +39,7 @@ def test_amenagement_register_view(client, mailoutbox):
             "name": "Te St",
             "password1": "ViveLaTartiflette!",
             "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(10),
         },
     )
     assert res.status_code == 302
@@ -76,6 +78,7 @@ def test_register_with_existing_email(amenagement_user, client, mailoutbox):
             "name": "Te St",
             "password1": "ViveLaTartiflette!",
             "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(10),
         },
     )
     assert res.status_code == 302
@@ -100,6 +103,7 @@ def test_register_with_existing_email_and_other_errors(
             "name": "Te St",
             "password1": "A",
             "password2": "B",
+            "displayed_at": signed_display_time(10),
         },
     )
     assert res.status_code == 200
@@ -111,6 +115,52 @@ def test_register_with_existing_email_and_other_errors(
 
     # Email error should NOT be displayed (security: don't reveal existing emails)
     assert "existe déjà" not in content
+
+
+def test_register_page_renders_bot_traps(client):
+    res = client.get(reverse("register"))
+
+    content = res.content.decode()
+    assert 'class="fr-input-group secondary-contact"' in content
+    assert 'name="website"' in content
+    assert re.search(r'type="hidden"\s+name="displayed_at"', content)
+
+
+def test_bot_register_is_faked(client, mailoutbox):
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": "test@example.com",
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(10),
+            "website": "spam.example",
+        },
+    )
+    assert res.status_code == 302
+    assert res.url == reverse("register_success")
+    assert len(mailoutbox) == 0
+    assert not User.objects.exists()
+
+
+def test_bot_register_with_existing_email_sends_nothing(
+    amenagement_user, client, mailoutbox
+):
+    register_url = reverse("register")
+    res = client.post(
+        register_url,
+        {
+            "email": amenagement_user.email,
+            "name": "Te St",
+            "password1": "ViveLaTartiflette!",
+            "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(2),
+        },
+    )
+    assert res.status_code == 302
+    assert len(mailoutbox) == 0
 
 
 @pytest.mark.haie
@@ -126,6 +176,7 @@ def test_haie_register_view(client, mailoutbox):
             "name": "Te St",
             "password1": "ViveLaTartiflette!",
             "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(10),
         },
     )
     assert res.status_code == 302
@@ -166,6 +217,7 @@ def test_haie_register_for_existing_amenagement_user(
             "name": "Te St",
             "password1": "ViveLaTartiflette!",
             "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(10),
         },
     )
 
@@ -208,6 +260,7 @@ def test_register_duplicate_email_with_other_errors(
             "name": "",
             "password1": "ViveLaTartiflette!",
             "password2": "ViveLaTartiflette!",
+            "displayed_at": signed_display_time(10),
         },
     )
 
