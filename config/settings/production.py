@@ -77,6 +77,9 @@ AWS_QUERYSTRING_AUTH = True
 AWS_QUERYSTRING_EXPIRE = 3600
 AWS_S3_FILE_OVERWRITE = False
 
+# Spill larger downloads to disk. The default, 0, keeps whole files in memory.
+AWS_S3_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 # The download proxy and nginx locations assume path-style presigned URLs
 # with a SigV4 querystring; pin both so botocore upgrades cannot drift.
 AWS_S3_ADDRESSING_STYLE = "path"

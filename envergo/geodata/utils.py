@@ -1,27 +1,25 @@
-import glob
 import json
 import logging
 import re
+import shutil
 import sys
-import zipfile
 from contextlib import contextmanager
-from tempfile import TemporaryDirectory
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
-from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.gdal import DataSource, GDALException
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db import connection
 from django.db.models import QuerySet
-from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
-from envergo.utils.storages import download_source
 
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
@@ -146,53 +144,40 @@ class CustomMapping(LayerMapping):
         return especes
 
 
+MAP_FILE_EXTENSIONS = (".gpkg", ".zip")
+
+
+class InvalidMapFile(Exception):
+    """The file cannot be read as a map. The message tells the user why."""
+
+
 @contextmanager
-def extract_map(archive):
-    """Returns the path to the map file.
+def open_map_file(file):
+    """Open a GeoPackage or a zipped shapefile as a GDAL DataSource.
 
-    If this is a zipped shapefile, extract it to a temporary directory.
+    `file` is any Django file.
     """
-    if archive.name.endswith(".zip"):
-        with TemporaryDirectory() as tmpdir:
-            logger.info("Extracting map zip file")
-            zf = zipfile.ZipFile(archive)
-            zf.extractall(tmpdir)
+    extension = Path(file.name).suffix.lower()
+    if extension not in MAP_FILE_EXTENSIONS:
+        raise InvalidMapFile("Format de fichier non supporté")
 
-            logger.info("Find .shp file path")
-            paths = glob.glob(f"{tmpdir}/*shp")  # glop glop !
+    # GDAL needs a local file with the format's extension
+    with NamedTemporaryFile(suffix=extension) as local_copy:
+        file.seek(0)
+        shutil.copyfileobj(file, local_copy)
+        local_copy.flush()
 
-            try:
-                shapefile = paths[0]
-            except IndexError:
-                raise ValueError(_("No .shp file found in archive"))
+        # The /vsizip/ prefix makes GDAL read the shapefile inside the archive,
+        # without extracting it.
+        gdal_path = local_copy.name
+        if extension == ".zip":
+            gdal_path = f"/vsizip/{gdal_path}"
 
-            yield shapefile
-
-    elif archive.name.endswith(".gpkg"):
-        if hasattr(archive, "temporary_file_path"):
-            yield archive.temporary_file_path()
-
-        # GDAL fetches over plain HTTP with no session: real S3 url, not proxy url.
-        elif hasattr(archive, "storage"):
-            yield download_source(archive)
-        elif hasattr(archive, "path"):
-            yield archive.path
-        else:
-            yield archive.name
-
-    else:
-        raise ValueError(_("Unsupported file format"))
-
-
-def count_features(map_file):
-    """Count the number of features from a shapefile."""
-
-    with extract_map(map_file) as file:
-        ds = DataSource(file)
-        layer = ds[0]
-        nb_features = len(layer)
-
-    return nb_features
+        try:
+            data_source = DataSource(gdal_path)
+        except GDALException as error:
+            raise InvalidMapFile("Ce fichier n'est pas une carte lisible") from error
+        yield data_source
 
 
 def process_geographic_file(map, lm, task):
@@ -206,13 +191,13 @@ def process_geographic_file(map, lm, task):
     logger.info("Importing is done")
 
 
-def process_zones_file(map, map_file, task=None):
+def process_zones_file(map, data_source, task=None):
     logger.info("Instanciating custom LayerMapping")
     mapping = {"geometry": "MULTIPOLYGON"}
     extra = {"map": map}
     lm = CustomMapping(
         Zone,
-        map_file,
+        data_source,
         mapping,
         transaction_mode="autocommit",
         extra_kwargs=extra,
@@ -221,13 +206,13 @@ def process_zones_file(map, map_file, task=None):
     process_geographic_file(map, lm, task)
 
 
-def process_lines_file(map, map_file, task=None):
+def process_lines_file(map, data_source, task=None):
     logger.info("Instanciating custom LayerMapping")
     mapping = {"geometry": "MULTILINESTRING"}
     extra = {"map": map}
     lm = CustomMapping(
         Line,
-        map_file,
+        data_source,
         mapping,
         transaction_mode="autocommit",
         extra_kwargs=extra,
