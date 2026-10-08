@@ -150,6 +150,13 @@ ANYMAIL = {
     "WEBHOOK_SECRET": env("SENDINBLUE_WEBHOOK_SECRET"),
 }
 
+if IS_REVIEW_APP:
+    # NB. env variable REGION_NAME is not set at build time, only at run time.
+    # => hence the default="" (we don't need the exact domain name at build time)
+    ENVERGO_AMENAGEMENT_DOMAIN = (
+        f'{env("APP")}.{env("REGION_NAME", default="")}.scalingo.io'
+    )
+
 # django-compressor
 # ------------------------------------------------------------------------------
 # https://django-compressor.readthedocs.io/en/latest/settings/#django.conf.settings.COMPRESS_ENABLED

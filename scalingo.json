@@ -68,6 +68,9 @@
     "DJANGO_ADMIN_OTP_REQUIRED": {
       "value": "False"
     },
+    "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN": {
+      "value": "Not set from environment for review apps!"
+    },
     "DISABLE_COLLECTSTATIC": {
       "value": "1"
     },
@@ -76,9 +79,6 @@
     },
     "SYNC_STATS_ENABLED": {
       "value": "false"
-    },
-    "ENVERGO_AMENAGEMENT_DOMAIN": {
-      "value": "$APP.$REGION_NAME.scalingo.io"
     }
   },
   "scripts": {
