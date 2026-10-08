@@ -14,6 +14,7 @@
       <span v-show="selectedHedge.additionalData.type_haie === '{{ value }}'">{{ label }}</span>
     {% endfor %}
   </p>
+  <p class="fr-mb-3w" v-show="!selectedHedge.hasSetProperties()">Aucune caractéristique particulière pour cette haie.</p>
   <ul class="hedge-data-dialog-properties fr-mb-3w">
     {% for fieldset_fields in form.fieldsets.values %}
       {% for name in fieldset_fields %}

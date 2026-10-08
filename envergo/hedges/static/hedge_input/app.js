@@ -240,6 +240,10 @@ class Hedge {
     return name in this.additionalData && !this.additionalData[name];
   }
 
+  hasSetProperties() {
+    return Object.keys(this.additionalData).some((name) => name !== "type_haie" && this.isPropertySet(name));
+  }
+
   hasUnsetProperties() {
     return Object.keys(this.additionalData).some((name) => name !== "type_haie" && this.isPropertyUnset(name));
   }
