@@ -19,16 +19,16 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 300, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 310, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText("Alignement d'arbres").check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('En bordure de route, voie ou chemin').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText('En bordure de route, voie ou chemin').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByRole('button', { name: 'Enregistrer' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('button', { name: 'Tracer une haie à détruire' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 400, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 410, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText('Haie mixte').check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText("Mare ou pièce d’eau à moins de 500 m").click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText("Mare ou pièce d’eau à moins de 500 m").click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByRole('button', { name: 'Enregistrer' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
     await page.getByRole('button', { name: 'Valider' }).click();
@@ -52,9 +52,9 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 440, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 400, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText("Alignement d'arbres").check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('En bordure de route, voie ou chemin').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText('En bordure de route, voie ou chemin').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByRole('button', { name: 'Enregistrer' }).click();
 
     const condition = page.locator('#hedge-input-iframe').contentFrame().locator('div.condition-content', {
         hasText: 'Alignements d’arbres (L350-3)',
@@ -67,8 +67,8 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 400, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 440, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByText('Haie mixte').check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.locator('#hedge-input-iframe').contentFrame().getByText('Plantation adéquate')).toBeVisible();
 
     await page.locator('#hedge-input-iframe').contentFrame().locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
