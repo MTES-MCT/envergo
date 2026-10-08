@@ -2,8 +2,7 @@
   <button aria-controls="{{ dialog_id }}"
           title="Fermer"
           type="button"
-          class="fr-btn--close fr-btn"
-          @click="closeHedgeDialog('{{ dialog_mode }}')">Fermer</button>
+          class="fr-btn--close fr-btn">Fermer</button>
 </div>
 <div class="fr-modal__content fr-pt-4w" v-if="selectedHedge">
   {% include "hedges/_hedge_data_dialog_header.html" %}

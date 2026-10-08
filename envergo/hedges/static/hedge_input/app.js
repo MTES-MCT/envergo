@@ -58,16 +58,12 @@ const hedgeDefaults = {
 
 const isDialogReadonly = (dialogMode) => mode === READ_ONLY_MODE || dialogMode !== mode;
 
-const closeHedgeDialog = (dialogMode) => {
-  dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
-};
-
 // Save the dialog form data into the hedge object
 const saveHedgeData = (dialogMode) => {
   for (const property in hedgeDefaults[dialogMode]) {
     selectedHedge.value.additionalData[property] = hedgeDraft[property];
   }
-  closeHedgeDialog(dialogMode);
+  dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
 };
 
 // Show the "description de la haie" modal
@@ -852,7 +848,6 @@ createApp({
       selectedHedge,
       hedgeDraft,
       saveHedgeData,
-      closeHedgeDialog,
       invalidHedges,
       conditions,
       hedgeBeingDrawn,
