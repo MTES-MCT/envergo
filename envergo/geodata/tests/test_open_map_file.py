@@ -85,6 +85,18 @@ def test_process_map_imports_every_geometry(fixture_name):
     assert map.imported_geometries == 2
 
 
+@pytest.mark.django_db
+@patch.object(FieldFile, "close", autospec=True)
+def test_process_map_closes_the_stored_file(mock_close):
+    map = Map.objects.create(name="Test", description="Test")
+    with open(DATA_DIR / "zones.gpkg", "rb") as fixture:
+        map.file.save("zones.gpkg", File(fixture))
+
+    process_map.delay(map.id)
+
+    mock_close.assert_called_once()
+
+
 def make_map_form(upload, instance=None):
     form_class = modelform_factory(
         Map, form=MapForm, fields=["name", "description", "file"]

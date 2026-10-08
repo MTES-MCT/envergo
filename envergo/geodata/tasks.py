@@ -37,7 +37,8 @@ def process_map(task, map_id):
             map.zones.all().delete()
             map.lines.all().delete()
 
-            with open_map_file(map.file) as data_source:
+            # open_map_file leaves the stored file open. Close it once imported.
+            with map.file.open("rb"), open_map_file(map.file) as data_source:
                 geom_type = data_source[0].geom_type.name
                 if geom_type in ("LineString", "MultiLineString"):
                     process_lines_file(map, data_source, task)
