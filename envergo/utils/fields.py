@@ -1,7 +1,7 @@
 from django.db.models import TextChoices
 from django.db.models.enums import ChoicesMeta
 from django.forms import ClearableFileInput, EmailField, FileField
-from django.forms.widgets import RadioSelect, Select
+from django.forms.widgets import RadioSelect, Select, TextInput
 
 from envergo.utils.validators import NoIdnEmailValidator
 
@@ -28,6 +28,17 @@ class AllowDisabledSelect(Select):
         if not value:
             option_dict["attrs"]["disabled"] = "disabled"
         return option_dict
+
+
+class HoneypotInput(TextInput):
+    """Honeypot input, hidden only by CSS so bots reading the HTML see a regular field."""
+
+    field_template_name = "django/forms/fields/honeypot.html"
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        # Autofill would make real users fail the check.
+        self.attrs["autocomplete"] = "off"
 
 
 def get_human_readable_value(choices, key):

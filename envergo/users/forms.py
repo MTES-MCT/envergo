@@ -1,10 +1,20 @@
+import logging
+import time
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from envergo.users.models import User
-from envergo.utils.fields import AllowDisabledSelect, NoIdnEmailField
+from envergo.utils.fields import AllowDisabledSelect, HoneypotInput, NoIdnEmailField
+
+logger = logging.getLogger(__name__)
+
+# Seconds. Below the fastest human signup observed in production logs (6.5 s).
+MIN_FILL_DURATION = 5
+
 
 # This string is used in django's original AuthenticationForm
 # There is a typo in the string translation, so we add this variable here
@@ -29,6 +39,8 @@ class RegisterForm(UserCreationForm):
         required=True,
         help_text="C'est ainsi que nous nous adresserons à vous dans nos communications.",
     )
+    website = forms.CharField(label="Site web", required=False, widget=HoneypotInput)
+    displayed_at = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta(UserCreationForm.Meta):
         model = User
@@ -37,6 +49,33 @@ class RegisterForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["name"].widget.attrs["placeholder"] = "Prénom Nom"
+        # Signed so the client cannot fake an older display time.
+        self.fields["displayed_at"].initial = signing.dumps(time.time())
+
+    def is_bot_submission(self):
+        """Tell whether the submission comes from a spam bot. Safe to call before validation."""
+        honeypot_filled = bool(self["website"].data)
+        submitted_too_fast = self.seconds_since_display() < MIN_FILL_DURATION
+        is_bot = honeypot_filled or submitted_too_fast
+
+        if is_bot:
+            logger.warning(
+                "Bot signup rejected (honeypot filled: %s, submitted too fast: %s)",
+                honeypot_filled,
+                submitted_too_fast,
+            )
+        return is_bot
+
+    def seconds_since_display(self):
+        """Seconds spent on the form. Zero when the display time is missing or forged."""
+        seconds = 0
+        signed_display_time = self["displayed_at"].data or ""
+        try:
+            displayed_at = signing.loads(signed_display_time)
+            seconds = time.time() - displayed_at
+        except signing.BadSignature:
+            pass
+        return seconds
 
     def clean_email(self):
         """Prevent case related issues."""
