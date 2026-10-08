@@ -21,6 +21,10 @@
       "size": "M"
     },
     {
+      "command": "30 3 * * * python manage.py delete_unactivated_accounts",
+      "size": "M"
+    },
+    {
       "command": "0 4 * * * bash bin/sync_stats_db.sh",
       "size": "M"
     }
