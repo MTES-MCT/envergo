@@ -15,12 +15,11 @@
   <ul class="hedge-data-dialog-properties fr-mb-3w">
     {% for name, field in form.fields.items %}
       {% if name != "type_haie" %}
-        {% include "hedges/_hedge_data_dialog_readonly_property.html" %}
+        {% include "hedges/_hedge_data_dialog_readonly_property.html" with visibility_check="isPropertySet" %}
       {% endif %}
     {% endfor %}
   </ul>
-  <section class="fr-accordion"
-           v-show="false{% for name in form.fields %}{% if name != "type_haie" %} || ('{{ name }}' in selectedHedge.additionalData && !selectedHedge.additionalData.{{ name }}){% endif %}{% endfor %}">
+  <section class="fr-accordion" v-show="selectedHedge.hasUnsetProperties()">
     <h2 class="fr-accordion__title">
       <button type="button"
               class="fr-accordion__btn"
@@ -32,7 +31,7 @@
       <ul class="hedge-data-dialog-properties">
         {% for name, field in form.fields.items %}
           {% if name != "type_haie" %}
-            {% include "hedges/_hedge_data_dialog_readonly_property.html" with unset=True %}
+            {% include "hedges/_hedge_data_dialog_readonly_property.html" with unset=True visibility_check="isPropertyUnset" %}
           {% endif %}
         {% endfor %}
       </ul>

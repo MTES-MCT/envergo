@@ -231,6 +231,19 @@ class Hedge {
     return type_haie !== undefined && type_haie && (!("position" in this.additionalData) || this.additionalData.position);
   }
 
+  // A property is "set" when it has a truthy value, "unset" when it is present but empty
+  isPropertySet(name) {
+    return Boolean(this.additionalData[name]);
+  }
+
+  isPropertyUnset(name) {
+    return name in this.additionalData && !this.additionalData[name];
+  }
+
+  hasUnsetProperties() {
+    return Object.keys(this.additionalData).some((name) => name !== "type_haie" && this.isPropertyUnset(name));
+  }
+
   category() {
     // This method logic is duplicate on backend side (envergo/hedges/models.py)
     // Any changes made here must be reflected there.
