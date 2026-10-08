@@ -176,7 +176,7 @@ def open_map_file(file):
         try:
             data_source = DataSource(gdal_path)
         except GDALException as error:
-            raise InvalidMapFile(str(error)) from error
+            raise InvalidMapFile("Ce fichier n'est pas une carte lisible") from error
         yield data_source
 
 
