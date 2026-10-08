@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(("aa_l3503_authorization_coefficient__gte", 1)),
+                condition=models.Q(("aa_l3503_authorization_coefficient__gte", 1)),
                 name="aa_l3503_authorization_coefficient_gte_1",
                 violation_error_message="Le coefficient d'autorisation L350-3 doit être supérieur ou égal à 1.",
             ),

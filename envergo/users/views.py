@@ -40,6 +40,7 @@ class Register(AnonymousRequiredMixin, CreateView):
         self.object.save()
 
         user_email = form.cleaned_data["email"]
+
         activate_url = make_activate_account_url(self.object)
         send_account_activation_email.delay(
             user_email, self.request.site.id, activate_url

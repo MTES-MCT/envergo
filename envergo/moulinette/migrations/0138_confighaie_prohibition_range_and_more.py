@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(
                         models.Q(
                             ("prohibition_range__startswith__isnull", False),
