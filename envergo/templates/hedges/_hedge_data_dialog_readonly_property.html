@@ -1,5 +1,5 @@
 <li v-show="{% if unset %}'{{ name }}' in selectedHedge.additionalData && !{% endif %}selectedHedge.additionalData.{{ name }}">
-  <strong>{{ field.display_label|default:field.label }}</strong> :
+  <strong>{{ field.display_label|default:field.label }}</strong> :
   {% if unset %}
     {% if field.choices %}
       Non renseigné
