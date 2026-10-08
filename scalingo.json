@@ -76,6 +76,9 @@
     },
     "SYNC_STATS_ENABLED": {
       "value": "false"
+    },
+    "ENVERGO_AMENAGEMENT_DOMAIN": {
+      "value": "$APP.$REGION_NAME.scalingo.io"
     }
   },
   "scripts": {
