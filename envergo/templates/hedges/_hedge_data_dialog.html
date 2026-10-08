@@ -4,7 +4,7 @@
         class="fr-modal hedge-data-dialog{% if dialog_mode != mode %} read-only{% endif %}">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col-12 fr-col-md-10 fr-col-xl-9">
+      <div class="fr-col-12 {% if dialog_mode != mode %}fr-col-md-8 fr-col-lg-6{% else %}fr-col-md-10 fr-col-xl-9{% endif %}">
         <div class="fr-modal__body">
           {% if dialog_mode != mode %}
             {% include "hedges/_hedge_data_dialog_readonly.html" %}
