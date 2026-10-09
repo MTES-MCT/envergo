@@ -1002,10 +1002,28 @@ class EspecesProtegeesRu(
         return evaluator_replantation_coefficient(self)
 
     def get_hedge_detail_rows(self):
-        """Return the RU detail rows, with the EP columns."""
-        rows = build_ru_hedge_detail_rows(self.catalog, self)
+        """Return the RU detail rows, with the EP columns.
+
+        ``applied_ep_bonus`` is the bonus really applied. The record's
+        ``ep_bonus`` is only potential. ``applied_ep_bonus`` and
+        ``coeff_ru_majore`` are ``None`` when no compensation is due.
+        """
+        rows = build_ru_hedge_detail_rows(self.catalog.get("ru_hedge_data", {}))
+        effective_coefficients = self.effective_coefficients
+
         for row in rows:
-            row["partial_result"] = self.per_hedge_results.get(row["hedge_id"], "-")
+            hedge_id = row["hedge_id"]
+
+            if hedge_id in effective_coefficients:
+                coeff_majore = round(effective_coefficients[hedge_id], 2)
+                applied_ep_bonus = round(coeff_majore - row["coeff_ru_brut"], 2)
+            else:
+                coeff_majore = None
+                applied_ep_bonus = None
+
+            row["applied_ep_bonus"] = applied_ep_bonus
+            row["coeff_ru_majore"] = coeff_majore
+            row["partial_result"] = self.per_hedge_results.get(hedge_id, "-")
         return rows
 
     def get_debug_context(self):

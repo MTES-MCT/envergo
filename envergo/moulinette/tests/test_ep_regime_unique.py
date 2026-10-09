@@ -588,6 +588,24 @@ def test_ep_ru_dispense_effective_empty(
     assert evaluator.get_replantation_coefficient() == 0.0
 
 
+def test_ep_ru_dispense_hedge_detail_rows_have_no_increased_coefficient(
+    ep_ru_criteria,
+):
+    """A dispense requires no compensation. Its rows show no increased coefficient."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=8)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == "dispense"
+
+    [row] = criterion.get_evaluator().get_hedge_detail_rows()
+    assert row["coeff_ru_majore"] is None
+    assert row["applied_ep_bonus"] is None
+
+
 def test_ru_zone_query_runs_once(
     france_map,
     ep_ru_criteria,

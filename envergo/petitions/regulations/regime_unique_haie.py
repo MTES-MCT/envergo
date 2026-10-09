@@ -38,7 +38,7 @@ def regime_unique_haie_get_instructor_view_context(
     context["RuHedgeType"] = HedgeTypeFactory.build_from_context(single_procedure=True)
 
     context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
-        moulinette.catalog, evaluator
+        moulinette.catalog.get("ru_hedge_data", {})
     )
 
     context["quality_condition"] = {}
