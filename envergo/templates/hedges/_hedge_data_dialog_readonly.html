@@ -7,15 +7,26 @@
           class="fr-btn--close fr-btn">Fermer</button>
 </div>
 <div class="fr-modal__content fr-pt-4w" v-if="selectedHedge">
-  {% include "hedges/_hedge_data_dialog_header.html" %}
-  <p class="fr-tag fr-mb-3w fr-ml-2w">
-    Type : 
-    {% for value, label in form.fields.type_haie.choices %}
-      <span v-show="selectedHedge.additionalData.type_haie === '{{ value }}'">{{ label }}</span>
-    {% endfor %}
-  </p>
-  <p class="fr-mb-3w" v-show="!selectedHedge.hasSetProperties()">Aucune caractéristique particulière pour cette haie.</p>
+  <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
+    Description de la haie <span>[[ selectedHedge?.id ]]</span>
+  </h1>
+  {% if config.single_procedure %}
+    <span class="fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm"
+          v-show="selectedHedge?.category() === 'hru'">{{ HedgeCategory.hru.badge_label }}</span>
+    <span class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm"
+          v-show="selectedHedge?.category() === 'l350_3'">{{ HedgeCategory.l350_3.badge_label }}</span>
+  {% endif %}
+
   <ul class="hedge-data-dialog-properties fr-mb-3w">
+    <li>
+      <strong>Longueur</strong> : [[ selectedHedge?.length.toFixed(0) ]] m
+    </li>
+    <li>
+      <strong>Type</strong> :
+      {% for value, label in form.fields.type_haie.choices %}
+        <span v-show="selectedHedge.additionalData.type_haie === '{{ value }}'">{{ label }}</span>
+      {% endfor %}
+    </li>
     {% for fieldset_fields in form.fieldsets.values %}
       {% for name in fieldset_fields %}
         {% if name != "type_haie" %}
