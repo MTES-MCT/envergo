@@ -41,7 +41,7 @@ from envergo.utils.validators import detect_mime, validate_mime
 CSV_MIME_TYPES = {"text/csv", "text/plain", "application/csv"}
 
 # A geopackage is a sqlite database; the exact label depends on the libmagic
-# version. The extension drives how `extract_map` reads the file, so each
+# version. The extension drives how `open_map_file` reads the file, so each
 # extension is checked against the content types it is allowed to hold.
 BATCH_FILE_MIME_TYPES = {
     ".gpkg": {

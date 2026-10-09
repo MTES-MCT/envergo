@@ -1,8 +1,5 @@
 import csv
 import logging
-import shutil
-from os.path import splitext
-from tempfile import NamedTemporaryFile
 
 from django.core.files import File
 from django.db import transaction
@@ -12,7 +9,6 @@ from config.celery_app import app
 from envergo.geodata.import_batch import is_blank_row, parse_batch_row, validate_headers
 from envergo.geodata.models import STATUSES, Map, MapImportBatch
 from envergo.geodata.utils import (
-    count_features,
     make_polygons_valid,
     open_map_file,
     process_lines_file,
@@ -224,15 +220,10 @@ def import_batch_row(row, batch, batch_file):
     map.batch_updated_at = now
 
     if batch_file is not None:
-        _, extension = splitext(row.file)
-        with NamedTemporaryFile(suffix=extension) as tmp:
-            with batch_file.file.open("rb") as source:
-                shutil.copyfileobj(source, tmp)
-            tmp.seek(0)
-
-            map_file = File(tmp)
-            map.expected_geometries = count_features(map_file)
-            map.file.save(row.file, map_file, save=False)
+        with batch_file.file.open("rb") as source:
+            with open_map_file(source) as data_source:
+                map.expected_geometries = len(data_source[0])
+            map.file.save(row.file, File(source), save=False)
 
     map.save()
     return map
