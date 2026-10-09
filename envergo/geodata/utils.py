@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 import re
@@ -178,6 +179,15 @@ def open_map_file(file):
         except GDALException as error:
             raise InvalidMapFile("Ce fichier n'est pas une carte lisible") from error
         yield data_source
+
+
+def read_csv_file(field_file):
+    """Return a csv FieldFile's decoded content.
+
+    Decoding with utf-8-sig removes the eventual bom produced by spreadsheet software.
+    """
+    with field_file.open("rb") as f:
+        return io.StringIO(f.read().decode("utf-8-sig"))
 
 
 def process_geographic_file(map, lm, task):
