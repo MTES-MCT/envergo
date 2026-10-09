@@ -1,6 +1,7 @@
 import factory
 from factory.django import DjangoModelFactory
 
+from envergo.demarchenumerique.tests.factories import DemarcheConfigFactory
 from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
 from envergo.moulinette.models import (
     ActionToTake,
@@ -124,28 +125,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
     ]
     aa_l3503_handling = "not_handled"
     aa_l3503_contact_info = "<p>À compléter</p>"
-    demarche_numerique_number = 123456
-    demarche_numerique_pre_fill_config = [
-        {
-            "id": "123",
-            "value": "profil",
-            "mapping": {
-                "autre": "Autre (collectivit\u00e9, am\u00e9nageur, gestionnaire de r\u00e9seau, particulier, etc.)",
-                "agri_pac": "Exploitant-e agricole b\u00e9n\u00e9ficiaire de la PAC",
-            },
-        },
-        {
-            "id": "456",
-            "value": "conditionnalite_pac.result",
-            "mapping": {"soumis": True, "non_soumis": False},
-        },
-        {"id": "789", "value": "url_projet"},
-        {"id": "321", "value": "ref_projet"},
-        {"id": "654", "value": "url_moulinette"},
-    ]
-    demarche_numerique_display_fields = {
-        "project_url": "ABC123",
-    }
+    demarche_numerique_config = factory.SubFactory(DemarcheConfigFactory)
 
 
 class RUConfigHaieFactory(DCConfigHaieFactory):
@@ -154,10 +134,12 @@ class RUConfigHaieFactory(DCConfigHaieFactory):
         "coeff_compensation": {
             "default": {
                 "X_densite": 60,
-                "R1_non_arboree_HD": 1.5,
-                "R2_non_arboree_LD": 1.5,
-                "R3_arboree_HD": 1.5,
-                "R4_arboree_LD": 1.5,
+                "R1_buissonnante_HD": 1.5,
+                "R2_buissonnante_LD": 1.5,
+                "R3_arbustive_HD": 1.5,
+                "R4_arbustive_LD": 1.5,
+                "R5_arboree_HD": 1.5,
+                "R6_arboree_LD": 1.5,
             }
         }
     }

@@ -71,6 +71,15 @@ hr.separator {
   text-align: center;
 }
 
+// Attention dot after a side menu label, see the sidemenu_item tag.
+.sidemenu-marker {
+  color: var(--blue-france-sun-113-625);
+  font-size: 150%;
+  position: relative;
+  top: -0.0625rem;
+  margin-left: 0.5rem;
+}
+
 /**
  * Update some margins for paragraphs and lists
  */
@@ -330,10 +339,14 @@ nav#evaluation-summary {
     display: none;
   }
 
-  #additional-forms.unbound {
+  /* Shared highlight for the blocks that appear mid-simulation */
+  #additional-forms.unbound,
+  #eviter-reduire {
     background-color: var(--blue-france-950-100-hover);
     padding: 1rem;
+  }
 
+  #additional-forms.unbound {
     .fr-input-group--error {
       &::before {
         background-image: none;
@@ -359,6 +372,10 @@ nav#evaluation-summary {
         box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
       }
     }
+  }
+
+  #eviter-reduire .eviter-reduire-motif {
+    margin-bottom: 1.5rem;
   }
 
   #optional-forms {
@@ -960,6 +977,14 @@ div.leaflet-container {
 
 .alt {
   background-color: var(--background-alt-blue-france);
+}
+
+.alt-sad {
+  background-color: var(--background-alt-grey);
+}
+
+.alt-light {
+  background-color: var(--yellow-tournesol-975-75);
 }
 
 ul.roomy {
@@ -2081,6 +2106,11 @@ img.moulinette-incentive-img {
   mask-image: url("/static/icons/hourglass-2-fill.svg");
 }
 
+.fr-icon-file-copy-line::before,
+.fr-icon-file-copy-line::after {
+  mask-image: url("/static/icons/file-copy-line.svg");
+}
+
 .fr-icon-crisp::before {
   background-image: url("/static/icons/crisp.svg");
   background-size: contain;
@@ -2622,10 +2652,6 @@ section#actions-to-take {
       }
     }
   }
-}
-
-.alt-light {
-  background-color: var(--yellow-tournesol-975-75);
 }
 
 .form-actions {

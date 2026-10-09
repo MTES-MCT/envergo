@@ -1,7 +1,9 @@
 from textwrap import shorten
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
+from django.utils.html import format_html
 
 from envergo.confs.models import SETTINGS_HELP, HostedFile, Setting, TopBar
 
@@ -49,8 +51,35 @@ class SettingAdmin(admin.ModelAdmin):
 
 @admin.register(HostedFile)
 class HostedFileAdmin(admin.ModelAdmin):
-    list_display = ["name", "file", "uploaded_by", "created_at"]
-    fields = ("file", "name", "description")
+    list_display = ["name", "public_url_short", "uploaded_by", "created_at"]
+    fields = ("file", "name", "description", "public_url")
+    readonly_fields = ("public_url",)
+
+    def build_public_url(self, obj):
+        if not obj.file:
+            return None
+        domain = settings.ENVERGO_AMENAGEMENT_DOMAIN
+        return f"https://{domain}/fichiers/{obj.file.name}"
+
+    def public_url(self, obj):
+        """Full absolute URL, displayed in the detail view for copy-pasting."""
+        url = self.build_public_url(obj)
+        if not url:
+            return "-"
+        return format_html('<a href="{}" target="_blank">{}</a>', url, url)
+
+    public_url.short_description = "URL publique"
+
+    def public_url_short(self, obj):
+        """Compact link for the list view."""
+        url = self.build_public_url(obj)
+        if not url:
+            return "-"
+        return format_html(
+            '<a href="{}" target="_blank">/fichiers/{}</a>', url, obj.file.name
+        )
+
+    public_url_short.short_description = "URL publique"
 
     def save_model(self, request, obj, form, change):
         if not change:

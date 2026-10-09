@@ -2,21 +2,25 @@ import logging
 import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum, IntEnum, nonmember
 from functools import reduce
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+import shapely
 from dateutil import parser
+from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
+from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import DataError, connection, models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
@@ -36,12 +40,15 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.html import format_html
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.phonenumber import PhoneNumber
 
+from envergo.demarchenumerique.models import DemarcheConfig
 from envergo.evaluations.models import (
     RESULT_CASCADE,
     RESULTS,
@@ -70,8 +77,10 @@ from envergo.moulinette.fields import (
 )
 from envergo.moulinette.forms import (
     DisplayIntegerField,
+    EviterReduireForm,
     MoulinetteFormAmenagement,
-    MoulinetteFormHaie,
+    MoulinetteFormHaieHRU,
+    MoulinetteFormHaieRU,
     TriageFormHaie,
 )
 from envergo.moulinette.regulations import (
@@ -879,6 +888,11 @@ class Criterion(models.Model):
         return self._evaluator
 
     @property
+    def catalog(self):
+        """Return the data computed by the evaluator."""
+        return self._evaluator.catalog_data
+
+    @property
     def result_code(self):
         """Return the criterion result code."""
         if not hasattr(self, "_evaluator"):
@@ -982,6 +996,25 @@ class Criterion(models.Model):
         return actions_to_take
 
 
+class PerimeterQuerySet(models.QuerySet):
+    def clip(self, hedges: HedgeList) -> HedgeList:
+        """Return `hedges` with lengths reduced to their intersection with the union of these perimeters' zones."""
+        if not hedges:
+            return HedgeList()
+
+        qs = Zone.objects.filter(
+            map_id__in=self.values_list("activation_map_id", flat=True),
+            geometry__intersects=hedges.to_multilinestring(),
+        ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+        multipolygon = qs["geom"]
+        if multipolygon is None:
+            return HedgeList()
+
+        # Other conversion options throw a cryptic numpy error, so…
+        geom = shapely.from_wkt(multipolygon.wkt)
+        return hedges.clip_to(geom)
+
+
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.
 
@@ -992,6 +1025,8 @@ class Perimeter(models.Model):
     Perimeters are related to regulations (e.g Natura 2000 Marais de Vilaine).
 
     """
+
+    objects = PerimeterQuerySet.as_manager()
 
     backend_name = models.CharField(
         _("Backend name"), help_text=_("For admin usage only"), max_length=256
@@ -1334,13 +1369,43 @@ class ConfigHaie(ConfigBase):
         "Informations de contact AA L350-3",
         blank=True,
     )
+    aa_l3503_authorization_coefficient = models.FloatField(
+        "Coefficient de replantation - autorisation L350-3",
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="Coefficient multiplicateur appliqué au linéaire à planter "
+        "lorsque le résultat est « soumis à autorisation » (L350-3).",
+    )
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
     )
 
-    contacts_info = models.TextField(
-        "Champ html des informations de contact", blank=True
+    prohibition_range = DateRangeField(
+        "Période d’interdiction de destruction de haies",
+        null=True,
+        blank=True,
+    )
+
+    guh_structure = models.CharField(
+        "Structure GUH (DDT ou DDTM)",
+        default="Direction Départementale des Territoires (DDT)",
+    )
+    guh_service_name = models.CharField(
+        "Nom du service GUH",
+        blank=True,
+    )
+    guh_email = models.EmailField(
+        "Email GUH",
+        blank=True,
+    )
+    guh_phone = PhoneNumberField(
+        "Téléphone GUH",
+        blank=True,
+    )
+    guh_address = models.TextField(
+        "Adresse GUH",
+        blank=True,
     )
 
     contacts_and_links = models.TextField(
@@ -1371,177 +1436,35 @@ class ConfigHaie(ConfigBase):
         ),
     )
 
-    demarche_numerique_number = models.IntegerField(
-        "Numéro de la « Démarche numérique »",
-        blank=True,
+    demarche_numerique_config = models.ForeignKey(
+        DemarcheConfig,
+        on_delete=models.PROTECT,
+        verbose_name="Démarche numérique",
         null=True,
-        help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
-        '<a href="https://demarche.numerique.gouv.fr/admin/procedures" target="_blank" rel="noopener">'
-        "https://demarche.numerique.gouv.fr/admin/procedures</a>",
-    )
-
-    demarche_numerique_pre_fill_config = models.JSONField(
-        "Configuration pré-remplissage sur « Démarche numérique »",
         blank=True,
-        null=False,
-        default=list,
     )
-
-    demarche_numerique_display_fields = models.JSONField(
-        blank=True,
-        null=False,
-        default=dict,
-    )
-
-    def __str__(self):
-        return self.department.get_department_display()
 
     def clean(self):
         super().clean()
-        if self.is_activated and self.demarche_numerique_pre_fill_config is not None:
-            # add constraints on the pre-fill configuration json to avoid unexpected entries
-
-            if not isinstance(self.demarche_numerique_pre_fill_config, list):
+        if (
+            self.prohibition_range is not None
+            and self.prohibition_range.lower is not None
+            and self.prohibition_range.upper is not None
+        ):
+            if self.prohibition_range.lower.year != self.prohibition_range.upper.year:
                 raise ValidationError(
                     {
-                        "demarche_numerique_pre_fill_config": "Cette configuration doit être une liste de champs"
-                        " (ou d'annotations privées) à pré-remplir"
+                        "prohibition_range": "Merci de renseigner deux dates de la même année."
                     }
                 )
-
-            availables_sources = {
-                tup[0]
-                for value in self.get_demarche_numerique_value_sources().values()
-                for tup in value
-            }
-            for field in self.demarche_numerique_pre_fill_config:
-                if (
-                    not isinstance(field, dict)
-                    or "id" not in field
-                    or "value" not in field
-                ):
-                    raise ValidationError(
-                        {
-                            "demarche_numerique_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
-                            " au moins l'id côté « Démarche numérique » et la "
-                            "source de la valeur côté guichet unique de la haie."
-                        }
-                    )
-                if field["value"] not in availables_sources:
-                    raise ValidationError(
-                        {
-                            "demarche_numerique_pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
-                            f"valide pour le champ dont l'id est {field['id']}"
-                        }
-                    )
-                if "mapping" in field and not isinstance(field["mapping"], dict):
-                    raise ValidationError(
-                        {
-                            "demarche_numerique_pre_fill_config": f"Le mapping du champ dont l'id est {field['id']} "
-                            f"doit être un dictionnaire."
-                        }
-                    )
-
-    @classmethod
-    def get_demarche_numerique_value_sources(cls):
-        """Populate a list of available sources for the pre-fill configuration of the Démarche numérique
-
-        This method aggregates :
-         * some well known values (e.g. moulinette_url)
-         * the fields of all the forms that the user may have to fill in the guichet unique de la haie :
-            * the main form
-            * the triage form
-            * the forms of the criteria of involved regulations
-         * the results of the regulations
-        """
-
-        regulations = Regulation.objects.filter(
-            regulation__in=MoulinetteHaie.REGULATIONS
-        ).prefetch_related("criteria")
-        triage_form_fields = {
-            (key, field.label) for key, field in TriageFormHaie.base_fields.items()
-        }
-        main_form_fields = {
-            (key, field.label)
-            for key, field in MoulinetteHaie.main_form_class.base_fields.items()
-        }
-
-        identified_sources = {
-            ("url_moulinette", "Url de la simulation"),
-            ("url_projet", "Url du projet de dossier"),
-            ("ref_projet", "Référence du projet de dossier"),
-            (
-                "plantation_adequate",
-                "Les conditions d’acceptabilité de la plantation sont toutes respectées (booléen)",
-            ),
-            ("category", "Catégorie du projet (ru, hru ou l350_3)"),
-            (
-                "from_multi_category",
-                "Le projet provient-il d'une simulation comportant plusieurs catégories",
-            ),
-            (
-                "original_multi_category_moulinette_url",
-                "Url de la simulation initiale comportant plusieurs catégories le cas échéant",
-            ),
-            ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
-            ("proximite_mare", "Proximité d'une mare (booléen)"),
-            (
-                "sur_talus_d",
-                "Au moins une haie à détruire est marquée “sur_talus” (booléen)",
-            ),
-            (
-                "sur_talus_p",
-                "Au moins une haie à planter est marquée “sur_talus” (booléen)",
-            ),
-        }
-
-        available_sources = {
-            "Fléchage": triage_form_fields,
-            "Questions principales": main_form_fields,
-        }
-
-        regulation_results = set()
-        criteria_results = set()
-
-        for regulation in regulations.all():
-            regulation_sources = set()
-            regulation_results.add(
-                (
-                    f"{regulation.slug}.result",
-                    f"Résultat de la réglementation {regulation.regulation}",
+            if self.prohibition_range.upper > self.prohibition_range.lower and (
+                self.prohibition_range.upper - self.prohibition_range.lower
+            ) < timedelta(days=7 * 21):
+                raise ValidationError(
+                    {
+                        "prohibition_range": "La période d’interdiction doit durer au moins 21 semaines consécutives."
+                    }
                 )
-            )
-            for criterion in regulation.criteria.all():
-                criterion_result_slug_code = (
-                    f"{regulation.slug}.{criterion.slug}.result_code"
-                )
-                if criterion_result_slug_code not in dict(criteria_results):
-                    criteria_results.add(
-                        (
-                            criterion_result_slug_code,
-                            f"Code de résultat du critère {criterion.backend_title} "
-                            f"de la réglementation {regulation.regulation}",
-                        )
-                    )
-                form_class = criterion.evaluator.form_class
-                if form_class:
-                    regulation_sources.update(
-                        {
-                            (key, field.label)
-                            for key, field in form_class.base_fields.items()
-                        }
-                    )
-
-            if regulation_sources:
-                available_sources[f'Questions complémentaires "{regulation.title}"'] = (
-                    regulation_sources
-                )
-
-        available_sources["Résultats réglementation"] = regulation_results
-        available_sources["Résultats des critères"] = criteria_results
-        available_sources["Variables projet"] = identified_sources
-
-        return available_sources
 
     class Meta(ConfigBase.Meta):
         verbose_name = "Config haie"
@@ -1549,20 +1472,15 @@ class ConfigHaie(ConfigBase):
         constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
                 check=Q(is_activated=False)
-                | Q(demarche_numerique_number__isnull=False),
-                name="demarche_numerique_number_required_if_activated",
-            ),
-            CheckConstraint(
-                check=Q(demarche_numerique_number__isnull=True)
-                | Q(demarche_numerique_display_fields__project_url__isnull=False),
-                name="project_url_id_required_if_demarche_number",
+                | Q(demarche_numerique_config__isnull=False),
+                name="demarche_numerique_config_required_if_activated",
             ),
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",
                 violation_error_message="Les paramètres de régime unique doivent comporter une clé "
                 "'coeff_compensation'. Sans zonage, une entrée 'default' avec "
-                "X_densite, R1_non_arboree_HD, R2_non_arboree_LD, R3_arboree_HD, "
-                "R4_arboree_LD est requise.",
+                "X_densite, R1_buissonnante_HD, R2_buissonnante_LD, R3_arbustive_HD, "
+                "R4_arbustive_LD, R5_arboree_HD, R6_arboree_LD est requise.",
                 check=Q(single_procedure=False)
                 | (
                     Q(has_ru_zonage=True)
@@ -1578,16 +1496,22 @@ class ConfigHaie(ConfigBase):
                         single_procedure_settings__coeff_compensation__default__has_key="X_densite"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R1_non_arboree_HD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R1_buissonnante_HD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R2_non_arboree_LD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R2_buissonnante_LD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R3_arboree_HD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R3_arbustive_HD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R4_arboree_LD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R4_arbustive_LD"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__default__has_key="R5_arboree_HD"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__default__has_key="R6_arboree_LD"
                     )
                 ),
             ),
@@ -1595,6 +1519,26 @@ class ConfigHaie(ConfigBase):
                 name="ru_zonage_requires_single_procedure",
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
+            ),
+            CheckConstraint(
+                check=Q(
+                    (
+                        Q(prohibition_range__startswith__isnull=False)
+                        & Q(prohibition_range__endswith__isnull=False)
+                    )
+                    | (
+                        Q(prohibition_range__startswith__isnull=True)
+                        & Q(prohibition_range__endswith__isnull=True)
+                    )
+                ),
+                name="confighaie_prohibition_range_both_or_no_value",
+                violation_error_message="Période d’interdiction : précisez à la fois une date "
+                "de début et une date de fin, ou aucune date.",
+            ),
+            CheckConstraint(
+                name="aa_l3503_authorization_coefficient_gte_1",
+                violation_error_message="Le coefficient d'autorisation L350-3 doit être supérieur ou égal à 1.",
+                check=Q(aa_l3503_authorization_coefficient__gte=1),
             ),
         ]
 
@@ -1616,6 +1560,99 @@ class ConfigHaie(ConfigBase):
 
         coeffs = self.single_procedure_settings.get("coeff_compensation")
         return coeffs
+
+    @staticmethod
+    def build_contact_info(data_object):
+        """
+        Used to build an <address> tag for ConfigHaie of for some other objects
+        wearing data from ConfigHaie objects.
+        """
+        if not data_object.guh_email and not data_object.guh_phone:
+            structure = (
+                data_object.guh_structure
+                or "Direction Départementale des Territoires (DDT)"
+            )
+
+            return format_html(
+                "<address>Nous ne disposons pas d’information sur le point de contact "
+                "privilégié au sein de la {}</address>",
+                structure,
+            )
+
+        address_rows = ["<strong>Guichet unique de la haie</strong>"]
+        if data_object.guh_service_name:
+            address_rows.append(
+                format_html("<strong>{}</strong>", data_object.guh_service_name)
+            )
+        if data_object.guh_email:
+            address_rows.append(
+                format_html(
+                    'Email : <a href="mailto:{}">{}</a>',
+                    data_object.guh_email,
+                    data_object.guh_email,
+                )
+            )
+        if data_object.guh_phone:
+            phone = data_object.guh_phone
+            if isinstance(phone, str):
+                phone = PhoneNumber.from_string(phone)
+            address_rows.append(
+                format_html(
+                    'Téléphone : <a href="tel:{}">{}</a>',
+                    str(phone),
+                    phone.as_national,
+                )
+            )
+
+        return f"<address>{'<br>'.join(address_rows)}</address>"
+
+    @property
+    def contact_info(self):
+        return self.build_contact_info(self)
+
+    @property
+    def prohibition_range_display(self) -> str:
+        """
+        prohibition range is stored with end date excluded: prohibition_range.upper
+        is the first day when work on hedges is allowed.
+
+        However prohibition range is *displayed* with end date included:
+        "prohibited from 15th march to 31st august"
+        means you can work on hedges on september 1st.
+        """
+        from django.template.defaultfilters import date as date_format
+
+        if self.prohibition_range is None:
+            return ""
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper - timedelta(days=1)
+        return f"du {date_format(start, 'j F')} au {date_format(end, 'j F')}"
+
+    def is_date_in_prohibition_range(self, tested_date: date):
+        if self.prohibition_range is None:
+            return None
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper
+        return (
+            (start.month, start.day)
+            <= (tested_date.month, tested_date.day)
+            < (end.month, end.day)
+        )
+
+    def first_allowed_work_date(self, blocked_date):
+        """First day work on hedges is allowed again, or None if already allowed."""
+        if not self.is_date_in_prohibition_range(blocked_date):
+            return None
+
+        prohibition_end = self.prohibition_range.upper
+        try:
+            first_allowed = prohibition_end.replace(year=blocked_date.year)
+        except ValueError:
+            # 29 February is the only day some years lack. Work then resumes on
+            # 1 March, the first day that exists past the boundary.
+            first_allowed = date(blocked_date.year, 3, 1)
+
+        return first_allowed
 
 
 TEMPLATE_KEYS = [
@@ -1985,6 +2022,10 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def all_forms(self):
         return self.get_all_forms()
 
+    def get_excluded_params(self):
+        """URL params the main form says should be stripped from redirects."""
+        return getattr(self.main_form, "excluded_params", [])
+
     def get_prefixed_fields(self):
         """Return all known fields, with prefixed keys."""
 
@@ -2076,6 +2117,39 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
         data = self.data
         return any(key in data for key in self.additional_fields.keys())
+
+    def get_acknowledgment_form(self):
+        """Return a form gating the simulation form submission, or None.
+
+        The form's data is not part of the simulation: it gates the form
+        submission but must never reach the result url, and existing
+        simulation urls must stay valid without it.
+        """
+        return None
+
+    @cached_property
+    def acknowledgment_form(self):
+        return self.get_acknowledgment_form()
+
+    def is_acknowledged(self):
+        """Return True when no acknowledgment is required, or it was confirmed."""
+
+        form = self.acknowledgment_form
+        return form is None or form.is_valid()
+
+    def is_acknowledgment_pending(self):
+        """Return True when an acknowledgment is required but not displayed yet.
+
+        Unbound means not displayed: see EviterReduireForm for the mechanism.
+        """
+        form = self.acknowledgment_form
+        return form is not None and not form.is_bound
+
+    def has_acknowledgment_error(self):
+        """Return True when the acknowledgment was displayed and refused."""
+
+        form = self.acknowledgment_form
+        return form is not None and form.is_bound and not form.is_valid()
 
     @cached_property
     def optional_fields(self):
@@ -2634,42 +2708,45 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     result_available_soon = "haie/moulinette/result_non_disponible.html"
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
-    main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
 
     def _get_single_procedure(self):
         config = self.config
         return config.single_procedure if config else False
 
-    def get_main_form(self):
-        """Instantiate the main form with data.
-
-        Overridden to pass some context to the main form constructor
-        """
-        return self.get_main_form_class()(
-            single_procedure=self._get_single_procedure(), **self.form_kwargs
+    def get_main_form_class(self):
+        """Return the form class for the main questions."""
+        FormClass = (
+            MoulinetteFormHaieRU
+            if self._get_single_procedure()
+            else MoulinetteFormHaieHRU
         )
+        return FormClass
 
-    @cached_property
-    def bound_main_form(self):
-        """Get the main form with forced bound data.
+    def get_acknowledgment_form(self):
+        """Return the « Éviter / réduire » acknowledgment form when required.
 
-        Overridden to pass some context to the main form constructor
-
-        When we display the moulinette form, we show the main form with
-        initial values. But if the initial data would be valid data, then we
-        want to also display the additional forms.
-
-        In that case, we force a form validation by creating a moulinette form
-        where we pass initial data as validation data.
+        Required when any hedge to remove has a `Hedge.category` of RU or
+        HRU — every project except a pure L350-3 one.
         """
-        if self.main_form.is_bound:
-            return self.main_form
-        form_kwargs = self.form_kwargs.copy()
-        form_kwargs["data"] = form_kwargs.get("initial", {})
-        return self.get_main_form_class()(
-            single_procedure=self._get_single_procedure(), **form_kwargs
-        )
+        if not settings.HAIE_EVITER_REDUIRE_ENABLED:
+            return None
+
+        if not self.is_evaluated():
+            return None
+
+        haies = self.catalog.get("haies")
+        if not haies:
+            return None
+
+        to_remove = haies.hedges_to_remove()
+        if not (to_remove.ru() or to_remove.hru()):
+            return None
+
+        form_kwargs = {}
+        if EviterReduireForm.DISPLAYED_MARKER in self.data:
+            form_kwargs["data"] = self.data
+        return EviterReduireForm(**form_kwargs)
 
     @property
     def result(self):
@@ -2841,7 +2918,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
         context = super().get_extra_context(request)
-        context["is_alternative"] = bool(request.GET.get("alternative", False))
+        context["is_alternative"] = bool(request.GET.get("project_reference", False))
 
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
@@ -2876,6 +2953,16 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["haies"] = data.pop("invalid_hedges")
             if not self.config:
                 del data["haies"]
+
+        if "reimplantation" not in data:
+            if self._get_single_procedure():
+                data["reimplantation"] = "replantation"
+            else:
+                raw_data = self.bound_main_form.data
+                initial = self.bound_main_form.initial or {}
+                data["reimplantation"] = raw_data.get("reimplantation") or initial.get(
+                    "reimplantation", "replantation"
+                )
 
         if "haies" in data:
             hedges = data["haies"]
@@ -3036,8 +3123,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
 
-        # add an entry in the project summary
-        lineaire_detruit_pac = round(self.catalog.get("lineaire_detruit_pac", 0))
+        haies = self.catalog.get("haies")
+        lineaire_detruit_pac = (
+            round(haies.hedges().to_remove().pac().length) if haies else 0
+        )
         localisation_pac = self.catalog.get("localisation_pac", False)
 
         if localisation_pac and lineaire_detruit_pac > 0:

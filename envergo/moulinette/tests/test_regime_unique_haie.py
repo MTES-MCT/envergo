@@ -9,7 +9,11 @@ from envergo.hedges.models import HedgeCategory, HedgeList
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
 from envergo.moulinette.regulations.regime_unique_haie import URGENCE_MOTIFS
-from envergo.moulinette.regulations.utils import compute_ru_compensation_ratio
+from envergo.moulinette.regulations.utils import (
+    compute_hedge_data,
+    compute_ru_compensation_ratio,
+    resolve_coeff_category,
+)
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -21,6 +25,12 @@ from envergo.moulinette.tests.utils import (
     make_hedge_factory,
     make_moulinette_haie_data,
     make_moulinette_haie_with_density,
+)
+
+REGIME_UNIQUE_HAIE_EVALUATOR_PATHS = (
+    "envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+    "envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
+    "envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
 )
 
 
@@ -37,10 +47,11 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            evaluator=evaluator_path,
             activation_map=france_map,
             activation_mode="department_centroid",
-        ),
+        )
+        for evaluator_path in REGIME_UNIQUE_HAIE_EVALUATOR_PATHS
     ]
     return criteria
 
@@ -83,8 +94,8 @@ def test_hru_criterion_non_concerne_in_ru_mode():
         ),
         (
             "alignement",
-            "non_disponible",
-            "non_disponible",
+            "non_concerne",
+            "non_concerne",
         ),
     ],
 )
@@ -105,18 +116,20 @@ def test_moulinette_evaluation_single_procedure(
 @pytest.mark.parametrize(
     "type_haie, expected_result",
     [
-        ("mixte", "non_disponible"),
-        ("alignement", "non_disponible"),
+        ("mixte", "non_concerne"),
+        ("alignement", "non_concerne"),
     ],
 )
 def test_moulinette_evaluation_outside_RU(type_haie, expected_result):
+    """Outside the régime unique, every hedge is HRU: the HRU criterion
+    activates and always returns non_concerne."""
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
-    assert moulinette.regime_unique_haie.criteria.count() == 0
+    assert moulinette.regime_unique_haie.criteria.count() == 1
 
 
 @pytest.mark.parametrize(
@@ -168,31 +181,47 @@ def make_zonage_map(zone_id, departments=None):
     return zonage_map
 
 
+def _zone_coeff(dx, *coeffs):
+    """Build one zone's coefficient dict from a values tuple.
+
+    Coeffs can be populated with:
+    - 6 values — the full ``(buissonnante_HD, buissonnante_LD, arbustive_HD,
+      arbustive_LD, arboree_HD, arboree_LD)`` matrix.
+    - 4 values — legacy ``(non_arboree_HD, non_arboree_LD, arboree_HD,
+      arboree_LD)``. buissonnante and arbustive both take the non_arboree
+      value.
+    """
+    if len(coeffs) == 6:
+        r1, r2, r3, r4, r5, r6 = coeffs
+    elif len(coeffs) == 4:
+        na_hd, na_ld, ar_hd, ar_ld = coeffs
+        r1, r2, r3, r4, r5, r6 = na_hd, na_ld, na_hd, na_ld, ar_hd, ar_ld
+    else:
+        raise ValueError(f"Expected 4 or 6 coefficients, got {len(coeffs)}")
+
+    return {
+        "X_densite": dx,
+        "R1_buissonnante_HD": r1,
+        "R2_buissonnante_LD": r2,
+        "R3_arbustive_HD": r3,
+        "R4_arbustive_LD": r4,
+        "R5_arboree_HD": r5,
+        "R6_arboree_LD": r6,
+    }
+
+
 def zone_settings(*zones, default=None):
     """Build a ``single_procedure_settings`` dict from zone configs.
 
-    Each zone is a ``(key, X_densite, R1_non_arboree_HD, R2_non_arboree_LD,
-    R3_arboree_HD, R4_arboree_LD)`` tuple. ``default`` follows the same
-    5-value convention.
+    Each zone is a ``(key, X_densite, *coeffs)`` tuple; ``default`` omits the
+    key. ``coeffs`` is either the full 6-value matrix or the 4-value legacy
+    shorthand — see ``_zone_coeff``.
     """
     coeff = {}
-    for key, dx, r1, r2, r3, r4 in zones:
-        coeff[key] = {
-            "X_densite": dx,
-            "R1_non_arboree_HD": r1,
-            "R2_non_arboree_LD": r2,
-            "R3_arboree_HD": r3,
-            "R4_arboree_LD": r4,
-        }
+    for key, *values in zones:
+        coeff[key] = _zone_coeff(*values)
     if default is not None:
-        dx, r1, r2, r3, r4 = default
-        coeff["default"] = {
-            "X_densite": dx,
-            "R1_non_arboree_HD": r1,
-            "R2_non_arboree_LD": r2,
-            "R3_arboree_HD": r3,
-            "R4_arboree_LD": r4,
-        }
+        coeff["default"] = _zone_coeff(*default)
     return {"coeff_compensation": coeff}
 
 
@@ -351,61 +380,38 @@ class TestZoneResolution:
 class TestPerHedgeCoefficients:
     """Test the density × hedge-type coefficient matrix."""
 
-    def test_arboree_high_density(self):
-        """Mixte hedge + density above threshold → R3_arboree_HD."""
-        settings = zone_settings(default=(60, 1.0, 1.1, 1.8, 2.0))
+    COEFFS = (60, 1.0, 1.1, 2.0, 2.1, 3.0, 3.1)
+
+    @pytest.mark.parametrize(
+        "type_haie, density, expected, expected_hd",
+        [
+            ("buissonnante", 80, 1.0, True),
+            ("buissonnante", 40, 1.1, False),
+            ("arbustive", 80, 2.0, True),
+            ("arbustive", 40, 2.1, False),
+            ("mixte", 80, 3.0, True),
+            ("mixte", 40, 3.1, False),
+        ],
+    )
+    def test_coefficient_by_type_and_density(
+        self, type_haie, density, expected, expected_hd
+    ):
+        """Each hedge type reads its own coefficient, split by density level."""
+        settings = zone_settings(default=self.COEFFS)
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
-            density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="mixte")],
+            density=density,
+            hedges=[make_hedge_factory(length=100, type_haie=type_haie)],
             reimplantation="replantation",
         )
         coefficients = raw_coefficients(moulinette)
-        assert list(coefficients.values()) == [1.8]
+        assert list(coefficients.values()) == [expected]
         zone_info = moulinette.catalog["ru_hedge_data"]
-        assert all(info["high_density"] is True for info in zone_info.values())
-
-    def test_arboree_low_density(self):
-        """Mixte hedge + density below threshold → R4_arboree_LD."""
-        settings = zone_settings(default=(60, 1.0, 1.1, 1.8, 2.0))
-        RUConfigHaieFactory(single_procedure_settings=settings)
-        moulinette = make_moulinette_haie_with_density(
-            density=40,
-            hedges=[make_hedge_factory(length=100, type_haie="mixte")],
-            reimplantation="replantation",
-        )
-        coefficients = raw_coefficients(moulinette)
-        assert list(coefficients.values()) == [2.0]
-        zone_info = moulinette.catalog["ru_hedge_data"]
-        assert all(info["high_density"] is False for info in zone_info.values())
-
-    def test_non_arboree_high_density(self):
-        """Non-mixte hedge + density above threshold → R1_non_arboree_HD."""
-        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
-        RUConfigHaieFactory(single_procedure_settings=settings)
-        moulinette = make_moulinette_haie_with_density(
-            density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
-            reimplantation="replantation",
-        )
-        coefficients = raw_coefficients(moulinette)
-        assert list(coefficients.values()) == [1.5]
-
-    def test_non_arboree_low_density(self):
-        """Non-mixte hedge + density below threshold → R2_non_arboree_LD."""
-        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
-        RUConfigHaieFactory(single_procedure_settings=settings)
-        moulinette = make_moulinette_haie_with_density(
-            density=40,
-            hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
-            reimplantation="replantation",
-        )
-        coefficients = raw_coefficients(moulinette)
-        assert list(coefficients.values()) == [1.7]
+        assert all(info["high_density"] is expected_hd for info in zone_info.values())
 
     def test_density_at_threshold_is_high(self):
         """Density exactly equal to X_densite counts as high density."""
-        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=self.COEFFS)
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=60,
@@ -415,22 +421,33 @@ class TestPerHedgeCoefficients:
         zone_info = moulinette.catalog["ru_hedge_data"]
         assert all(info["high_density"] is True for info in zone_info.values())
         coefficients = raw_coefficients(moulinette)
-        assert list(coefficients.values()) == [1.8]
+        assert list(coefficients.values()) == [3.0]
 
-    @pytest.mark.parametrize("type_haie", ["buissonnante", "arbustive"])
-    def test_all_non_mixte_types_are_non_arboree(self, type_haie):
-        """buissonnante, arbustive map to non_arboree (degradee is not valid in RU)."""
-        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
-        RUConfigHaieFactory(single_procedure_settings=settings)
-        moulinette = make_moulinette_haie_with_density(
-            density=80,
-            hedges=[make_hedge_factory(length=100, type_haie=type_haie)],
-            reimplantation="replantation",
-        )
-        coefficients = raw_coefficients(moulinette)
-        assert list(coefficients.values()) == [
-            1.5
-        ], f"{type_haie} should use R1_non_arboree_HD"
+    @pytest.mark.parametrize("hedge_type", ["degradee", "alignement", "unknown"])
+    def test_invalid_type_raises(self, hedge_type):
+        """Types that never occur as RU hedges to remove are a data error.
+
+        The moulinette form already blocks such hedges upstream, so this
+        guards the coefficient computation against corrupt/unexpected data.
+        """
+        with pytest.raises(ValueError, match="invalide pour le régime unique"):
+            resolve_coeff_category(hedge_type)
+
+    @pytest.mark.parametrize("hedge_type", ["degradee", "unknown"])
+    def test_invalid_type_yields_unresolved_record(self, hedge_type):
+        """A hedge whose type has no RU coefficient degrades to a zeroed,
+        unresolved record (zone_config=None) instead of raising. The record
+        flags the project non_disponible via ru_all_zones_resolved, the same
+        path as an unresolved zone. Guards evaluation against data bypassing
+        the RU form's client-side type filtering.
+        """
+        hedge = make_hedge_factory(length=100, type_haie=hedge_type)
+        zone_config = {"X_densite": 50, "R3_arbustive_HD": 2.0}
+
+        record = compute_hedge_data(hedge, "default", zone_config, density_400=80)
+
+        assert record["zone_config"] is None
+        assert record["raw_coefficient"] == 0.0
 
     def test_alignements_excluded_from_coefficients(self):
         """When all hedges are alignements, the RU evaluator is not loaded and
@@ -463,7 +480,7 @@ class TestCompensationRatio:
 
     def test_weighted_average_mixed_types(self):
         """Multiple hedges of different types → weighted average by length."""
-        # arboree_HD=2.0, non_arboree_HD=1.0
+        # arboree_HD=2.0 (R5), buissonnante_HD=1.0 (R1)
         settings = zone_settings(default=(60, 1.0, 1.5, 2.0, 2.5))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
@@ -508,7 +525,7 @@ class TestCompensationRatio:
             reimplantation="replantation",
         )
         evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
-        # zone_A, R3_arboree_HD = 4.0
+        # zone_A, R5_arboree_HD = 4.0
         assert evaluator.get_replantation_coefficient() == 4.0
 
 
@@ -582,7 +599,7 @@ class TestMultiZoneHedges:
         # Each hedge should be in its own zone
         assert zone_info[hedge_south.id]["zone_id"] == "zone_A"
         assert zone_info[hedge_north.id]["zone_id"] == "zone_B"
-        # R3_arboree_HD from respective zones
+        # R5_arboree_HD from respective zones
         assert coefficients[hedge_south.id] == 1.2
         assert coefficients[hedge_north.id] == 2.2
 
@@ -604,10 +621,10 @@ class TestMultiZoneHedges:
         )
         zone_info = moulinette.catalog["ru_hedge_data"]
         coefficients = raw_coefficients(moulinette)
-        # Zone A: density 60 >= X_densite 50 → HD → R1_non_arboree_HD=1.0
+        # Zone A: density 60 >= X_densite 50 → HD → arbustive → R3_arbustive_HD=1.0
         assert zone_info[hedge_south.id]["high_density"] is True
         assert coefficients[hedge_south.id] == 1.0
-        # Zone B: density 60 < X_densite 80 → LD → R2_non_arboree_LD=2.1
+        # Zone B: density 60 < X_densite 80 → LD → arbustive → R4_arbustive_LD=2.1
         assert zone_info[hedge_north.id]["high_density"] is False
         assert coefficients[hedge_north.id] == 2.1
 
@@ -677,7 +694,9 @@ class TestResultsByCategory:
         assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_by_category_dc_mode(self):
-        """In DC mode, all categories are non_active."""
+        """In DC mode, every hedge is HRU: the HRU criterion activates and
+        returns non_concerne. RU and L350-3 have no hedges, so they stay
+        non_disponible."""
         DCConfigHaieFactory()
         data = make_moulinette_haie_data(
             hedge_data=[make_hedge(type_haie="mixte")],
@@ -685,7 +704,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HedgeCategory.hru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.hru] == RESULTS.non_concerne
         assert rbc[HedgeCategory.ru] == RESULTS.non_disponible
         assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 

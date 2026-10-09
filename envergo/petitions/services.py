@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
+from envergo.demarchenumerique.models import DemarcheConfig
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
 from envergo.petitions.demarche_numerique.client import (
@@ -25,8 +26,8 @@ from envergo.petitions.demarche_numerique.models import (
     PieceJustificativeChamp,
     YesNoChamp,
 )
-from envergo.utils.mattermost import notify
-from envergo.utils.tools import display_form_details
+from envergo.utils.tchap import notify
+from envergo.utils.tools import display_form_details, get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +150,7 @@ def get_context_from_dn(petition_project) -> dict:
     """Get parts of context for instructor pages from Démarche numérique"""
     # Get ds details
     config = petition_project.config
+    dn_config = config.demarche_numerique_config
     dossier = get_demarche_numerique_dossier(petition_project)
 
     city_item = ""
@@ -159,21 +161,21 @@ def get_context_from_dn(petition_project) -> dict:
     applicant_email = ""
     representative = ""
 
-    display_dn_fields = config.demarche_numerique_display_fields
+    display_dn_fields = dn_config.display_fields
     if (
         not display_dn_fields.get("city", None)
         or not display_dn_fields.get("organization", None)
         or not display_dn_fields.get("pacage", None)
     ):
         logger.error(
-            "Missing « Démarche numérique » ids in Haie Config",
+            "Missing « Démarche numérique » ids in DemarcheNumerique",
             extra={
-                "config.id": config.id,
+                "demarchenumerique.id": dn_config.id,
             },
         )
         admin_url = reverse(
-            "admin:moulinette_confighaie_change",
-            args=[config.id],
+            "admin:demarchenumerique_demarcheconfig_change",
+            args=[dn_config.id],
         )
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         message = render_to_string(
@@ -187,11 +189,11 @@ def get_context_from_dn(petition_project) -> dict:
         notify(dedent(message), "haie")
 
     if dossier:
-        city_item = get_field_data_from_dn_dossier("city", config, dossier)
+        city_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
         organization_item = get_field_data_from_dn_dossier(
-            "organization", config, dossier
+            "organization", dn_config, dossier
         )
-        pacage_item = get_field_data_from_dn_dossier("pacage", config, dossier)
+        pacage_item = get_field_data_from_dn_dossier("pacage", dn_config, dossier)
         usager = dossier.usager.email or ""
         applicant = dossier.applicant_name or ""
         if dossier.demandeur:
@@ -200,7 +202,7 @@ def get_context_from_dn(petition_project) -> dict:
 
     context = {
         "demarche_numerique_dossier_number": petition_project.demarche_numerique_dossier_number,
-        "demarche_numerique_number": config.demarche_numerique_number,
+        "demarche_numerique_number": dn_config.demarche_numerique_number,
         "ds_info": {
             "usager": usager,
             "city": city_item.value if city_item else "",
@@ -215,13 +217,13 @@ def get_context_from_dn(petition_project) -> dict:
     return context
 
 
-def get_field_data_from_dn_dossier(field_name, config, dossier):
+def get_field_data_from_dn_dossier(field_name, dn_config: DemarcheConfig, dossier):
     """Get field value from dossier DN related to a given config and a DN dossier
     from a petition project.
 
-    `field_name` must be set in config.demarche_numerique_display_fields.
+    `field_name` must be set in config.demarche_numerique.display_fields.
     """
-    dn_field_id = config.demarche_numerique_display_fields.get(field_name, None)
+    dn_field_id = dn_config.display_fields.get(field_name, None)
     if not dn_field_id:
         return None
     champs = dossier.champs
@@ -330,6 +332,54 @@ def send_message_dossier_ds(petition_project, message_body, attachment_file=None
         )
 
     return response
+
+
+def declared_commune(petition_project):
+    """The commune the applicant declared, or "" when the dossier carries none."""
+    dossier = petition_project.prefetched_dossier
+    if not dossier:
+        return ""
+
+    dn_config = petition_project.config.demarche_numerique_config
+    commune_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
+    return commune_item.value if commune_item else ""
+
+
+def declaration_receipt_message(petition_project, received_on, due_date):
+    """Render the déclaration receipt for the applicant.
+
+    `received_on` is the day the déclaration or its additional documents reached
+    the guichet.
+    `due_date` ends the two month tacit agreement delay.
+    """
+    config = petition_project.config
+    hedge_data = petition_project.hedge_data
+
+    base_url = get_base_url(settings.ENVERGO_HAIE_DOMAIN)
+    consultation_path = reverse(
+        "petition_project",
+        args=[petition_project.reference],
+        urlconf="config.urls_haie",
+    )
+    consultation_url = f"{base_url}{consultation_path}"
+
+    return render_to_string(
+        "haie/petitions/declaration_receipt.txt",
+        context={
+            "department": petition_project.department,
+            "commune": declared_commune(petition_project),
+            "received_on": received_on,
+            "due_date": due_date,
+            "consultation_url": consultation_url,
+            "hedges_to_remove": hedge_data.hedges_to_remove(),
+            "hedges_to_plant": hedge_data.hedges_to_plant(),
+            "hedge_types": petition_project.hedge_types,
+            "prohibition_range_display": config.prohibition_range_display,
+            "first_allowed_work_date": config.first_allowed_work_date(due_date),
+            "config": config,
+            "faq_url": settings.HAIE_FAQ_URLS["SERVICE_USERS"],
+        },
+    )
 
 
 def get_item_value_from_ds_champ(champ):
@@ -574,7 +624,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
             if self.config:
                 dossier_url = (
                     self._petition_project.get_demarche_numerique_instructor_url(
-                        self.config.demarche_numerique_number
+                        self.config.demarche_numerique_config.demarche_numerique_number
                     )
                 )
 

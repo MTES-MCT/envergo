@@ -1,11 +1,10 @@
 import csv
 import io
 import logging
-import os
 
 import requests
 from django.conf import settings
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from config.celery_app import app
@@ -19,6 +18,7 @@ from envergo.hedges.models import (
     SpeciesHabitatFile,
 )
 from envergo.hedges.species_stubs import make_stub_scientific_name
+from envergo.utils.storages import download_source
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,23 @@ def process_species_habitat_file(task, object_id):
     habitat_file.import_log = ""
     habitat_file.import_status = None
     habitat_file.save()
+
+    try:
+        with transaction.atomic():
+            do_species_habitat_import(habitat_file, import_log)
+    except Exception as e:
+        logger.exception(f"Import failed for species habitat file {object_id}")
+        import_log.append(f"Erreur fatale : {e}")
+        habitat_file.refresh_from_db()
+        habitat_file.import_status = IMPORT_STATUSES.failure
+        habitat_file.task_id = None
+        habitat_file.import_date = timezone.now()
+        habitat_file.import_log = "\n".join(import_log)
+        habitat_file.save()
+
+
+def do_species_habitat_import(habitat_file, import_log):
+    """Run the actual import steps for a SpeciesHabitatFile."""
 
     # Clear existing data
     logger.info("Clearing existing data")
@@ -99,23 +116,20 @@ def process_species_habitat_file(task, object_id):
 
 
 def extract_file(field_file):
-    """Handle local and remote files."""
+    """Return the file's csv content, whatever the storage backend."""
 
-    if field_file.url.startswith("http"):
-        r = requests.get(
-            field_file.url, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
-        )
-        # utf-8-sig to remove the eventual bom
-        content = io.StringIO(r.content.decode("utf-8-sig"))
-        return content
-
-    elif os.path.exists(field_file.path):
-        with open(field_file.path, "rb") as f:
+    source = download_source(field_file)
+    if settings.SERVE_FILES_LOCALLY:
+        with open(source, "rb") as f:
             raw = f.read()
-        return io.StringIO(raw.decode("utf-8-sig"))
-
     else:
-        raise RuntimeError("File not found")
+        r = requests.get(
+            source, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
+        )
+        raw = r.content
+
+    # utf-8-sig to remove the eventual bom
+    return io.StringIO(raw.decode("utf-8-sig"))
 
 
 def process_species_habitat_row(row, habitat_file, import_log=None):

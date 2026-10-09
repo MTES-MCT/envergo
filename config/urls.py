@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
 
 from envergo.analytics.views import CSPReportView
+from envergo.confs.views import PrivateFileDownloadView, PublicFileDownloadView
 from envergo.pages.views import rate_limited, server_error
 from envergo.urlmappings.views import UrlMappingRedirect
 
@@ -24,6 +25,16 @@ urlpatterns = [
         name="urlmapping_redirect",
     ),
     path("csp/reports/", CSPReportView.as_view(), name="csp_report"),
+    path(
+        f"{settings.PUBLIC_FILES_URL_PREFIX}/<path:file_path>",
+        PublicFileDownloadView.as_view(),
+        name="public_file_download",
+    ),
+    path(
+        f"{settings.PRIVATE_FILES_URL_PREFIX}/<path:file_path>",
+        PrivateFileDownloadView.as_view(),
+        name="private_file_download",
+    ),
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

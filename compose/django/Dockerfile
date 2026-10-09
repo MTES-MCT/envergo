@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   build-essential
 
 # build assets
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
   && apt-get install -y nodejs
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js and npm
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
   && apt-get install -y nodejs
 
 RUN locale-gen fr_FR.UTF-8 && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
@@ -78,8 +78,5 @@ RUN chmod +x /start
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
-
-# This is required because we disabled all npm scripts in .npmrc
-RUN node node_modules/optipng-bin/lib/install.js
 
 ENTRYPOINT ["/entrypoint"]

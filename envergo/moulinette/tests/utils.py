@@ -4,7 +4,17 @@ Provides helpers to reduce boilerplate when constructing moulinette test data,
 creating regulation/criterion combos, and building hedge scenarios.
 """
 
-from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
+from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.core.cache import cache
+
+from envergo.geodata.tests.factories import MapFactory, ZoneFactory
+from envergo.hedges import density as density_module
+from envergo.hedges.tests.factories import (
+    HedgeDataFactory,
+    HedgeFactory,
+    SpeciesFactory,
+    SpeciesHabitatFactory,
+)
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -196,34 +206,32 @@ def make_moulinette_haie_data(
     return {"initial": data, "data": data}
 
 
-def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **extra):
-    """Build a MoulinetteHaie with pre-populated line-buffer density.
+def prefill_density_cache(hedge_data, density):
+    """Pre-fill the line-buffer density cache for a HedgeData instance.
 
-    Pre-fills the HedgeData density cache so evaluators that read
-    density_around_lines get the supplied value without hitting the
-    database or needing an active mock.
+    Assumes single-category test data: the cache key targets all hedges to
+    remove, which is the subset evaluators request.
     """
+    cache_key = density_module.lines_cache_key(hedge_data.hedges_to_remove(), 400)
+    cache.set(
+        cache_key,
+        {
+            "density_400": density,
+            "length_400": 3000,
+            "area_400_ha": 50.0,
+        },
+        None,
+    )
+
+
+def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **extra):
+    """Build a MoulinetteHaie with pre-populated line-buffer density."""
     data = make_moulinette_haie_data(
         hedges=hedges,
         hedge_data=hedge_data,
         **extra,
     )
-    # Pre-populate the lazy cache so density_around_lines returns our value
-    # without calling compute_density_around_lines_with_artifacts.
-    # The cache key targets all hedges to remove: this assumes the test data
-    # holds a single category, so the evaluators request that exact subset.
-    hedge_data_instance = data["data"]["haies"]
-    cache_key = hedge_data_instance.around_lines_cache_key(
-        hedge_data_instance.hedges_to_remove()
-    )
-    hedge_data_instance._density = {
-        cache_key: {
-            "density_400": density,
-            "length_400": 3000,
-            "area_400_ha": 50.0,
-        },
-    }
-    hedge_data_instance.save()
+    prefill_density_cache(data["data"]["haies"], density)
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors
@@ -287,13 +295,42 @@ def setup_loi_sur_leau(activation_map, include_optional=True):
 
 
 def setup_conditionnalite_pac(activation_map):
-    """Create Conditionnalité PAC regulation with BCAE8 criterion."""
+    """Create Conditionnalité PAC regulation with the pre-régime unique BCAE8 criterion."""
     regulation = RegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="BCAE 8",
             regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return regulation, criteria
+
+
+def setup_conditionnalite_pac_ru(activation_map):
+    """Create Conditionnalité PAC regulation with the régime unique BCAE8 criteria."""
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    criteria = [
+        CriterionFactory(
+            title="BCAE 8 (régime unique)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Ru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="BCAE 8 (hors régime unique)",
+            regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="BCAE 8 (L350-3)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8L3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),
@@ -387,11 +424,12 @@ EP_RU_DEFAULT_SETTINGS = {
 
 
 def setup_ep_regime_unique(activation_map, evaluator_settings=None):
-    """Create EP regulation with EspecesProtegeesRegimeUnique criterion.
+    """Create EP regulation with the three criteria a régime unique department has.
 
-    The criterion is configured with ``EP_RU_DEFAULT_SETTINGS`` unless the
-    caller passes a custom ``evaluator_settings`` dict (e.g. to test the
-    non_disponible path).
+    Mirrors the production setup: one criterion per hedge category (RU, HRU,
+    L350-3), so tests can exercise multi-category projects. The RU criterion is
+    configured with ``EP_RU_DEFAULT_SETTINGS`` unless the caller passes a custom
+    ``evaluator_settings`` dict (e.g. to test the non_disponible path).
     """
     if evaluator_settings is None:
         evaluator_settings = EP_RU_DEFAULT_SETTINGS
@@ -402,13 +440,67 @@ def setup_ep_regime_unique(activation_map, evaluator_settings=None):
         CriterionFactory(
             title="EP Régime Unique",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique",
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesRu",
             evaluator_settings=evaluator_settings,
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="EP hors régime unique",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesHru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="EP alignements d'arbres L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesL3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),
     ]
     return regulation, criteria
+
+
+# Default HedgeFactory places hedges near (lng=3.584, lat=43.687).
+# This polygon covers that area so RU zone queries find it within 400m.
+HEDGE_AREA_POLYGON = Polygon(
+    [
+        (3.580, 43.685),
+        (3.590, 43.685),
+        (3.590, 43.690),
+        (3.580, 43.690),
+        (3.580, 43.685),
+    ]
+)
+
+
+DEFAULT_HABITAT_HEDGE_TYPES = ["degradee", "buissonnante", "arbustive", "mixte"]
+
+
+def setup_species_near_hedges(species_specs, hedge_types=None):
+    """Create species with SpeciesHabitats on a map covering the default hedge area."""
+    map_obj = MapFactory(map_type="species", zones=None)
+    cd_refs = [spec["cd_ref"] for spec in species_specs]
+    ZoneFactory(
+        map=map_obj,
+        geometry=MultiPolygon([HEDGE_AREA_POLYGON]),
+        species_taxrefs=cd_refs,
+    )
+    species_list = []
+    for spec in species_specs:
+        fields = dict(spec)
+        level = fields.pop("level")
+        sp = SpeciesFactory(**fields)
+        SpeciesHabitatFactory(
+            species=sp,
+            map=map_obj,
+            hedge_types=hedge_types or DEFAULT_HABITAT_HEDGE_TYPES,
+            level_of_concern=level,
+        )
+        species_list.append(sp)
+    return species_list
 
 
 def setup_regime_unique_haie(activation_map):

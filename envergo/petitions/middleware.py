@@ -99,6 +99,9 @@ class HandleInvitationTokenMiddleware:
             if invitation.is_valid(request.user):
                 invitation.user = request.user
                 invitation.save()
+                # the user gains access to the project: the permission checks
+                # further down this request must not use the cached role
+                request.user.clear_access_cache()
 
                 messages.info(request, "Un dossier a été rattaché à votre compte.")
 

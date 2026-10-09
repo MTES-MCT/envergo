@@ -22,6 +22,7 @@ from scipy.interpolate import griddata
 
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
+from envergo.utils.storages import download_source
 
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
@@ -38,6 +39,9 @@ GOOGLE_MAPS_URL = (
 )
 GEOPORTAIL_URL = (
     "https://www.geoportail-urbanisme.gouv.fr/map/#tile=1&lon={0}&lat={1}&zoom={2}"
+)
+CARTES_GOUV_FR_URL = (
+    "https://cartes.gouv.fr/explorer-les-cartes/?c={0},{1}&z={2}&permalink=yes"
 )
 
 
@@ -169,9 +173,9 @@ def extract_map(archive):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
 
-        # Local files also get an url, but its just unreachable
-        elif hasattr(archive, "url") and archive.url.startswith("http"):
-            yield archive.url
+        # GDAL fetches over plain HTTP with no session: real S3 url, not proxy url.
+        elif hasattr(archive, "storage"):
+            yield download_source(archive)
         elif hasattr(archive, "path"):
             yield archive.path
         else:
@@ -678,19 +682,21 @@ WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
 def query_hedge_length(truncated_buffer, untruncated_circle):
     """Sum the geodetic length of hedges clipped to the truncated buffer.
 
-    Only hedges inside the truncated buffer (circle ∩ terres émergées) count
-    toward density. The buffer is a complex polygon; the raw circle is simple.
-    Each candidate hedge is measured by one of two paths:
+    Long comment because many iterations were spent improving this heavy query.
 
-      Fast path — hedge covered by the circle and clear of the excluded
-        (sea / forest) zone: measure it whole, skipping the costly clip.
-      Slow path — hedge straddles a boundary: clip to the buffer first.
+    Only hedges inside the truncated buffer (circle ∩ terres émergées) count
+    toward density. Each candidate hedge is measured by one of two paths:
+
+      Fast path — hedge covered by the truncated buffer: measure it whole,
+        skipping the costly clip.
+      Slow path — hedge straddles a boundary (coast, forest, circle edge):
+        clip to the buffer first.
 
     trunc is sanitized (ST_MakeValid + ST_CollectionExtract): land-trimmed
     buffers can carry degenerate holes (see trim_land).
 
-    The clip casts hedges to ::geometry so it runs in planar 4326, the plane
-    the buffer was built in. Predicates stay on geography for the GIST index.
+    Hedges are filtered as geography (GIST index) but tested and clipped as
+    planar geometry: the prepared-geometry cache there makes it ~5x faster.
 
     Args:
         truncated_buffer: land-trimmed polygon, or None if off-land.
@@ -710,29 +716,35 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                     ST_MakeValid(ST_GeomFromEWKT(%(truncated)s)), 3) AS trunc,
                 ST_GeomFromEWKT(%(circle)s) AS circ
         ),
-        -- zones: adds the excluded area (circle minus buffer = sea / forest).
-        zones AS (
-            SELECT trunc, circ,
-                ST_Difference(ST_MakeValid(circ), trunc) AS excluded
-            FROM inputs
-        ),
+
         -- candidates: hedges inside the circle, with fast/slow path flag.
         candidates AS (
             SELECT
                 l.geometry::geometry AS hedge,
-                zones.trunc,
-                ST_CoveredBy(l.geometry, zones.circ)
-                    AND NOT ST_Intersects(l.geometry, zones.excluded)
-                        AS fully_inside
+                inputs.trunc,
+                ST_Covers(inputs.trunc, l.geometry::geometry) AS fully_inside
             FROM geodata_line l
             JOIN geodata_map m ON l.map_id = m.id
-            CROSS JOIN zones
+            CROSS JOIN inputs
             WHERE m.map_type = %(map_type)s
-              AND ST_Intersects(l.geometry, zones.circ)
+              AND ST_Intersects(l.geometry, inputs.circ)
         )
+
+        -- Sum the hedges lengths
         SELECT COALESCE(SUM(ST_LengthSpheroid(
-            CASE WHEN fully_inside THEN hedge
-                 ELSE ST_Intersection(hedge, trunc) END,
+            CASE WHEN fully_inside
+                -- Full length when hedge is fully inside the buffer
+                THEN hedge
+
+                -- Only the part inside the buffer otherwise
+                ELSE ST_Intersection(
+                    hedge,
+                    -- Pre-clipping the buffer to the hedge's bounding box speeds the query ~20%%.
+                    -- ClipByBox2D can output invalid shapes that crash ST_Intersection.
+                    ST_MakeValid(ST_ClipByBox2D(
+                          trunc,
+                          ST_Expand(ST_Envelope(hedge), 0.0001))))
+            END,
             %(spheroid)s
         )), 0)
         FROM candidates;
@@ -754,14 +766,7 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
 def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
     """Return hedge geometries clipped to the truncated buffer for display.
 
-    Uses the same CTE excluded-zone strategy as `query_hedge_length` — see
-    its docstring for the trunc sanitization and the ::geometry casts:
-
-      Fast path — hedge fully inside the truncated buffer (covered by the
-        simple circle and not touching the excluded zone): return as-is.
-
-      Slow path — hedge crosses a boundary (coast, forest, circle edge):
-        clip against the truncated buffer via ST_Intersection.
+    See `query_hedge_length` for details
 
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """
@@ -772,25 +777,21 @@ def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
                 ST_CollectionExtract(
                     ST_MakeValid(ST_GeomFromEWKT(%(truncated)s)), 3) AS trunc,
                 ST_GeomFromEWKT(%(circle)s) AS circ
-        ),
-        zones AS (
-            SELECT trunc, circ,
-                ST_Difference(ST_MakeValid(circ), trunc) AS excluded
-            FROM inputs
         )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
             CASE
-                WHEN ST_CoveredBy(l.geometry, zones.circ)
-                     AND NOT ST_Intersects(l.geometry, zones.excluded)
+                WHEN ST_Covers(inputs.trunc, l.geometry::geometry)
                 THEN l.geometry::geometry
-                ELSE ST_Intersection(l.geometry::geometry, zones.trunc)
+                ELSE ST_Intersection(l.geometry::geometry,
+                     ST_MakeValid(ST_ClipByBox2D(inputs.trunc,
+                         ST_Expand(ST_Envelope(l.geometry::geometry), 0.0001))))
             END
         ), 2))
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
-        CROSS JOIN zones
+        CROSS JOIN inputs
         WHERE m.map_type = %(map_type)s
-          AND ST_Intersects(l.geometry, zones.circ);
+          AND ST_Intersects(l.geometry, inputs.circ);
     """
     params = {
         "map_type": MAP_TYPES.haies,
@@ -942,19 +943,19 @@ def compute_hedge_density_around_lines(
     return {"density": density, "artifacts": artifacts}
 
 
-def _get_centered_url(url, hedges: "HedgeList"):
+def _get_centered_url(url, hedges: "HedgeList", zoom=None):
     lng = FRANCE_LNG
     lat = FRANCE_LAT
-    zoom = FRANCE_ZOOM
+    default_zoom = FRANCE_ZOOM
 
     if hedges:
         # Generate urls centered on the project
         centroid = hedges.to_remove().centroid
         lng = centroid.x
         lat = centroid.y
-        zoom = 16
+        default_zoom = 16
 
-    return url.format(lng, lat, zoom)
+    return url.format(lng, lat, zoom if zoom is not None else default_zoom)
 
 
 def get_google_maps_centered_url(hedges: "HedgeList"):
@@ -965,6 +966,11 @@ def get_google_maps_centered_url(hedges: "HedgeList"):
 def get_ign_centered_url(hedges: "HedgeList"):
     """Return the IGN URL centered on the hedges to remove."""
     return _get_centered_url(IGN_URL, hedges)
+
+
+def get_cartes_gouv_fr_centered_url(hedges: "HedgeList", zoom=None, layer=None):
+    """Return the cartes.gouv.fr URL centered on the hedges to remove."""
+    return f"{_get_centered_url(CARTES_GOUV_FR_URL, hedges, zoom)}{f"&l={layer}" if layer else ""}"
 
 
 def get_geoportail_urbanisme_centered_url(hedges: "HedgeList"):

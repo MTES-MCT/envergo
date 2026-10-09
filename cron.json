@@ -19,6 +19,10 @@
     {
       "command": "0 2 * * 1 python manage.py obsolete_moulinette_template_admin_alert",
       "size": "M"
+    },
+    {
+      "command": "0 4 * * * bash bin/sync_stats_db.sh",
+      "size": "M"
     }
   ]
 }

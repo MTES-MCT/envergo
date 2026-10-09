@@ -5,6 +5,7 @@ from typing import Literal
 from django import template
 from django.template import TemplateDoesNotExist
 from django.template.defaultfilters import date as date_filter
+from django.template.defaultfilters import pluralize
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
@@ -187,7 +188,7 @@ def stage_badge(stage, is_small=True):
     color = color_map.get(stage, None)
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
     badge_color_class = f"fr-badge--{color}" if color else ""
-    badge_size_class = "fr-badge--sm fr-ml-n1v" if is_small else "badge--lg fr-ml-n3v"
+    badge_size_class = "fr-badge--sm" if is_small else "badge--lg fr-ml-n3v"
 
     return mark_safe(
         f"""<p class="fr-badge {badge_color_class}  {badge_size_class}">
@@ -228,60 +229,40 @@ def decision_badge(decision, is_light=False):
 
 
 @register.simple_tag
-def display_due_date(due_date, display_days_left=True, self_explanatory_label=False):
+def display_due_date(due_date, self_explanatory_label=False):
+    """Display project due date"""
     if not due_date or not isinstance(due_date, date):
         return mark_safe(
             f'<span class="due-date">{"Échéance à" if self_explanatory_label else "À"} renseigner</span>'
         )
 
+    # Select color and icon left time
     days_left = (due_date - date.today()).days
     if days_left >= 7:
-        icon_part = '<span class="fr-icon-timer-line fr-icon--sm"></span>'
+        icon_part = "timer-line"
+        color = ""
     elif days_left >= 0:
-        icon_part = '<span class="fr-icon-hourglass-2-fill fr-icon--sm"></span>'
+        icon_part = "hourglass-2-fill"
+        color = "orange "
     else:
-        icon_part = '<span class="fr-icon-warning-fill fr-icon--sm"></span>'
+        icon_part = "warning-fill"
+        color = "red "
 
-    date_part = f"""<span class="due-date fr-text--sm">
-                {icon_part}
-                {date_filter(due_date, "SHORT_DATE_FORMAT")}
-              </span>"""
+    date_part = f"""<span class="fr-icon-{icon_part} fr-icon--sm"></span> {date_filter(due_date, "d N")}"""
 
-    if not display_days_left:
-        days_left_part = ""
-    elif days_left >= 2:
-        days_left_part = (
-            f'<br/><span class="days-left">{days_left} jours restants</span>'
-        )
-    elif days_left >= 0:
-        days_left_part = f'<br/><span class="days-left">{days_left} jour restant</span>'
-    elif days_left >= -1:
-        days_left_part = (
-            f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
-        )
-    elif days_left:
-        days_left_part = f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
-    else:
-        days_left_part = ""
+    days_left_content = ""
+    plural = pluralize(days_left)
+    if days_left > 0:
+        days_left_content = f"{days_left} j restant{plural}"
+    elif days_left == 0:
+        days_left_content = f"{days_left} j restant"  # Yes plural puts an "s"
+    elif days_left < 0:
+        days_left_content = f"retard {abs(days_left)} j"
 
-    return mark_safe(date_part + days_left_part)
-
-
-@register.simple_tag
-def display_pause(due_date):
-    days_left = (due_date - date.today()).days
-    if days_left >= 7:
-        icon_class = ""
-    elif days_left >= 0:
-        icon_class = "orange"
-    else:
-        icon_class = "red"
+    days_left_part = f'(<span class="days-left">{days_left_content}</span>)'
 
     return mark_safe(
-        f"""<span class="due-date fr-text--sm">
-                <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
-                Attente de compléments
-              </span>"""
+        f"""<span class="due-date displayed {color}">{date_part} {days_left_part}</span>"""
     )
 
 
@@ -298,13 +279,13 @@ def get_ds_field(context, field_name):
     ds_dossier = get_demarche_numerique_dossier(petition_project)
     if ds_dossier is None:
         return None
-    config = context.get("moulinette").config
+    dn_config = context.get("moulinette").config.demarche_numerique_config
 
-    return get_field_data_from_dn_dossier(field_name, config, ds_dossier)
+    return get_field_data_from_dn_dossier(field_name, dn_config, ds_dossier)
 
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
-def display_ds_field(context, field_name, inline=False):
+def display_dn_field(context, field_name, inline=False, label=None):
     """Includes template to display a field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
@@ -315,13 +296,21 @@ def display_ds_field(context, field_name, inline=False):
     item = get_ds_field(context, field_name)
     if not item:
         return {}
+    if label:
+        item.label = label
     return {"item": item, "inline": bool(inline)}
 
 
 @register.filter
-def has_edit_permission(user, project):
+def has_change_permission(user, project):
     """Check if the user can edit the project."""
     return project.has_change_permission(user)
+
+
+@register.filter
+def has_view_permission(user, project):
+    """Check if the user can view the project."""
+    return project.has_view_permission(user)
 
 
 @register.simple_tag

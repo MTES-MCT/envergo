@@ -55,7 +55,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -122,10 +122,12 @@ def test_moulinette_result_alignement():
             "coeff_compensation": {
                 "default": {
                     "X_densite": 60,
-                    "R1_non_arboree_HD": 1.5,
-                    "R2_non_arboree_LD": 1.5,
-                    "R3_arboree_HD": 1.5,
-                    "R4_arboree_LD": 1.5,
+                    "R1_buissonnante_HD": 1.5,
+                    "R2_buissonnante_LD": 1.5,
+                    "R3_arbustive_HD": 1.5,
+                    "R4_arbustive_LD": 1.5,
+                    "R5_arboree_HD": 1.5,
+                    "R6_arboree_LD": 1.5,
                 }
             }
         },
@@ -228,10 +230,12 @@ def test_moulinette_result_interdit():
         "coeff_compensation": {
             "default": {
                 "X_densite": 60,
-                "R1_non_arboree_HD": 1.5,
-                "R2_non_arboree_LD": 1.5,
-                "R3_arboree_HD": 1.5,
-                "R4_arboree_LD": 1.5,
+                "R1_buissonnante_HD": 1.5,
+                "R2_buissonnante_LD": 1.5,
+                "R3_arbustive_HD": 1.5,
+                "R4_arbustive_LD": 1.5,
+                "R5_arboree_HD": 1.5,
+                "R6_arboree_LD": 1.5,
             }
         }
     }

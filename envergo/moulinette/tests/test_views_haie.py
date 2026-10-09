@@ -19,6 +19,12 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import (
+    make_hedge_factory,
+    prefill_density_cache,
+    setup_ep_regime_unique,
+)
+from envergo.petitions.tests.factories import PetitionProjectFactory
 
 pytestmark = pytest.mark.haie
 
@@ -39,7 +45,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
             activation_map=loire_atlantique_map,
             activation_mode="department_centroid",
         ),
@@ -116,6 +122,77 @@ def test_triage_result(client):
     # THEN redirect to homepage
     assert res.status_code == 302
     assert res.url == "/#simulateur"
+
+
+def test_moulinette_form_exposes_the_petition_project_context(client):
+    """The Haie form is petition-project aware, unlike the Amenagement one."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    url = reverse("moulinette_form")
+    params = (
+        "department=44&element=haie&travaux=destruction&contexte=non"
+        f"&project_reference={project.reference}"
+    )
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    assert res.context["petition_project"].id == project.id
+    assert project.reference in res.context["add_simulation_url"]
+
+
+def test_moulinette_result_exposes_the_petition_project_context(client):
+    """The result page gets the context from the mixin, with no call of its own."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory()
+    project = PetitionProjectFactory()
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+        "project_reference": project.reference,
+    }
+    url = reverse("moulinette_result")
+    res = client.get(f"{url}?{urlencode(data)}")
+
+    assert res.status_code == 200
+    assert res.context["petition_project"].id == project.id
+    assert project.reference in res.context["add_simulation_url"]
+
+
+def test_moulinette_form_ignores_an_unknown_project_reference(client):
+    """An unknown reference must degrade quietly, not break the page."""
+    DCConfigHaieFactory()
+
+    url = reverse("moulinette_form")
+    params = (
+        "department=44&element=haie&travaux=destruction&contexte=non"
+        "&project_reference=NOPE"
+    )
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    assert "petition_project" not in res.context
+
+
+def test_moulinette_form_without_a_project_reference(client):
+    """The form is normally reached without any project at all."""
+    DCConfigHaieFactory()
+
+    url = reverse("moulinette_form")
+    params = "department=44&element=haie&travaux=destruction&contexte=non"
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    assert "petition_project" not in res.context
 
 
 def test_moulinette_form_with_invalid_triage(client):
@@ -302,6 +379,38 @@ def test_result_p_view(mock_R, client):
     assert Event.objects.get(
         category="simulateur", event="soumission_p", metadata__user_type="anonymous"
     )
+
+
+def test_result_d_view_shows_species_cortege(client, france_map):
+    """The simulation result page shows the species cortege in the EP RU criterion result."""
+    RUConfigHaieFactory()
+    setup_ep_regime_unique(france_map)
+    hedges = HedgeDataFactory(hedges=[make_hedge_factory(length=50)])
+    prefill_density_cache(hedges, density=60)
+
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result")
+    res = client.get(f"{url}?{urlencode(data)}", follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        in content
+    )
+    assert "Voir plus de détails" in content
 
 
 def test_moulinette_post_form_error(client):
@@ -529,8 +638,8 @@ def test_confighaie_home_view(
     herault_department,  # noqa
     loire_atlantique_department,  # noqa
     haie_user,
-    haie_instructor_no_dept,
-    haie_instructor_44,
+    haie_coordinator_no_dept,
+    haie_coordinator_44,
     admin_user,
 ):
     """Test config haie settings homepage view"""
@@ -563,7 +672,7 @@ def test_confighaie_home_view(
     )
 
     # GIVEN an instructor user with right to 0 department
-    client.force_login(haie_instructor_no_dept)
+    client.force_login(haie_coordinator_no_dept)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN department config page is displayed
@@ -580,7 +689,7 @@ def test_confighaie_home_view(
     )
 
     # GIVEN an instructor user
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN department config page is displayed
@@ -605,7 +714,7 @@ def test_confighaie_settings_view(
     herault_department,  # noqa
     haie_user,
     haie_user_44,
-    haie_instructor_44,
+    haie_coordinator_44,
     admin_user,
 ):
     """Test config haie settings view"""
@@ -639,7 +748,7 @@ def test_confighaie_settings_view(
     assert response.status_code == 403
 
     # GIVEN an instructor user
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN department config page is displayed because only one is displayed
@@ -648,7 +757,7 @@ def test_confighaie_settings_view(
     assert "Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
     assert haie_user.email not in content
-    assert haie_instructor_44.email in content
+    assert haie_coordinator_44.email in content
     assert admin_user.email not in content
 
     # GIVEN an admin user
@@ -669,7 +778,7 @@ def test_confighaie_settings_view(
 
 def test_confighaie_settings_view_map_display(
     client,
-    haie_instructor_44,
+    haie_coordinator_44,
     loire_atlantique_department,  # noqa: F811
     bizous_town_center,  # noqa: F811
     france_map,  # noqa: F811
@@ -689,7 +798,7 @@ def test_confighaie_settings_view_map_display(
     CriterionFactory(
         title="Code rural L126-3",
         regulation=regulation_code_rural,
-        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRural",
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRuralHru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -707,7 +816,7 @@ def test_confighaie_settings_view_map_display(
         title="Réserves Naturelles > RN Bizous",
         regulation=regulation_reserves_naturelles,
         perimeter=perimeter_reserves_naturelles,
-        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturelles",
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesRu",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
     ),
@@ -727,7 +836,7 @@ def test_confighaie_settings_view_map_display(
         title="Natura 2000 Haie > Haie Bizous",
         regulation=regulation_natura2000_haie,
         perimeter=perimeter_natura2000_haie,
-        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieHru",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
@@ -737,7 +846,7 @@ def test_confighaie_settings_view_map_display(
         title="Natura 2000 Haie > Haie Bizous après 2020",
         regulation=regulation_natura2000_haie,
         perimeter=perimeter_natura2000_haie,
-        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieHru",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
@@ -745,7 +854,7 @@ def test_confighaie_settings_view_map_display(
     )
 
     # AS instructor user in 44
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     # WHEN they visit department setting page
     url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url)
@@ -790,7 +899,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         title="Sites Patrimoniaux Remarquables",
         regulation=sites_proteges_regulation,
         perimeter=spr_perimeter,
-        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaie",
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaieHru",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
     )
@@ -799,7 +908,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         title="Natura 2000 Haie > Haie Bizous",
         regulation=n2000_regulation,
         perimeter=n2000_perimeter,
-        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieHru",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
@@ -855,8 +964,10 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
     # # Given a department configured as régime unique
     config_44.delete()
     RUConfigHaieFactory()
-    # WHEN requesting the result plantation page with droit constant
-    res = client.get(f"{url}?{query}")
+    # WHEN requesting the result plantation page with RU config
+    ru_data = {k: v for k, v in data.items() if k != "reimplantation"}
+    ru_query = urlencode(ru_data)
+    res = client.get(f"{url}?{ru_query}")
 
     # THEN the result page is displayed with a warning listing only regulations that can be in "autorisation"
     assert (
@@ -873,7 +984,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
 def test_confighaie_settings_view_with_multiple_configs(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """Settings view redirects to config list view when multiple exist."""
     from datetime import timedelta
@@ -892,7 +1003,7 @@ def test_confighaie_settings_view_with_multiple_configs(
         validity_range=DateRange(today, tomorrow, "[)"),
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url, follow=True)
     # THEN redirection to confighaie list page
@@ -904,7 +1015,7 @@ def test_confighaie_settings_view_with_multiple_configs(
 def test_confighaie_detail_by_date_slug(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """Accessing /parametrage/{dep}/{date_slug}/ returns the matching config."""
     from datetime import timedelta
@@ -922,7 +1033,7 @@ def test_confighaie_detail_by_date_slug(
         validity_range=DateRange(today, tomorrow, "[)"),
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Access the old config by its date slug ({start}_{end})
     slug = f"{one_year_ago.isoformat()}_{today.isoformat()}"
@@ -939,7 +1050,7 @@ def test_confighaie_detail_by_date_slug(
 def test_confighaie_detail_permanent_slug(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """The 'permanent' slug matches a config with no validity_range."""
     permanent_config = DCConfigHaieFactory(
@@ -947,7 +1058,7 @@ def test_confighaie_detail_permanent_slug(
         validity_range=None,
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse(
         "confighaie_detail",
         kwargs={"department": "44", "date_slug": "permanent"},
@@ -961,12 +1072,12 @@ def test_confighaie_detail_permanent_slug(
 def test_confighaie_detail_invalid_slug_returns_404_with_link_to_config_list_view(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """An unknown date slug returns 404."""
     DCConfigHaieFactory(department=loire_atlantique_department)
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Well-formed slug that matches no config
     url = reverse(
@@ -990,7 +1101,7 @@ def test_confighaie_detail_invalid_slug_returns_404_with_link_to_config_list_vie
 def test_confighaie_settings_by_date_query_param(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """?date= returns the config valid at that date."""
     from datetime import timedelta
@@ -1008,7 +1119,7 @@ def test_confighaie_settings_by_date_query_param(
         validity_range=DateRange(today, tomorrow, "[)"),
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
     # A date inside the old range returns the old config
@@ -1026,7 +1137,7 @@ def test_confighaie_settings_by_date_query_param(
 def test_confighaie_settings_by_date_matches_permanent_config(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """?date= matches a config with no validity_range (always valid)."""
     permanent_config = DCConfigHaieFactory(
@@ -1034,7 +1145,7 @@ def test_confighaie_settings_by_date_matches_permanent_config(
         validity_range=None,
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url, {"date": date.today().isoformat()})
 
@@ -1045,7 +1156,7 @@ def test_confighaie_settings_by_date_matches_permanent_config(
 def test_confighaie_settings_by_date_no_match_returns_404(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """?date= with no config valid at that date, or a malformed date, returns 404."""
     from datetime import timedelta
@@ -1057,7 +1168,7 @@ def test_confighaie_settings_by_date_no_match_returns_404(
         validity_range=DateRange(one_year_ago, today, "[)"),
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
     # No config valid at a far-future date
@@ -1074,7 +1185,7 @@ def test_confighaie_settings_by_date_no_match_returns_404(
 def test_confighaie_date_slug_takes_precedence_over_date_query_param(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """When both date_slug and ?date= are present, date_slug wins."""
     from datetime import timedelta
@@ -1092,7 +1203,7 @@ def test_confighaie_date_slug_takes_precedence_over_date_query_param(
         validity_range=DateRange(today, tomorrow, "[)"),
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     slug = f"{one_year_ago.isoformat()}_{today.isoformat()}"
     url = reverse(
         "confighaie_detail",
@@ -1108,12 +1219,12 @@ def test_confighaie_date_slug_takes_precedence_over_date_query_param(
 def test_old_parametrage_url_redirects(
     client,
     loire_atlantique_department,  # noqa
-    haie_instructor_44,
+    haie_coordinator_44,
 ):
     """The old /moulinette/parametrage/{dep}/ URL permanently redirects."""
     DCConfigHaieFactory(department=loire_atlantique_department)
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get("/simulateur/parametrage/44/")
 
     assert response.status_code == 301
@@ -1182,3 +1293,208 @@ def test_triage_nul_byte_in_department(client):
     url = reverse("triage")
     res = client.get(f"{url}?department=44%00")
     assert res.status_code in (200, 302)
+
+
+class TestReimplantationFieldRemoval:
+    """In regime unique, the reimplantation question is removed from the
+    main form. When regime unique is not activated, it stays visible and
+    required.
+
+    When absent from the submitted data (RU or saved simulations),
+    criteria that need it fall back to "replantation".
+    """
+
+    REIMPLANTATION_LABEL = "Est-il prévu de planter une nouvelle haie"
+
+    def test_field_not_shown_on_form_page_ru(self, client):
+        """Regime unique: the reimplantation question does not appear."""
+        RUConfigHaieFactory()
+        url = reverse("moulinette_form")
+        params = "department=44&element=haie&travaux=destruction&contexte=non"
+        res = client.get(f"{url}?{params}")
+
+        assert res.status_code == 200
+        assert self.REIMPLANTATION_LABEL not in res.content.decode()
+
+    def test_simulation_valid_without_reimplantation_ru(self, client):
+        """Regime unique: a simulation is valid without reimplantation."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=False,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_form")
+        triage = urlencode(
+            {
+                "department": "44",
+                "element": "haie",
+                "travaux": "destruction",
+                "contexte": "non",
+            }
+        )
+        data = {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "localisation_pac": "non",
+            "haies": str(hedges.id),
+        }
+        res = client.post(f"{url}?{triage}", data)
+
+        assert FORM_ERROR not in res.content.decode()
+
+    def test_field_shown_on_form_page_dc(self, client):
+        """Regime unique not activated: the reimplantation question appears."""
+        DCConfigHaieFactory()
+        url = reverse("moulinette_form")
+        params = "department=44&element=haie&travaux=destruction&contexte=non"
+        res = client.get(f"{url}?{params}")
+
+        assert res.status_code == 200
+        assert self.REIMPLANTATION_LABEL in res.content.decode()
+
+    def test_default_value_used_when_absent_ru_bcae8(self, client):
+        """Regime unique + BCAE8: without reimplantation in the data,
+        the criterion falls back to 'replantation'."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=True,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "replantation"
+
+    def test_provided_value_used_when_present_dc_bcae8(self, client):
+        """When reimplantation is in the URL (saved simulation),
+        the provided value is used."""
+        DCConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "reimplantation": "non",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "non"
+
+    def test_stale_reimplantation_stripped_from_result_url_in_ru(self, client):
+        """Regime unique: when the result URL contains a stale
+        reimplantation param, the result view redirects to the same
+        result URL with that param stripped. Following the redirect
+        renders the result with the default value."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=True,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "reimplantation": "non",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 302
+        assert "reimplantation" not in res["Location"]
+
+        res = client.get(res["Location"])
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "replantation"
+
+    def test_reimplantation_stripped_from_redirect_url_in_ru(self, client):
+        """Regime unique: when the form view builds a redirect URL
+        (e.g. to the result page), the stale reimplantation param
+        from the original URL is stripped."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=False,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_form")
+        triage = urlencode(
+            {
+                "department": "44",
+                "element": "haie",
+                "travaux": "destruction",
+                "contexte": "non",
+                "reimplantation": "non",
+            }
+        )
+        data = {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "localisation_pac": "non",
+            "haies": str(hedges.id),
+        }
+        res = client.post(f"{url}?{triage}", data)
+
+        assert res.status_code == 302
+        assert "reimplantation" not in res["Location"]

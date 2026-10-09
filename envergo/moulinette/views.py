@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import defaultdict
 from datetime import date
 from itertools import groupby
@@ -7,6 +8,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -26,7 +28,7 @@ from envergo.analytics.utils import (
 from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
-from envergo.hedges.models import HedgeCategory
+from envergo.hedges.models import HedgeCategory, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import (
@@ -37,9 +39,15 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.utils import get_moulinette_class_from_site
-from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.petitions.models import PetitionProject
+from envergo.users.mixins import CoordinatorDepartmentAuthorised
 from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
+
+logger = logging.getLogger(__name__)
+
+
+ACKNOWLEDGED_SESSION_KEY = "eviter_reduire_acknowledged_simulation"
 
 
 class MoulinetteMixin:
@@ -99,6 +107,7 @@ class MoulinetteMixin:
             for prefix in ignore_prefixes:
                 if key.startswith(prefix):
                     GET.pop(key)
+
         return GET
 
     def get_context_data(self, **kwargs):
@@ -246,6 +255,10 @@ class MoulinetteMixin:
 
         cleaned_data = self.moulinette.cleaned_data
         data.update(cleaned_data)
+
+        for key in self.moulinette.get_excluded_params():
+            data.pop(key, None)
+
         return data
 
     def get_triage_url(self):
@@ -307,6 +320,46 @@ class MoulinetteMixin:
         )
 
 
+class PetitionProjectContextMixin:
+    """Contributes petition project context to the Haie moulinette pages."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_petition_project_context())
+        return context
+
+    def get_petition_project_context(self):
+        """Returns petition project infos"""
+        petition_project_reference = self.request.GET.get("project_reference")
+        if not petition_project_reference:
+            return {}
+
+        try:
+            petition_project = PetitionProject.objects.get(
+                reference=petition_project_reference
+            )
+        except ObjectDoesNotExist:
+            logger.warning(
+                "No petition project found for reference %s",
+                petition_project_reference,
+            )
+            return {}
+
+        add_simulation_url = reverse(
+            "petition_project_instructor_alternative_view",
+            kwargs={"reference": petition_project_reference},
+        )
+        add_simulation_url = update_qs(
+            add_simulation_url,
+            {"moulinette_url": self.request.build_absolute_uri()},
+        )
+        add_simulation_url += "#add-alternative"
+        return {
+            "petition_project": petition_project,
+            "add_simulation_url": add_simulation_url,
+        }
+
+
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteForm(MoulinetteMixin, FormView):
 
@@ -324,10 +377,20 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def get_template_names(self):
         return self.moulinette.get_home_template()
 
+    def get_acknowledgment_key(self):
+        """Identify what was acknowledged: the motif of a given hedge set."""
+
+        params = self.get_results_params()
+        return f'{params.get("motif")}:{params.get("haies")}'
+
     def post(self, request, *args, **kwargs):
         # If the moulinette is valid, i.e. it can run the evaluation and provide
         # a result, then we redirect to the result page
-        if self.moulinette.is_valid():
+        if self.moulinette.is_valid() and self.moulinette.is_acknowledged():
+            if self.moulinette.acknowledgment_form is not None:
+                self.request.session[ACKNOWLEDGED_SESSION_KEY] = (
+                    self.get_acknowledgment_key()
+                )
             return HttpResponseRedirect(self.get_result_url())
 
         # If the main form is valid and all the errors are missing data, it means
@@ -339,6 +402,12 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         ):
             return HttpResponseRedirect(f"{self.get_form_url()}#additional-forms")
 
+        # If the acknowledgment block was never displayed, redirect to the form
+        # so it appears — without an error, like the additional questions above.
+        elif self.moulinette.is_valid() and self.moulinette.is_acknowledgment_pending():
+            self.request.session.pop(ACKNOWLEDGED_SESSION_KEY, None)
+            return HttpResponseRedirect(f"{self.get_form_url()}#eviter-reduire")
+
         # In other cases, it means there are errors in one of the submitted forms,
         # so we just display back the page with the validation errors
         else:
@@ -347,8 +416,13 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
 
+        # The acknowledgment form is not part of moulinette.form_errors
+        all_errors = dict(self.moulinette.form_errors)
+        if self.moulinette.has_acknowledgment_error():
+            all_errors.update(self.moulinette.acknowledgment_form.errors)
+
         form_errors = defaultdict(list)
-        for field, errors in self.moulinette.form_errors.items():
+        for field, errors in all_errors.items():
             for error in errors.as_data():
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}
@@ -370,6 +444,22 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Exposed here rather than in the mixin: result views must never see it
+        acknowledgment_form = self.moulinette.acknowledgment_form
+        context["acknowledgment_form"] = acknowledgment_form
+
+        # Editing a simulation the user already acknowledged: start checked
+        if (
+            acknowledgment_form is not None
+            and self.request.session.get(ACKNOWLEDGED_SESSION_KEY)
+            == self.get_acknowledgment_key()
+        ):
+            acknowledgment_form.precheck()
+
+        if self.moulinette.has_acknowledgment_error():
+            context["has_errors"] = True
+
         matomo_url = self.request.path
 
         # Custom url when some values are pre-filled
@@ -400,6 +490,14 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         )
 
         return context
+
+
+class MoulinetteHaieForm(PetitionProjectContextMixin, MoulinetteForm):
+    """The Haie flavour of the simulation form.
+
+    Petition projects only exist on the Haie site, so the petition project
+    context is contributed here rather than in the shared `MoulinetteForm`.
+    """
 
 
 class MoulinetteResultMixin:
@@ -453,7 +551,7 @@ class MoulinetteResultMixin:
         data = {}
         moulinette = self.moulinette
         is_debug = bool(self.request.GET.get("debug", False))
-        is_alternative = bool(self.request.GET.get("alternative", False))
+        is_alternative = bool(self.request.GET.get("project_reference", False))
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -547,6 +645,15 @@ class BaseMoulinetteResult(FormView):
             redirect_url = reverse("moulinette_form")
             redirect_url = update_qs(redirect_url, request.GET)
 
+        # The URL contains stale params that this moulinette form
+        # excludes (e.g. reimplantation in RU mode). Redirect to the
+        # same result URL with those params stripped so the moulinette
+        # evaluates with the default value.
+        elif any(key in request.GET for key in moulinette.get_excluded_params()):
+            redirect_url = request.get_full_path()
+            for key in moulinette.get_excluded_params():
+                redirect_url = remove_from_qs(redirect_url, key)
+
         if redirect_url:
             return HttpResponseRedirect(redirect_url)
 
@@ -593,7 +700,10 @@ class MoulinetteAmenagementResult(
 
 
 class MoulinetteHaieResult(
-    MoulinetteResultMixin, MoulinetteMixin, BaseMoulinetteResult
+    MoulinetteResultMixin,
+    MoulinetteMixin,
+    PetitionProjectContextMixin,
+    BaseMoulinetteResult,
 ):
     event_category = "simulateur"
     event_action_haie = "soumission_d"
@@ -622,6 +732,7 @@ class MoulinetteHaieResult(
             context["HedgeCategory"] = HedgeCategory
             context["CityHallSubmission"] = CityHallSubmission
             context["AaL3503Handling"] = AaL3503Handling
+            context["show_species_cortege"] = True
 
             main_department = hedge_data.main_department()
             if (
@@ -706,8 +817,8 @@ class Triage(MoulinetteMixin, FormView):
             "department": self.moulinette.department.department,
             "user_type": get_user_type(request.user),
         }
-        is_alternative = bool(request.GET.get("alternative", False))
-        if is_alternative:
+        project_reference = bool(request.GET.get("project_reference", None))
+        if project_reference:
             event_params["alternative"] = "true"
 
         log_event(
@@ -759,7 +870,7 @@ class Triage(MoulinetteMixin, FormView):
         return initial
 
 
-class ConfigHaieBaseView(InstructorDepartmentAuthorised):
+class ConfigHaieBaseView(CoordinatorDepartmentAuthorised):
     """Define what to when user has no permission"""
 
     def handle_no_permission(self):
@@ -890,12 +1001,12 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
             .order_by("email")
         )
         departement_members_dict = {
-            "instructors_emails": [],
+            "coordinators_emails": [],
             "invited_emails": [],
         }
         for user in department_members:
-            if user.is_instructor:
-                departement_members_dict["instructors_emails"].append(user.email)
+            if user.is_coordinator:
+                departement_members_dict["coordinators_emails"].append(user.email)
             else:
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
@@ -952,13 +1063,39 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         )
 
         context["ru_zone_configs"] = self.object.zone_configs
+        context["RuHedgeType"] = HedgeTypeFactory.build_from_context(
+            single_procedure=True
+        )
 
         # Compute the hedge density reference map list
         density_maps = (
-            Map.objects.filter(map_type=MAP_TYPES.density_reference)
-            .filter(departments__contains=[department.department])
+            Map.objects.of_type(MAP_TYPES.density_reference)
+            .for_department(department.department)
             .defer("geometry")
         )
         context["density_maps"] = density_maps
+
+        zonage_maps = (
+            Map.objects.of_type(MAP_TYPES.zonage)
+            .for_department(department.department)
+            .defer("geometry")
+        )
+        context["zonage_maps"] = zonage_maps
+
+        zones_sensibles_ep_maps = (
+            Map.objects.of_type(MAP_TYPES.zone_sensible_ep)
+            .for_department(department.department)
+            .defer("geometry")
+        )
+        context["zones_sensibles_ep_maps"] = zones_sensibles_ep_maps
+
+        context["has_maps"] = any(
+            (
+                grouped_criteria_by_regulation,
+                density_maps,
+                zonage_maps,
+                zones_sensibles_ep_maps,
+            )
+        )
 
         return context

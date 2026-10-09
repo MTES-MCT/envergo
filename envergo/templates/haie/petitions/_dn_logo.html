@@ -1,0 +1,10 @@
+{% load static %}
+
+<img class="dn-logo fr-mx-1v"
+     src="{% static 'images/dn_logo.svg' %}"
+     alt="Démarche numérique"
+     tabindex="0"
+     aria-describedby="dn-logo-tooltip-{{ id }}" />
+<span class="fr-tooltip fr-placement"
+      id="dn-logo-tooltip-{{ id }}"
+      role="tooltip">Information saisie dans le formulaire Démarche numérique</span>

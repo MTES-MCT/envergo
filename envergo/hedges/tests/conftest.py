@@ -26,7 +26,7 @@ def make_mock_evaluator(
 
 @pytest.fixture
 def ep_ru_criterion(france_map):  # noqa: F811
-    """Create an EP regulation with a single EspecesProtegeesRegimeUnique criterion."""
+    """Create an EP regulation with a single EspecesProtegeesRu criterion."""
     _regulation, criteria = setup_ep_regime_unique(france_map)
     return criteria
 

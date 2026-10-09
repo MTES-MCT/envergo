@@ -30,42 +30,44 @@
   </section>
 {% endif %}
 
-<h5>Plantation proposée</h5>
-<div class="fr-table">
-  <div class="fr-table__wrapper">
-    <div class="fr-table__container">
-      <div class="fr-table__content">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Type</th>
-              <th scope="col">Minimum attendu</th>
-              <th scope="col">Plantation proposée</th>
-              <th scope="col">Manque</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for choice in ordered_hedge_types %}
-              {% if choice.value != "alignement" %}
-                <tr>
-                  <th scope="row">{{ choice.label }}</th>
-                  <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row">Total</th>
-              <td>{{ quality_condition.lpm|floatformat:"0g" }} m</td>
-              <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
-              <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
-            </tr>
-          </tfoot>
-        </table>
+{% if quality_condition %}
+  <h5>Plantation proposée</h5>
+  <div class="fr-table">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">Minimum attendu</th>
+                <th scope="col">Plantation proposée</th>
+                <th scope="col">Manque</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for choice in ordered_hedge_types %}
+                {% if choice.value != "alignement" %}
+                  <tr>
+                    <th scope="row">{{ choice.label }}</th>
+                    <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Total</th>
+                <td>{{ quality_condition.lpm|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
+{% endif %}

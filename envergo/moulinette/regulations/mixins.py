@@ -1,57 +1,34 @@
 from envergo.moulinette.regulations import TO_ADD, ActionsToTakeMixin
 
 
+def within(zones, distance):
+    """Whether at least one of the zones is within `distance` meters of the project."""
+    return any(zone.distance <= distance for zone in zones)
+
+
 class ZoneHumideMixin(ActionsToTakeMixin):
 
     ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_catalog_data(self):
-        data = {}
-        if "wetlands_25" not in self.catalog:
-            data["wetlands_25"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= 25
-            ]
-            data["wetlands_within_25m"] = bool(data["wetlands_25"])
+        data = super().get_catalog_data()
 
-        if "wetlands_100" not in self.catalog:
-            data["wetlands_100"] = [
-                zone for zone in self.catalog["wetlands"] if zone.distance <= 100
-            ]
-            data["wetlands_within_100m"] = bool(data["wetlands_100"])
-
-        if "potential_wetlands_10" not in self.catalog:
-            data["potential_wetlands_10"] = [
-                zone
-                for zone in self.catalog["potential_wetlands"]
-                if zone.distance <= 10
-            ]
-            data["potential_wetlands_within_10m"] = bool(data["potential_wetlands_10"])
-
-        if "forbidden_wetlands_25" not in self.catalog:
-            data["forbidden_wetlands_25"] = [
-                zone
-                for zone in self.catalog["forbidden_wetlands"]
-                if zone.distance <= 25
-            ]
-            data["forbidden_wetlands_within_25m"] = bool(data["forbidden_wetlands_25"])
-
-        if "forbidden_wetlands_100" not in self.catalog:
-            data["forbidden_wetlands_100"] = [
-                zone
-                for zone in self.catalog["forbidden_wetlands"]
-                if zone.distance <= 100
-            ]
-            data["forbidden_wetlands_within_100m"] = bool(
-                data["forbidden_wetlands_100"]
-            )
+        facts = {
+            "wetlands_within_25m": ("wetlands", 25),
+            "wetlands_within_100m": ("wetlands", 100),
+            "potential_wetlands_within_10m": ("potential_wetlands", 10),
+            "forbidden_wetlands_within_25m": ("forbidden_wetlands", 25),
+            "forbidden_wetlands_within_100m": ("forbidden_wetlands", 100),
+        }
+        for key, (zones_key, distance) in facts.items():
+            if key not in self.catalog:
+                data[key] = within(self.catalog[zones_key], distance)
 
         if "within_potential_wetlands_department" not in self.catalog:
-            if self.moulinette.config:
-                data["within_potential_wetlands_department"] = (
-                    self.moulinette.config.zh_doubt
-                )
-            else:
-                data["within_potential_wetlands_department"] = False
+            config = self.moulinette.config
+            data["within_potential_wetlands_department"] = bool(
+                config and config.zh_doubt
+            )
 
         return data
 
@@ -60,20 +37,12 @@ class ZoneInondableMixin:
     def get_catalog_data(self):
         data = super().get_catalog_data()
 
-        if "flood_zones_12" not in self.catalog:
-            data["flood_zones_12"] = [
-                zone for zone in self.catalog["flood_zones"] if zone.distance <= 12
-            ]
-            data["flood_zones_within_12m"] = bool(data["flood_zones_12"])
-
-        if "potential_flood_zones_0" not in self.catalog:
-            data["potential_flood_zones_0"] = [
-                zone
-                for zone in self.catalog["potential_flood_zones"]
-                if zone.distance <= 0
-            ]
-            data["potential_flood_zones_within_0m"] = bool(
-                data["potential_flood_zones_0"]
-            )
+        facts = {
+            "flood_zones_within_12m": ("flood_zones", 12),
+            "potential_flood_zones_within_0m": ("potential_flood_zones", 0),
+        }
+        for key, (zones_key, distance) in facts.items():
+            if key not in self.catalog:
+                data[key] = within(self.catalog[zones_key], distance)
 
         return data

@@ -27,19 +27,28 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    DemarcheConfigFactory,
     HaieRegulationFactory,
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
+from envergo.moulinette.tests.utils import (
+    prefill_density_cache,
+    setup_ep_regime_unique,
+    setup_species_near_hedges,
+)
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     LOG_TYPES,
     STAGES,
     InvitationToken,
     LatestMessagerieAccess,
+    PetitionProject,
 )
+from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
     DEMARCHE_NUMERIQUE_FAKE_DISABLED,
@@ -57,10 +66,11 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
-    PetitionProjectInstructorView,
     PetitionProjectList,
+    PetitionProjectSummaryView,
 )
 from envergo.urlmappings.models import UrlMapping
+from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 from envergo.utils.urls import remove_from_qs, update_qs
 
@@ -88,7 +98,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
             activation_map=loire_atlantique_map,
             activation_mode="department_centroid",
         ),
@@ -104,6 +114,21 @@ def ep_criteria(france_map):  # noqa
             title="Espèces protégées",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return criteria
+
+
+@pytest.fixture
+def ep_normandie_criteria(france_map):  # noqa
+    regulation = HaieRegulationFactory(regulation="ep")
+    criteria = [
+        CriterionFactory(
+            title="Espèces protégées Normandie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesNormandie",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -139,17 +164,18 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_pre_fill_config.append(
-        {"id": "abc", "value": "plantation_adequate"}
+    dn_config = DemarcheConfigFactory()
+    dn_config.pre_fill_config.append(
+        {
+            "id": "abc",
+            "value": "plantation_adequate",
+            "mapping": {"true": "Oui", "false": "Non"},
+        }
     )
-    config.demarche_numerique_pre_fill_config.append(
-        {"id": "def", "value": "sur_talus_d"}
-    )
-    config.demarche_numerique_pre_fill_config.append(
-        {"id": "ghi", "value": "sur_talus_p"}
-    )
-    config.save()
+    dn_config.pre_fill_config.append({"id": "def", "value": "sur_talus_d"})
+    dn_config.pre_fill_config.append({"id": "ghi", "value": "sur_talus_p"})
+    dn_config.save()
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -176,12 +202,86 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "champ_456": None,  # improve this test by configuring a result for bcae8
         "champ_654": ANY,
         "champ_789": "http://haie.local:3000/projet/ABC123",
-        "champ_abc": "true",
+        "champ_abc": "Oui",
         "champ_def": "false",
         "champ_ghi": "false",
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
+
+
+def get_pre_fill_value(field, catalog):
+    """Call `get_value_from_source` with a moulinette exposing the given catalog.
+
+    Returns the pre-filled value and the keys of the alerts raised on the way.
+    """
+    view = PetitionProjectCreate()
+    request = RequestFactory().get("")
+    view.request = request
+    request.alerts = PetitionProjectCreationAlert(request)
+    moulinette = Mock(catalog=catalog)
+    petition_project = Mock(moulinette_url="http://moulinette.url")
+    config = Mock(id=1)
+
+    value = view.get_value_from_source(petition_project, moulinette, field, config)
+    return value, [alert.key for alert in request.alerts]
+
+
+def test_pre_fill_value_from_moulinette_catalog_ignores_default():
+    field = {"id": "abc", "value": "urgence", "default": "non"}
+    value, alerts = get_pre_fill_value(field, {"urgence": "oui"})
+    assert value == "oui"
+    assert alerts == []
+
+
+def test_pre_fill_value_missing_from_catalog_uses_default():
+    field = {"id": "abc", "value": "urgence", "default": "non"}
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "non"
+    assert alerts == []
+
+
+def test_pre_fill_value_missing_from_catalog_without_default_raises_an_alert():
+    field = {"id": "abc", "value": "urgence"}
+    value, alerts = get_pre_fill_value(field, {})
+    assert value is None
+    assert alerts == ["missing_source_moulinette"]
+
+
+def test_pre_fill_default_value_does_not_need_to_be_in_the_mapping():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "inconnu",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "inconnu"
+    assert alerts == []
+
+
+def test_pre_fill_default_value_is_mapped_when_in_the_mapping():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "non",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "Non"
+    assert alerts == []
+
+
+def test_pre_fill_non_default_value_missing_from_mapping_raises_an_alert():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "inconnu",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {"urgence": "peut-etre"})
+    assert value == "peut-etre"
+    assert alerts == ["mapping_missing_value"]
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -203,12 +303,16 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     today = date.today()
     # Expired config
     DCConfigHaieFactory(
-        demarche_numerique_number=111111,
+        demarche_numerique_config=DemarcheConfigFactory(
+            demarche_numerique_number=111111
+        ),
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
     DCConfigHaieFactory(
-        demarche_numerique_number=222222,
+        demarche_numerique_config=DemarcheConfigFactory(
+            demarche_numerique_number=222222
+        ),
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
 
@@ -332,11 +436,11 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     )
 
 
-def test_petition_project_instructor_view_requires_authentication(
+def test_petition_project_summary_requires_authentication(
     haie_user,
     inactive_haie_user_44,
     haie_user_44,
-    haie_instructor_44,
+    haie_coordinator_44,
     admin_user,
     site,
 ):
@@ -349,9 +453,7 @@ def test_petition_project_instructor_view_requires_authentication(
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
-        reverse(
-            "petition_project_instructor_view", kwargs={"reference": project.reference}
-        )
+        reverse("petition_project_summary", kwargs={"reference": project.reference})
     )
     request.site = site
     request.session = {}
@@ -362,7 +464,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an unauthenticated user
     request.user = AnonymousUser()
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response is a redirect to the login page
@@ -372,7 +474,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an authenticated user, by default no departments
     request.user = haie_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response status code is 403
@@ -382,7 +484,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an authenticated user, with department 44, same as project, but not instructor
     request.user = inactive_haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -392,7 +494,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN a simple user with department 44
     request.user = haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -400,9 +502,9 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
     # GIVEN an instructor user with department 44
-    request.user = haie_instructor_44
+    request.user = haie_coordinator_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -414,7 +516,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an admin user, should be authorized
     request.user = admin_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -422,10 +524,11 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
     # GIVEN a simple user with invitation token, should be authorized
-    request.user = haie_user
     InvitationTokenFactory(user=haie_user, petition_project=project)
+    # refresh the user instance: `guh_role` is a cached_property
+    request.user = User.objects.get(pk=haie_user.pk)
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -436,7 +539,7 @@ def test_petition_project_instructor_view_requires_authentication(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_notes_view(
-    mock_post, haie_user_44, haie_instructor_44, client, site
+    mock_post, haie_user_44, haie_coordinator_44, client, site
 ):
     """
     Test petition project instructor notes view
@@ -464,7 +567,7 @@ def test_petition_project_instructor_notes_view(
     assert "Note mineure : Fa dièse" not in project.instructor_free_mention
 
     # Given user is instructor on department
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     # Then response status code is 200
     response = client.get(instructor_notes_url)
     assert response.status_code == 200
@@ -482,8 +585,33 @@ def test_petition_project_instructor_notes_view(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_side_menu_opens_the_group_of_the_current_page(
+    mock_post, haie_user_44, client, site
+):
+    """The Projet group is open and current on its pages, closed on the others."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_user_44)
+
+    def project_group_button(url_name):
+        url = reverse(url_name, kwargs={"reference": project.reference})
+        html = client.get(url).content.decode()
+        return re.search(r'<button[^>]*aria-controls="sidemenu-project"[^>]*>', html)[0]
+
+    button = project_group_button("petition_project_summary")
+    assert 'aria-expanded="true"' in button
+    assert 'aria-current="true"' in button
+
+    button = project_group_button("petition_project_instructor_notes_view")
+    assert 'aria-expanded="false"' in button
+    assert "aria-current" not in button
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
-    mock_post, haie_instructor_44, client, site
+    mock_post, haie_coordinator_44, client, site
 ):
     """Coordinator (has_change_permission) sees both note fields and can edit them."""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -494,7 +622,7 @@ def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(url)
     assert response.status_code == 200
     content = response.content.decode()
@@ -615,7 +743,7 @@ def test_instructor_notes_invited_links_are_clickable(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_links_are_clickable(
-    mock_post, haie_instructor_44, client, site
+    mock_post, haie_coordinator_44, client, site
 ):
     """URLs in notes are rendered as clickable links in read mode for coordinators."""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -629,7 +757,7 @@ def test_instructor_notes_coordinator_links_are_clickable(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(url)
     content = response.content.decode()
     assert 'href="https://example.com/pub"' in content
@@ -639,7 +767,7 @@ def test_instructor_notes_coordinator_links_are_clickable(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_empty_notes(
-    mock_post, haie_instructor_44, client, site
+    mock_post, haie_coordinator_44, client, site
 ):
     """Coordinator sees 'Aucune note.' for each empty field."""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -653,7 +781,7 @@ def test_instructor_notes_coordinator_empty_notes(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(url)
     content = response.content.decode()
     assert content.count("Aucune note.") == 2
@@ -661,9 +789,9 @@ def test_instructor_notes_coordinator_empty_notes(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_petition_project_instructor_view_reglementation_pages(
+def test_petition_project_summary_reglementation_pages(
     mock_post,
-    haie_instructor_44,
+    haie_coordinator_44,
     haie_user,
     conditionnalite_pac_criteria,
     ep_criteria,
@@ -686,7 +814,7 @@ def test_petition_project_instructor_view_reglementation_pages(
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(instructor_url)
     assert response.status_code == 404
 
@@ -696,7 +824,7 @@ def test_petition_project_instructor_view_reglementation_pages(
         kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(instructor_url)
     assert response.status_code == 200
     assert f"{ep_criteria[0].regulation}" in response.content.decode()
@@ -706,16 +834,14 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert "Maintien des haies PAC" in content
     assert "Réponse du simulateur" in content
 
-    # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "ep"},
     )
-    # Submit onagre
-    response = client.post(instructor_url, {"onagre_number": "1234567"})
+    response = client.post(instructor_url, {"instructor_free_mention": "Ma note"})
     assert response.url == instructor_url
     project.refresh_from_db()
-    assert project.onagre_number == "1234567"
+    assert project.instructor_free_mention == "Ma note"
 
     # When I go to a regulation page
     instructor_url = reverse(
@@ -737,21 +863,21 @@ def test_petition_project_instructor_view_reglementation_pages(
     response = client.post(
         instructor_url,
         {
-            "onagre_number": "7654321",
+            "instructor_free_mention": "Note interdite",
         },
     )
 
     # THEN i should get a 403 forbidden response
     assert response.status_code == 403
     project.refresh_from_db()
-    assert project.onagre_number == "1234567"
+    assert project.instructor_free_mention == "Ma note"
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_regulation_view_includes_config_in_context(
     mock_post,
-    haie_instructor_44,
+    haie_coordinator_44,
     conditionnalite_pac_criteria,
     client,
     site,
@@ -774,7 +900,7 @@ def test_regulation_view_includes_config_in_context(
         kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(instructor_url)
 
     assert response.status_code == 200
@@ -782,10 +908,130 @@ def test_regulation_view_includes_config_in_context(
     assert response.context["config"].single_procedure is True
 
 
+def setup_ep_ru_project(france_map):  # noqa
+    """Create a RU petition project with an evaluated EP RU criterion.
+
+    Returns the project. The hedge type must be RU-compatible ("degradee"
+    is not offered under the régime unique), and the density cache is
+    pre-filled so the EP RU cascade yields a deterministic result
+    (derogation_simplifiee).
+    """
+    RUConfigHaieFactory()
+    setup_ep_regime_unique(france_map)
+    project = PetitionProjectFactory(
+        hedge_data=HedgeDataFactory(
+            hedges=[HedgeFactory(additionalData__type_haie="arbustive")]
+        ),
+    )
+    prefill_density_cache(project.hedge_data, density=60)
+    return project
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_species_details(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """The instructor EP page shows the majeur and cortege tables.
+
+    The species cortege must not appear inside the simulator response
+    section.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9301, "level": "fort", "common_name": "Fauvette des jardins"},
+            {"cd_ref": 9302, "level": "majeur", "common_name": "Pie-grièche grise"},
+        ]
+    )
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Instructor-only sections with the two species tables
+    assert "Espèces à enjeu majeur observées proche du projet" in content
+    assert "Pie-grièche grise" in content
+    assert "Cortège-type départemental (enjeux faible à très fort)" in content
+    assert "Voir la liste des espèces" in content
+    assert "Ces données sensibles n'ont pas été communiquées au demandeur" in content
+
+    # The simulator response section must not duplicate the species cortege
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        not in content
+    )
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_species_details_without_sensitive_species(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """Without majeur species, the majeur table shows its empty state.
+
+    The sensitive-data warning must not appear either.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9303, "level": "fort", "common_name": "Fauvette des jardins"},
+        ]
+    )
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    assert "Aucune espèce spécifique disponible pour l'affichage" in content
+    assert (
+        "Ces données sensibles n'ont pas été communiquées au demandeur" not in content
+    )
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_petition_project_page_shows_species_cortege(
+    mock_post, client, site, france_map  # noqa
+):
+    """The read-only project page shows the cortege in the EP criterion result."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9304, "level": "fort", "common_name": "Fauvette des jardins"},
+        ]
+    )
+
+    url = reverse("petition_project", kwargs={"reference": project.reference})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        in content
+    )
+
+
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_display_dossier_ds_info(
-    mock_post, haie_instructor_44, client, site
+    mock_post, haie_coordinator_44, client, site
 ):
     """Test if dossier data is in template"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -798,7 +1044,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(instructor_ds_url)
     assert response.status_code == 200
 
@@ -813,7 +1059,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_messagerie_ds(
-    mock_ds_query_execute, haie_user_44, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_user_44, haie_coordinator_44, client, site
 ):
     """Test messagerie view"""
     DCConfigHaieFactory()
@@ -847,7 +1093,7 @@ def test_petition_project_instructor_messagerie_ds(
     assert "Nouveau message</button>" not in content
 
     # GIVEN an instructor haie user 44
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     # THEN I can access to messagerie page
@@ -901,7 +1147,7 @@ def test_petition_project_instructor_messagerie_ds(
     assert envoi_event.metadata["piece_jointe"] == 1
 
 
-def _setup_messagerie(haie_instructor_44, client):
+def _setup_messagerie(haie_coordinator_44, client):
     """Helper to setup messagerie test context."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
@@ -911,17 +1157,17 @@ def _setup_messagerie(haie_instructor_44, client):
         "petition_project_instructor_messagerie_view",
         kwargs={"reference": project.reference},
     )
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     return url
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_valid_message_without_file(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Soumettre un message valide sans pièce jointe → succès."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": "Bonjour"}, follow=True)
@@ -932,10 +1178,10 @@ def test_messagerie_valid_message_without_file(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_valid_message_with_file(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Soumettre un message valide avec pièce jointe valide → succès."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
@@ -949,10 +1195,10 @@ def test_messagerie_valid_message_with_file(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_empty_message_error(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Soumettre un formulaire avec message vide → erreur"""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": ""})
@@ -965,10 +1211,10 @@ def test_messagerie_empty_message_error(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_invalid_extension_error(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Soumettre avec une pièce jointe d'extension invalide → erreur incluant le message complet."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     attachment = SimpleUploadedFile(
@@ -988,10 +1234,10 @@ def test_messagerie_invalid_extension_error(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_html_in_filename_is_escaped(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Un nom de fichier contenant du HTML ne doit pas être interprété."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     attachment = SimpleUploadedFile("test.csv.<h1>", b"data")
@@ -1004,10 +1250,10 @@ def test_messagerie_html_in_filename_is_escaped(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_file_too_large_error(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Soumettre avec une pièce jointe trop volumineuse → erreur incluant le message complet."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     big_file = SimpleUploadedFile(
@@ -1022,10 +1268,10 @@ def test_messagerie_file_too_large_error(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_opens_on_error(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Après soumission invalide, la modale s'ouvre au chargement."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": ""})
@@ -1038,10 +1284,10 @@ def test_messagerie_modal_opens_on_error(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_not_opened_on_success(
-    mock_ds_query_execute, haie_instructor_44, client, site
+    mock_ds_query_execute, haie_coordinator_44, client, site
 ):
     """Après soumission valide, le script d'ouverture de modale n'est pas présent."""
-    url = _setup_messagerie(haie_instructor_44, client)
+    url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": "Bonjour"}, follow=True)
@@ -1053,7 +1299,7 @@ def test_messagerie_modal_not_opened_on_success(
 
 
 def test_petition_project_list(
-    inactive_haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
+    inactive_haie_user_44, haie_coordinator_44, haie_user, admin_user, client, site
 ):
 
     DCConfigHaieFactory()
@@ -1084,7 +1330,7 @@ def test_petition_project_list(
     assert response.url.startswith(reverse("login"))
 
     # WHEN an instructor on 44 acesses to project list
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(reverse("petition_project_list"))
     # THEN response status code is 200 (ok)
     assert response.status_code == 200
@@ -1119,37 +1365,37 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
-def test_petition_project_list_filters(
-    haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
+def test_petition_project_list_filters_followed_by(
+    haie_user_44, haie_coordinator_44, haie_user, admin_user, client, site
 ):
-    """Test filters on project list"""
+    """Test followed_by filter on project list."""
 
     project_list_url = reverse("petition_project_list")
-    # Given config haie on 44
     config_haie_44 = DCConfigHaieFactory()
     department_44 = config_haie_44.department
 
-    # Given two haie instructors, haie user, `haie_user_44` and admin user instructor
-    haie_instructor_44_instructor1 = UserFactory(is_haie_instructor=True)
-    haie_instructor_44_instructor1.departments.add(department_44)
-    haie_instructor_44_instructor2 = UserFactory(is_haie_instructor=True)
-    haie_instructor_44_instructor2.departments.add(department_44)
-    admin_user.is_instructor = True
+    haie_coordinator_44_instructor1 = UserFactory(is_haie_coordinator=True)
+    haie_coordinator_44_instructor1.departments.add(department_44)
+    haie_coordinator_44_instructor2 = UserFactory(is_haie_coordinator=True)
+    haie_coordinator_44_instructor2.departments.add(department_44)
+    haie_coordinator_no_dept = UserFactory(is_haie_coordinator=True)
+    haie_coordinator_34 = UserFactory(is_haie_coordinator=True)
+    haie_coordinator_34.departments.add(Department34Factory())
+    admin_user.is_coordinator = True
     admin_user.save()
 
-    # GIVEN projects non draft followed by users and instructors
     now = timezone.now()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
         demarche_numerique_state=DOSSIER_STATES.prefilled,
         demarche_numerique_date_depot=now,
     )
-    project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
+    project_44_followed_by_instructor1.followed_by.add(haie_coordinator_44_instructor1)
     project_44_followed_by_instructor2 = PetitionProjectFactory(
         reference="ACB132",
         demarche_numerique_state=DOSSIER_STATES.prefilled,
         demarche_numerique_date_depot=now,
     )
-    project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
+    project_44_followed_by_instructor2.followed_by.add(haie_coordinator_44_instructor2)
     project_44_followed_by_invited = PetitionProjectFactory(
         reference="XYZ123",
         demarche_numerique_state=DOSSIER_STATES.prefilled,
@@ -1163,7 +1409,7 @@ def test_petition_project_list_filters(
     )
     project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2.followed_by.add(
-        haie_instructor_44_instructor2
+        haie_coordinator_44_instructor2
     )
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
@@ -1171,6 +1417,18 @@ def test_petition_project_list_filters(
         demarche_numerique_date_depot=now,
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
+    project_44_followed_by_no_dept = PetitionProjectFactory(
+        reference="NOD123",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+    )
+    project_44_followed_by_no_dept.followed_by.add(haie_coordinator_no_dept)
+    project_44_followed_by_other_dept = PetitionProjectFactory(
+        reference="OTH123",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+    )
+    project_44_followed_by_other_dept.followed_by.add(haie_coordinator_34)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ789",
         demarche_numerique_state=DOSSIER_STATES.prefilled,
@@ -1179,28 +1437,28 @@ def test_petition_project_list_filters(
 
     # AS haie user with no project
     client.force_login(haie_user)
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is displayed
-    assert "Aucun dossier n’est accessible pour le moment" in content
+    assert "Vous n’avez actuellement accès à aucun dossier" in content
 
     # AS haie user invited on one project
     InvitationTokenFactory(
         user=haie_user, petition_project=project_44_followed_by_instructor1
     )
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is not displayed, only a table
-    assert "Aucun dossier n’est accessible pour le moment" not in content
+    assert "Vous n’avez actuellement accès à aucun dossier" not in content
     # AND followed by me project list is empty
     assert response.context["object_list"].count() == 0
 
     # AS Instructor 1 on 44
-    client.force_login(haie_instructor_44_instructor1)
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    client.force_login(haie_coordinator_44_instructor1)
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
 
     # THEN project list is filtered on user followed projects
@@ -1210,8 +1468,8 @@ def test_petition_project_list_filters(
     assert project_44_followed_by_superuser.reference not in content
     assert project_44_no_instructor.reference not in content
 
-    # WHEN I search on projects followed by no instructor
-    response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
+    # WHEN I filter on projects followed by nobody
+    response = client.get(f"{project_list_url}?followed_by=nobody")
     content = response.content.decode()
 
     # THEN project list is filtered on project followed by no instructor, excluding admin users
@@ -1220,14 +1478,17 @@ def test_petition_project_list_filters(
     assert project_44_followed_by_invited.reference in content
     assert project_44_followed_by_superuser.reference in content
     assert project_44_no_instructor.reference in content
+    # AND coordinators the followers column never displays do not count as followers
+    assert project_44_followed_by_no_dept.reference in content
+    assert project_44_followed_by_other_dept.reference in content
 
     # AS Instructor 2 on 44
-    client.force_login(haie_instructor_44_instructor2)
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    client.force_login(haie_coordinator_44_instructor2)
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
 
-    # Then project list is filtered on user followed projects
+    # THEN project list is filtered on user followed projects
     assert project_44_followed_by_instructor1.reference not in content
     assert project_44_followed_by_instructor2.reference in content
     assert project_44_followed_by_invited.reference not in content
@@ -1246,13 +1507,209 @@ def test_petition_project_list_filters(
     assert projects_followers[project_44_followed_by_superuser.reference] == []
     # Project followed by instructor1 has only instructor1 as follower
     assert projects_followers[project_44_followed_by_instructor1.reference] == [
-        haie_instructor_44_instructor1.email
+        haie_coordinator_44_instructor1.email
     ]
     # Project followed by haie user and instructor2 has only instructor2 as follower
     assert projects_followers[
         project_44_followed_by_invited_and_instructor2.reference
-    ] == [haie_instructor_44_instructor2.email]
+    ] == [haie_coordinator_44_instructor2.email]
+    # Projects followed by a coordinator of another department, or of none, have no follower
+    assert projects_followers[project_44_followed_by_no_dept.reference] == []
+    assert projects_followers[project_44_followed_by_other_dept.reference] == []
+
+
+def test_petition_project_list_filter_show_closed(haie_coordinator_44, client, site):
+    """Closed dossiers are hidden by default, shown with ?show_closed=1."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    open_project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        status__stage=STAGES.instruction_d,
+    )
+    closed_project = PetitionProjectFactory(
+        reference="CLOSED1",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        status__stage=STAGES.closed,
+        status__decision=DECISIONS.express_agreement,
+    )
+
+    client.force_login(haie_coordinator_44)
+
+    # Default: closed dossiers are hidden
+    response = client.get(project_list_url)
     content = response.content.decode()
+    assert open_project.reference in content
+    assert closed_project.reference not in content
+
+    # With show_closed=1, closed dossiers are visible
+    response = client.get(f"{project_list_url}?show_closed=1")
+    content = response.content.decode()
+    assert open_project.reference in content
+    assert closed_project.reference in content
+
+
+def test_petition_project_list_filter_category(haie_coordinator_44, client, site):
+    """Category filter shows only selected categories."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    ru_project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="ru",
+    )
+    aa_project = PetitionProjectFactory(
+        reference="AA001",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="l350_3",
+    )
+    hru_project = PetitionProjectFactory(
+        reference="HRU001",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="hru",
+    )
+
+    client.force_login(haie_coordinator_44)
+
+    # No category param: all categories shown
+    response = client.get(project_list_url)
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference in content
+    assert hru_project.reference in content
+
+    # Single category selected
+    response = client.get(f"{project_list_url}?category=ru")
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference not in content
+    assert hru_project.reference not in content
+
+    # Two categories selected
+    response = client.get(f"{project_list_url}?category=ru&category=hru")
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference not in content
+    assert hru_project.reference in content
+
+    # All three selected = no filter (same as no param)
+    response = client.get(
+        f"{project_list_url}?category=ru&category=l350_3&category=hru"
+    )
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference in content
+    assert hru_project.reference in content
+
+
+def test_petition_project_list_filter_combined(haie_coordinator_44, client, site):
+    """Multiple filters apply as intersection."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    followed_ru = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="ru",
+    )
+    followed_ru.followed_by.add(haie_coordinator_44)
+
+    unfollowed_ru = PetitionProjectFactory(
+        reference="UNFRU1",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="ru",
+    )
+
+    followed_hru = PetitionProjectFactory(
+        reference="FOLHRU",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="hru",
+    )
+    followed_hru.followed_by.add(haie_coordinator_44)
+
+    client.force_login(haie_coordinator_44)
+
+    # followed_by=me AND category=ru → only the followed RU project
+    response = client.get(f"{project_list_url}?followed_by=me&category=ru")
+    content = response.content.decode()
+    assert followed_ru.reference in content
+    assert unfollowed_ru.reference not in content
+    assert followed_hru.reference not in content
+
+
+def test_petition_project_list_filter_pagination(haie_coordinator_44, client, site):
+    """Pagination count reflects filtered results, not unfiltered total."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    # Create 5 RU projects and 3 HRU projects
+    for i in range(5):
+        PetitionProjectFactory(
+            reference=f"RU{i:03d}",
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_date_depot=now,
+            underscore_category="ru",
+        )
+    for i in range(3):
+        PetitionProjectFactory(
+            reference=f"HRU{i:03d}",
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_date_depot=now,
+            underscore_category="hru",
+        )
+
+    client.force_login(haie_coordinator_44)
+
+    # Unfiltered: 8 projects total
+    response = client.get(project_list_url)
+    assert response.context["page_obj"].paginator.count == 8
+
+    # Filtered by category=ru: only 5
+    response = client.get(f"{project_list_url}?category=ru")
+    assert response.context["page_obj"].paginator.count == 5
+
+
+def test_petition_project_list_htmx_response(haie_coordinator_44, client, site):
+    """HX-Request header returns partial HTML, not a full page."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+    PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+    )
+
+    client.force_login(haie_coordinator_44)
+
+    # Normal request returns full page with the wrapper div
+    response = client.get(project_list_url)
+    content = response.content.decode()
+    assert "<!DOCTYPE" in content
+    assert 'id="dossier-results"' in content
+    assert "table-dossier-list" in content
+
+    # HX-Request returns partial (content only, no wrapper div, no full page)
+    response = client.get(project_list_url, HTTP_HX_REQUEST="true")
+    content = response.content.decode()
+    assert "<!DOCTYPE" not in content
+    assert 'id="dossier-results"' not in content
+    assert "table-dossier-list" in content
 
 
 def test_petition_project_dl_geopkg(client, haie_user, site):
@@ -1275,7 +1732,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
 
 
 def test_petition_project_instructor_notes_form(
-    client, haie_user, haie_instructor_44, site
+    client, haie_user, haie_coordinator_44, site
 ):
     """Post instruction note as different users"""
 
@@ -1322,11 +1779,10 @@ def test_petition_project_instructor_notes_form(
 
     # THEN i should get a 403 forbidden response
     assert response.status_code == 403
-    assert project.onagre_number == ""
     assert project.instructor_free_mention == ""
 
     # WHEN I post some instructor data with a department instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(
         instructor_notes_form_url,
         {
@@ -1343,10 +1799,10 @@ def test_petition_project_instructor_notes_form(
     )
 
 
-def test_instructor_view_multi_departments_alert(client, haie_instructor_44):
+def test_instructor_view_multi_departments_alert(client, haie_coordinator_44):
     """Test the multi-department alert on the instructor view."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     DepartmentFactory(department="14", geometry=MultiPolygon([calvados_polygon]))
 
@@ -1368,7 +1824,7 @@ def test_instructor_view_multi_departments_alert(client, haie_instructor_44):
     project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
 
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1380,10 +1836,10 @@ def test_instructor_view_multi_departments_alert(client, haie_instructor_44):
     assert "Loire-Atlantique" in content
 
 
-def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
+def test_instructor_view_single_department_no_alert(client, haie_coordinator_44):
     """No multi-department alert when all hedges are in the declared department."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
 
     hedge_44 = HedgeFactory(
@@ -1395,7 +1851,7 @@ def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
     hedges = HedgeDataFactory(hedges=[hedge_44])
     project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1403,10 +1859,60 @@ def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
     assert "Le projet se situe sur plusieurs départements" not in res.content.decode()
 
 
+@pytest.mark.parametrize(
+    "emergency, expect_emergency_badge",
+    [
+        ("non", False),
+        ("oui", True),
+    ],
+)
+def test_petition_emergency_badge(
+    client, haie_coordinator_44, emergency, expect_emergency_badge
+):
+    """Test emergency badge in project list and project detail"""
+
+    # GIVEN project with no urgence
+    RUConfigHaieFactory(
+        is_activated=False,
+        validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+    )
+    RUConfigHaieFactory(validity_range=DateRange(date(2025, 1, 1), None, "[)"))
+    hedge = HedgeFactory(additionalData__type_haie="mixte")
+    hedges = HedgeDataFactory(hedges=[hedge])
+    project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled, hedge_data=hedges
+    )
+
+    # GIVEN project with urgence or not
+    moulinette_data = {
+        "reimplantation": "replantation",
+        "motif": "securite",
+        "urgence": emergency,
+    }
+    new_url = update_qs(project.moulinette_url, moulinette_data)
+    project.moulinette_url = new_url
+    project.save()
+
+    # WHEN Instructor visits project list page
+    project_list_url = reverse("petition_project_list")
+    client.force_login(haie_coordinator_44)
+    res = client.get(project_list_url)
+    # THEN badge "Urgence" is in content if "urgence" == "oui"
+    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+
+    # WHEN Instructor visits project instructor page
+    project_url = reverse(
+        "petition_project_summary", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+    # THEN badge "Urgence" is in content if "urgence" == "oui"
+    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+
+
 @patch("envergo.petitions.views.notify")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
-    mock_notify, client, haie_user, haie_instructor_44, site
+    mock_notify, client, haie_user, haie_coordinator_44, site
 ):
     """Test procedure flow for petition project"""
     # GIVEN a petition project
@@ -1443,7 +1949,7 @@ def test_petition_project_procedure(
     assert "Modifier l'état du dossier</button>" not in content
 
     # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(status_url)
 
     # THEN the page is displayed and the edition button is there
@@ -1528,11 +2034,11 @@ def procedure_url(project):
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
-    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
     """Closing with an express agreement uploads the order and notifies the applicant."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1576,11 +2082,11 @@ def test_petition_project_close_with_express_agreement(
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
-    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
     """Closing with a tacit agreement needs no prefectural order."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1606,11 +2112,11 @@ def test_petition_project_close_with_tacit_agreement(
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
-    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
     """Closing as dropped only requires the applicant message."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1631,11 +2137,11 @@ def test_petition_project_close_with_dropped(
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
-    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
     """Closing with an opposition requires the check, the order and the message."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1662,11 +2168,11 @@ def test_petition_project_close_with_missing_fields(
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
-    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
     """If the DS status change fails, the log rolls back and no message is sent."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
 
     DCConfigHaieFactory()
@@ -1694,7 +2200,7 @@ def test_petition_project_close_status_change_failure(
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 @pytest.mark.django_db(transaction=True)
 def test_closing_actually_calls_ds_messagerie(
-    mock_execute, mock_update_ds, mock_notify, client, haie_instructor_44, site
+    mock_execute, mock_update_ds, mock_notify, client, haie_coordinator_44, site
 ):
     """Closing a dossier reaches the real DS "dossierEnvoyerMessage" mutation.
 
@@ -1702,7 +2208,7 @@ def test_closing_actually_calls_ds_messagerie(
     view -> send_message_dossier_ds -> client.dossier_send_message send path is
     exercised. The DS state change is mocked out to isolate the message send.
     """
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     mock_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
@@ -1734,11 +2240,11 @@ def test_closing_actually_calls_ds_messagerie(
 
 
 def test_petition_project_prefectural_order_download_block(
-    client, haie_instructor_44, site
+    client, haie_coordinator_44, site
 ):
     """The procedure page shows a download block when an order exists."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
 
@@ -1773,7 +2279,7 @@ def test_petition_project_prefectural_order_download_block(
     assert "Le nouveau document de décision remplacera" in content
 
 
-def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site):
+def test_petition_project_follow_up(client, haie_user, haie_coordinator_44, site):
     """Test follow up flow for petition project"""
     # GIVEN a petition project
     DCConfigHaieFactory()
@@ -1819,13 +2325,13 @@ def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site)
     assert event.metadata["view"] == "detail"
 
     # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(toggle_follow_url, data, follow=True)
 
     # THEN the project is followed
     assert response.status_code == 200
-    haie_instructor_44.refresh_from_db()
-    assert haie_instructor_44.followed_petition_projects.get(id=project.id)
+    haie_coordinator_44.refresh_from_db()
+    assert haie_coordinator_44.followed_petition_projects.get(id=project.id)
     assert Event.objects.filter(category="dossier", event="suivi").count() == 2
 
     # WHEN I switch off the follow up
@@ -1837,8 +2343,8 @@ def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site)
 
     # THEN the project is followed
     assert response.status_code == 200
-    haie_instructor_44.refresh_from_db()
-    assert not haie_instructor_44.followed_petition_projects.filter(
+    haie_coordinator_44.refresh_from_db()
+    assert not haie_coordinator_44.followed_petition_projects.filter(
         id=project.id
     ).exists()
 
@@ -1849,7 +2355,7 @@ def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site)
     assert event.metadata["view"] == "liste"
 
 
-def test_petition_project_follow_buttons(client, haie_instructor_44, site):
+def test_petition_project_follow_buttons(client, haie_coordinator_44, site):
     """Test the buttons to toggle follow up are on the pages"""
     # GIVEN a petition project
     DCConfigHaieFactory()
@@ -1860,7 +2366,7 @@ def test_petition_project_follow_buttons(client, haie_instructor_44, site):
     )
 
     # WHEN the user is a department instructor that is not following the project
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(status_url)
 
     # THEN there is a "Suivre" button to follow up the project
@@ -1868,7 +2374,7 @@ def test_petition_project_follow_buttons(client, haie_instructor_44, site):
     assert 'type="submit">Suivre</button>' in response.content.decode()
 
     # WHEN the user is following the project
-    project.followed_by.add(haie_instructor_44)
+    project.followed_by.add(haie_coordinator_44)
     response = client.get(status_url)
 
     # THEN there is a "Ne plus suivre" button to stop following up the project
@@ -1877,9 +2383,9 @@ def test_petition_project_follow_buttons(client, haie_instructor_44, site):
 
 
 def test_petition_invited_instructor_cannot_see_send_message_button(
-    client, haie_instructor_44, haie_user
+    client, haie_coordinator_44, haie_user
 ):
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
@@ -1893,18 +2399,15 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client.force_login(haie_user)
     res = client.get(messagerie_url)
     assert "Nouveau message</button>" not in res.content.decode()
-    assert (
-        '<span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule'
-        in res.content.decode()
-    )
+    assert "</span>Dossier en lecture seule" in res.content.decode()
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_invited_instructor_cannot_send_message(
-    mock_ds_query_execute, client, haie_instructor_44, haie_user
+    mock_ds_query_execute, client, haie_coordinator_44, haie_user
 ):
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
@@ -1932,7 +2435,7 @@ def test_petition_invited_instructor_cannot_send_message(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_petition_project_rai_button(client, haie_user, haie_instructor_44, site):
+def test_petition_project_rai_button(client, haie_user, haie_coordinator_44, site):
     """Only department admin can see the "request additional info" button"""
 
     DCConfigHaieFactory()
@@ -1954,7 +2457,7 @@ def test_petition_project_rai_button(client, haie_user, haie_instructor_44, site
     assert "Demander des compléments" not in content
 
     # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(status_url)
 
     # THEN the page is displayed and the edition button is there
@@ -1973,11 +2476,11 @@ def test_petition_project_rai_button(client, haie_user, haie_instructor_44, site
     ],
 )
 def test_request_info_default_message(
-    client, haie_instructor_44, site, category, expect_ru_fragment
+    client, haie_coordinator_44, site, category, expect_ru_fragment
 ):
     """The default message includes the department and, for RU projects, a warning."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
         status__stage="instruction_d",
@@ -2003,11 +2506,11 @@ def test_request_info_default_message(
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_request_for_info(
-    mock_ds_msg, client, haie_instructor_44, site
+    mock_ds_msg, client, haie_coordinator_44, site
 ):
     """Instructors can request for additional info."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     today = date.today()
@@ -2042,11 +2545,11 @@ def test_petition_project_request_for_info(
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_resume_instruction(
-    mock_ds_msg, client, haie_instructor_44, site
+    mock_ds_msg, client, haie_coordinator_44, site
 ):
     """Instructors can resume_instruction."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     today = date.today()
@@ -2108,10 +2611,135 @@ def test_petition_project_resume_instruction(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_request_info_date_in_past(client, haie_instructor_44, site):
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """Receiving the documents restarts the delay, so a new receipt goes out."""
+
+    client.force_login(haie_coordinator_44)
+
+    today = date.today()
+    RUConfigHaieFactory()
+    # Already submitted, so only the resumption can send a receipt
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage="instruction_d",
+        original_due_date=today,
+        due_date=today + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    new_due_date = today + timedelta(days=60)
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": new_due_date,
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "L'instruction du dossier a repris." in content
+    assert "Le récépissé de déclaration sera envoyé au demandeur" in content
+
+    assert mock_receipt_task.delay.call_count == 1
+    assert mock_receipt_task.delay.call_args[0] == (
+        project.pk,
+        today.isoformat(),
+        new_due_date.isoformat(),
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_refused_without_a_suspension(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The button is hidden when nothing is awaited, so only a replayed post gets here."""
+
+    client.force_login(haie_coordinator_44)
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    assert project.is_additional_information_requested is False
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    today = date.today()
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    assert "Ce dossier n'est pas en attente de compléments" in res.content.decode()
+
+    assert not project.status_history.filter(type=LOG_TYPES.resumption).exists()
+    assert not mock_receipt_task.delay.called
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The receipt only covers the déclaration stage of the régime unique."""
+
+    client.force_login(haie_coordinator_44)
+
+    today = date.today()
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_a",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage="instruction_a",
+        original_due_date=today,
+        due_date=today + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "L'instruction du dossier a repris." in content
+    assert "récépissé" not in content
+    assert not mock_receipt_task.delay.called
+
+
+@pytest.mark.django_db(transaction=True)
+def test_request_info_date_in_past(client, haie_coordinator_44, site):
     """Requesting additional info with a past date is rejected."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
 
@@ -2134,10 +2762,10 @@ def test_request_info_date_in_past(client, haie_instructor_44, site):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_request_info_date_exceeds_three_months(client, haie_instructor_44, site):
+def test_request_info_date_exceeds_three_months(client, haie_coordinator_44, site):
     """Requesting additional info with a date beyond 3 months is rejected."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
 
@@ -2160,10 +2788,10 @@ def test_request_info_date_exceeds_three_months(client, haie_instructor_44, site
 
 
 @pytest.mark.django_db(transaction=True)
-def test_request_info_errors_reopen_modal(client, haie_instructor_44, site):
+def test_request_info_errors_reopen_modal(client, haie_coordinator_44, site):
     """When the request-info form has errors, the modal auto-opens."""
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
 
@@ -2184,7 +2812,7 @@ def test_request_info_errors_reopen_modal(client, haie_instructor_44, site):
     assert "fr-modal--opened" in content
 
 
-def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_user):
+def test_messagerie_access_stores_access_date(client, haie_coordinator_44, haie_user):
 
     qs = LatestMessagerieAccess.objects.all()
     assert qs.count() == 0
@@ -2203,14 +2831,14 @@ def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_u
     assert qs.count() == 0
 
     # Logged user accessed it's messagerie
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     res = client.get(messagerie_url)
     assert res.status_code == 200
     assert qs.count() == 1
 
     # Access was logged
     access = qs[0]
-    assert access.user == haie_instructor_44
+    assert access.user == haie_coordinator_44
     assert access.project == project
     assert access.access.timestamp() == pytest.approx(
         timezone.now().timestamp(), abs=100
@@ -2222,7 +2850,7 @@ def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_u
     assert qs.count() == 1
 
 
-def test_project_list_unread_pill(client, haie_instructor_44):
+def test_project_list_unread_pill(client, haie_coordinator_44):
     DCConfigHaieFactory()
 
     read_msg = '<td class="messagerie-col read">'
@@ -2236,7 +2864,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
         demarche_numerique_date_depot=last_month,
         latest_petitioner_msg=None,
     )
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse("petition_project_list")
 
     # The messagerie was never accessed, there is no message in the project
@@ -2252,8 +2880,8 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     # there is an existing message in the project before the user joined in
     project.latest_petitioner_msg = last_week
     project.save()
-    haie_instructor_44.date_joined = now
-    haie_instructor_44.save()
+    haie_coordinator_44.date_joined = now
+    haie_coordinator_44.save()
     res = client.get(url)
     assert res.status_code == 200
     assert read_msg in res.content.decode()
@@ -2263,8 +2891,8 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     # there is an existing message in the project after the user joined in
     project.latest_petitioner_msg = last_week
     project.save()
-    haie_instructor_44.date_joined = last_month
-    haie_instructor_44.save()
+    haie_coordinator_44.date_joined = last_month
+    haie_coordinator_44.save()
     res = client.get(url)
     assert res.status_code == 200
     assert read_msg not in res.content.decode()
@@ -2272,7 +2900,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
 
     # The messagerie was accessed before the latest message
     access = LatestMessagerieAccess.objects.create(
-        project=project, user=haie_instructor_44, access=last_month
+        project=project, user=haie_coordinator_44, access=last_month
     )
     res = client.get(url)
     assert res.status_code == 200
@@ -2288,7 +2916,131 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg not in res.content.decode()
 
 
-def test_alternatives_list_permission(client, haie_user, haie_instructor_44, site):
+class TestAlternativeResultView:
+    """Tests for Alternative result instruction page view"""
+
+    @pytest.fixture
+    def project(self):
+        """Create config and regulation needed for"""
+        DCConfigHaieFactory()
+        # At least one regulation is needed so the moulinette produces results by
+        # category, from which the activation takes the project's new category.
+        HaieRegulationFactory()
+        project = PetitionProjectFactory()
+        return project
+
+    def test_alternatives_result_view_permissions(
+        self, client, haie_user, haie_coordinator_44, project
+    ):
+        """Test alternative result page view permissions"""
+        simulation = SimulationFactory(project=project, comment="Simulation 2")
+
+        display_alternative_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation.id},
+        )
+        # AS anonymous WHEN I visit alternative page
+        response = client.get(display_alternative_url)
+        # THEN page redirects to moulinette form
+        assert response.status_code == 302
+        assert response.url.startswith(reverse("moulinette_form"))
+
+        # AS basic haie user
+        client.force_login(haie_user)
+        # WHEN I visit alternative page
+        response = client.get(display_alternative_url)
+        # THEN page redirects to moulinette form
+        assert response.status_code == 302
+        assert response.url.startswith(reverse("moulinette_form"))
+
+    @patch("envergo.petitions.views.get_context_from_dn", return_value={})
+    def test_alternatives_result_view_with_petitioner_message(
+        self, mock_dn, client, haie_coordinator_44, project
+    ):
+        """The page does not depend on the messagerie access annotations."""
+        # The dossier sync resets the field, which is what the page reads
+        PetitionProject.objects.filter(pk=project.pk).update(
+            latest_petitioner_msg=timezone.now()
+        )
+        simulation = project.simulations.first()
+        client.force_login(haie_coordinator_44)
+
+        url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation.id},
+        )
+        response = client.get(url)
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Simulation initiale" in content
+        assert format_ds_number(project.demarche_numerique_dossier_number) in content
+        assert_matomo_url(
+            response, "/projet/+ref_projet+/instruction/alternatives/+simulation+/"
+        )
+
+    def test_alternatives_result_view_content(
+        self, client, haie_user, haie_coordinator_44, project
+    ):
+        """Test alternative result page view permissions"""
+        simulation_moulinette_url = update_qs(
+            project.moulinette_url,
+            {"motif": "securite"},
+        )
+
+        simulation1 = project.simulations.first()
+        simulation2 = SimulationFactory(
+            project=project,
+            moulinette_url=simulation_moulinette_url,
+            comment="Simulation 2",
+        )
+
+        # AS instructor
+        client.force_login(haie_coordinator_44)
+
+        # WHEN I visit active and initiale simulation page
+        display_active_simulation_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation1.id},
+        )
+        response = client.get(display_active_simulation_url)
+        # THEN page is 200
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Simulation initiale" in content
+        assert "Modifier" not in content
+        assert "Active" in content
+        assert "Démarrer une nouvelle simulation" in content
+        assert "Autre" in content
+        assert_matomo_url(
+            response, "/projet/+ref_projet+/instruction/alternatives/+simulation+/"
+        )
+
+        # WHEN I visit alternative simulation page
+        display_alternative_simulation_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation2.id},
+        )
+        response = client.get(display_alternative_simulation_url)
+        # THEN page is 200
+        assert response.status_code == 200
+        content = response.content.decode()
+        # AND simulation is not displayed as active
+        assert "Active" not in content
+        # AND content is related to this simulation
+        assert "Mise en sécurité, risque sanitaire" in content
+
+        # WHEN I visit not existing alternative page
+        display_alternative_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": "1234"},
+        )
+        response = client.get(display_alternative_url)
+        # THEN page is 404
+        assert response.status_code == 404
+
+
+def test_alternatives_list_permission(client, haie_user, haie_coordinator_44, site):
     """Test alternative flow for petition project"""
 
     # GIVEN a petition project
@@ -2314,7 +3066,7 @@ def test_alternatives_list_permission(client, haie_user, haie_instructor_44, sit
     assert response.status_code == 403
 
     # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(alternative_url)
 
     # THEN the page is displayed
@@ -2323,7 +3075,7 @@ def test_alternatives_list_permission(client, haie_user, haie_instructor_44, sit
     assert "<h2>Simulations alternatives</h2>" in content
 
 
-def test_alternatives_list_shows_data(client, haie_instructor_44):
+def test_alternatives_list_shows_data(client, haie_coordinator_44):
 
     # GIVEN a petition project
     DCConfigHaieFactory()
@@ -2349,7 +3101,7 @@ def test_alternatives_list_shows_data(client, haie_instructor_44):
     assert project.simulations.all().count() == 4
 
     # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(alternative_url)
 
     assert response.status_code == 200
@@ -2361,7 +3113,7 @@ def test_alternatives_list_shows_data(client, haie_instructor_44):
     assert "Simulation test" not in content
 
 
-def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
+def test_alternative_edit_permission(client, haie_user, haie_coordinator_44):
     DCConfigHaieFactory()
     HaieRegulationFactory()
     project = PetitionProjectFactory(reference="ABC123")
@@ -2387,13 +3139,13 @@ def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
     assert res.status_code == 403
 
     # Instructors can update alternatives
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     res = client.post(activate_url)
     assert res.status_code == 302
     assert res.url == "/projet/ABC123/instruction/alternatives/"
 
 
-def test_alternative_activate(client, haie_instructor_44):
+def test_alternative_activate(client, haie_coordinator_44):
 
     DCConfigHaieFactory()
     # At least one regulation is needed so the moulinette produces results by
@@ -2419,7 +3171,7 @@ def test_alternative_activate(client, haie_instructor_44):
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url)
     assert response.status_code == 302
 
@@ -2432,7 +3184,7 @@ def test_alternative_activate(client, haie_instructor_44):
     assert s2.is_active
 
 
-def test_alternative_delete(client, haie_instructor_44):
+def test_alternative_delete(client, haie_coordinator_44):
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -2446,7 +3198,7 @@ def test_alternative_delete(client, haie_instructor_44):
     s2.is_active = True
     s2.save()
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Initial simulation cannot be deleted
     delete_url = reverse(
@@ -2561,7 +3313,7 @@ def test_simulation_form_surfaces_moulinette_errors():
 
 
 def test_alternative_create_invalid_url_lists_errors_on_page(
-    client, haie_instructor_44
+    client, haie_coordinator_44
 ):
     """Submitting an invalid simulation url re-renders the page with, in one
     place, the headline message and every underlying error prefixed by its field
@@ -2578,7 +3330,7 @@ def test_alternative_create_invalid_url_lists_errors_on_page(
     )
     invalid_url = remove_from_qs(invalid_url, "localisation_pac")
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(
         create_url,
         {"moulinette_url": invalid_url, "source": "instructor", "comment": "x"},
@@ -2621,6 +3373,103 @@ def test_simulation_form_unfolds_short_moulinette_url():
     assert form.cleaned_data["moulinette_url"] == project.moulinette_url
 
 
+def test_simulation_form_resolves_consultation_url_to_active_simulation():
+    """A petition project consultation url is swapped for that project's active simulation url."""
+    DCConfigHaieFactory()
+    other_project = PetitionProjectFactory()
+    consultation_url = f"http://haie.testserver:8000{reverse('petition_project', args=[other_project.reference])}"
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": consultation_url,
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["moulinette_url"] == other_project.moulinette_url
+
+
+def test_simulation_form_rejects_consultation_url_for_unknown_reference():
+    """A consultation-shaped url for a nonexistent project falls back to the generic invalid-simulation error"""
+    DCConfigHaieFactory()
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.testserver:8000/projet/DOESNOTEXIST/consultation/",
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert not form.is_valid()
+    assert form.errors["moulinette_url"] == [
+        "Il semble que l'url ne corresponde pas à une page de simulation valide."
+    ]
+
+
+def test_simulation_form_resolves_shortened_consultation_url():
+    """A shortened project consultation url is unfolded, then swapped for that project's active simulation url"""
+    DCConfigHaieFactory()
+    other_project = PetitionProjectFactory()
+    consultation_url = f"http://haie.testserver:8000{reverse('petition_project', args=[other_project.reference])}"
+    UrlMapping.objects.create(key="abcdef", url=consultation_url)
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.local:8000/abcdef/",
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["moulinette_url"] == other_project.moulinette_url
+
+
+def test_simulation_form_rejects_mismatched_project_reference():
+    """A url whose project_reference differs from the target project is rejected."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    other_project = PetitionProjectFactory()
+    mismatched_url = update_qs(
+        project.moulinette_url, {"project_reference": other_project.reference}
+    )
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": mismatched_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+        project_reference=project.reference,
+    )
+
+    assert not form.is_valid()
+    assert (
+        format_ds_number(other_project.demarche_numerique_dossier_number)
+        in form.errors["moulinette_url"][0]
+    )
+
+
+def test_simulation_form_accepts_url_without_project_reference():
+    """A url without any project_reference param is accepted regardless of target project."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+        project_reference="SOME-OTHER-REF",
+    )
+
+    assert form.is_valid(), form.errors
+
+
 def test_alternative_create_requires_change_permission(client, haie_user_44):
     """Creating an alternative requires change permission, not mere view access.
 
@@ -2647,7 +3496,7 @@ def test_alternative_create_requires_change_permission(client, haie_user_44):
     assert project.simulations.count() == 1
 
 
-def test_alternative_create_happy_path(client, haie_instructor_44):
+def test_alternative_create_happy_path(client, haie_coordinator_44):
     """An instructor posting a valid url creates an inert alternative."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -2656,7 +3505,7 @@ def test_alternative_create_happy_path(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(
         create_url,
         {
@@ -2668,11 +3517,12 @@ def test_alternative_create_happy_path(client, haie_instructor_44):
     )
 
     assert response.status_code == 200
-    assert response.redirect_chain[-1][0] == create_url
+    assert response.redirect_chain[-1][0] == create_url + "#"
 
     assert project.simulations.count() == 2
     created = project.simulations.get(is_initial=False)
     assert created.source == "instructor"
+    assert created.created_by == haie_coordinator_44
     assert created.comment == "Nouvelle alternative"
     assert not created.is_active
     assert not created.is_initial
@@ -2681,8 +3531,92 @@ def test_alternative_create_happy_path(client, haie_instructor_44):
     assert "La simulation alternative a été ajoutée." in flashes
 
 
+def test_alternative_create_rejects_url_for_another_project(
+    client, haie_coordinator_44
+):
+    """A simulation url tagged with another project's reference is rejected."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    other_project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    mismatched_url = update_qs(
+        project.moulinette_url, {"project_reference": other_project.reference}
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": mismatched_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 200
+    assert project.simulations.count() == 1
+    assert (
+        format_ds_number(other_project.demarche_numerique_dossier_number)
+        in response.context["form"].errors["moulinette_url"][0]
+    )
+
+
+def test_alternative_create_allows_url_for_same_project(client, haie_coordinator_44):
+    """A simulation url tagged with this project's own reference is accepted."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    matching_url = update_qs(
+        project.moulinette_url, {"project_reference": project.reference}
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": matching_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 302
+    assert project.simulations.count() == 2
+
+
+def test_alternative_create_success_redirect_has_no_fragment(
+    client, haie_coordinator_44
+):
+    """The post-save redirect clears any #add-alternative fragment."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 302
+    assert response.url.endswith("#")
+
+
 def test_alternative_create_keeps_existing_active_and_initial(
-    client, haie_instructor_44
+    client, haie_coordinator_44
 ):
     """Creating an alternative leaves the current active/initial simulation untouched."""
     DCConfigHaieFactory()
@@ -2696,7 +3630,7 @@ def test_alternative_create_keeps_existing_active_and_initial(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     client.post(
         create_url,
         {
@@ -2713,7 +3647,7 @@ def test_alternative_create_keeps_existing_active_and_initial(
     assert original.is_initial
 
 
-def test_alternative_create_allows_multiple_inert(client, haie_instructor_44):
+def test_alternative_create_allows_multiple_inert(client, haie_coordinator_44):
     """Several inert alternatives coexist without tripping the partial-unique constraints."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -2722,7 +3656,7 @@ def test_alternative_create_allows_multiple_inert(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     for comment in ["Alternative 1", "Alternative 2"]:
         response = client.post(
             create_url,
@@ -2738,7 +3672,7 @@ def test_alternative_create_allows_multiple_inert(client, haie_instructor_44):
     assert project.simulations.filter(is_active=False).count() == 2
 
 
-def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor_44):
+def test_alternative_activate_rejected_on_closed_dossier(client, haie_coordinator_44):
     """A closed dossier blocks activation, with a page-wide error message.
 
     The active simulation is left unchanged and the instructor is redirected
@@ -2760,7 +3694,7 @@ def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url, follow=True)
 
     assert response.status_code == 200
@@ -2772,7 +3706,7 @@ def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor
     assert any("clos" in message for message in page_messages)
 
 
-def test_alternative_create_error_logs_analytics_event(client, haie_instructor_44):
+def test_alternative_create_error_logs_analytics_event(client, haie_coordinator_44):
     """A failed creation records an "erreur"/"simualt_add" analytics event."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -2785,7 +3719,7 @@ def test_alternative_create_error_logs_analytics_event(client, haie_instructor_4
         {"motif": "chemin_acces", "reimplantation": "remplacement"},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(
         create_url,
         {
@@ -2800,13 +3734,13 @@ def test_alternative_create_error_logs_analytics_event(client, haie_instructor_4
 
     event = Event.objects.get(category="erreur", event="simualt_add")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["user_type"] == "coordinator"
     assert any(
         "création d’un accès" in error for error in event.metadata["moulinette_errors"]
     )
 
 
-def test_alternative_activate_error_logs_analytics_event(client, haie_instructor_44):
+def test_alternative_activate_error_logs_analytics_event(client, haie_coordinator_44):
     """A closed-dossier activation records an "erreur"/"simualt_activate" event."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -2824,14 +3758,14 @@ def test_alternative_activate_error_logs_analytics_event(client, haie_instructor
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url)
 
     assert response.status_code == 302
 
     event = Event.objects.get(category="erreur", event="simualt_activate")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["user_type"] == "coordinator"
     assert event.metadata["moulinette_url"] == alternative.moulinette_url
     assert event.metadata["message"]
     # A closed dossier is not a moulinette problem, so there is no detail list.
@@ -2839,7 +3773,7 @@ def test_alternative_activate_error_logs_analytics_event(client, haie_instructor
 
 
 def test_alternative_activate_rejected_when_simulation_invalid(
-    client, haie_instructor_44
+    client, haie_coordinator_44
 ):
     """Activating a simulation whose url is no longer a valid moulinette is
     rejected: it is not activated, the page shows a headline message and, below
@@ -2866,7 +3800,7 @@ def test_alternative_activate_rejected_when_simulation_invalid(
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url, follow=True)
 
     assert response.status_code == 200
@@ -2892,13 +3826,13 @@ def test_alternative_activate_rejected_when_simulation_invalid(
 
     event = Event.objects.get(category="erreur", event="simualt_activate")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["user_type"] == "coordinator"
     assert any(
         "création d’un accès" in error for error in event.metadata["moulinette_errors"]
     )
 
 
-def test_alternative_activate_rejected_when_multi_category(client, haie_instructor_44):
+def test_alternative_activate_rejected_when_multi_category(client, haie_coordinator_44):
     """A multi-category simulation cannot be activated.
 
     A dossier must stay mono-category, so activating a simulation mixing
@@ -2929,7 +3863,7 @@ def test_alternative_activate_rejected_when_multi_category(client, haie_instruct
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url, follow=True)
 
     assert response.status_code == 200
@@ -2955,12 +3889,12 @@ def test_alternative_activate_rejected_when_multi_category(client, haie_instruct
 
     event = Event.objects.get(category="erreur", event="simualt_activate")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["user_type"] == "coordinator"
     assert event.metadata["moulinette_url"] == mixed_url
     assert "catégorie" in event.metadata["message"]
 
 
-def test_alternative_activate_updates_project_category(client, haie_instructor_44):
+def test_alternative_activate_updates_project_category(client, haie_coordinator_44):
     """Activating a mono-category simulation gives its category to the dossier.
 
     A simulation of a single category different from the dossier's one is
@@ -2988,7 +3922,7 @@ def test_alternative_activate_updates_project_category(client, haie_instructor_4
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url)
 
     assert response.status_code == 302
@@ -3001,7 +3935,7 @@ def test_alternative_activate_updates_project_category(client, haie_instructor_4
 
 
 def test_alternative_activate_mixed_hedges_without_single_procedure(
-    client, haie_instructor_44
+    client, haie_coordinator_44
 ):
     """Without single procedure, mixed hedges are no obstacle to activation.
 
@@ -3031,7 +3965,7 @@ def test_alternative_activate_mixed_hedges_without_single_procedure(
         },
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(activate_url)
 
     assert response.status_code == 302
@@ -3041,7 +3975,7 @@ def test_alternative_activate_mixed_hedges_without_single_procedure(
     assert project._category == "hru"
 
 
-def test_alternative_create_allows_multi_category(client, haie_instructor_44):
+def test_alternative_create_allows_multi_category(client, haie_coordinator_44):
     """Saving a multi-category alternative simulation stays possible.
 
     Only the activation is blocked for multi-category simulations; recording
@@ -3062,7 +3996,7 @@ def test_alternative_create_allows_multi_category(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(
         create_url,
         {
@@ -3217,7 +4151,7 @@ def test_consultations_view_requires_haie_access(client, haie_user):
 
 
 def test_consultations_view_accessible_to_department_instructor(
-    client, haie_instructor_44
+    client, haie_coordinator_44
 ):
     """Test that consultations view is accessible to department instructor"""
     DCConfigHaieFactory()
@@ -3227,14 +4161,14 @@ def test_consultations_view_accessible_to_department_instructor(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(consultations_url)
     assert response.status_code == 200
     assert "Services consultés" in response.content.decode()
 
 
 def test_consultations_view_inaccessible_to_invited_instructor(client, haie_user):
-    """Test that consultations view is accessible to invited instructor"""
+    """Test that consultations view is not accessible to invited instructor"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     # Create an accepted invitation token for haie_user
@@ -3251,7 +4185,7 @@ def test_consultations_view_inaccessible_to_invited_instructor(client, haie_user
 
 
 def test_consultations_view_displays_accepted_tokens(
-    client, haie_instructor_44, haie_user
+    client, haie_coordinator_44, haie_user
 ):
     """Test that consultations view displays only accepted tokens"""
     DCConfigHaieFactory()
@@ -3260,19 +4194,19 @@ def test_consultations_view_displays_accepted_tokens(
     # Create tokens with different states
     # Pending token (not accepted - should NOT be displayed)
     token1 = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
+        petition_project=project, created_by=haie_coordinator_44
     )
     # Accepted token (should be displayed)
     token2 = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         user=haie_user,  # Accepted
     )
     # Create expired but not accepted token (should NOT be displayed)
     past_date = timezone.now() - timedelta(days=31)
     token3 = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         valid_until=past_date,
     )
 
@@ -3281,7 +4215,7 @@ def test_consultations_view_displays_accepted_tokens(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(consultations_url)
 
     assert response.status_code == 200
@@ -3333,7 +4267,7 @@ def test_invitation_token_create_requires_change_permission(client, haie_user):
 
 
 def test_invitation_token_create_authorized_for_department_instructor(
-    client, haie_instructor_44, site
+    client, haie_coordinator_44, site
 ):
     """Test that department instructor can create tokens"""
     DCConfigHaieFactory()
@@ -3343,16 +4277,16 @@ def test_invitation_token_create_authorized_for_department_instructor(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
-    response = client.post(create_url)
+    client.force_login(haie_coordinator_44)
+    response = client.post(create_url, {"invitee": "other"})
 
     assert response.status_code == 200
     # Verify token was created
-    token = InvitationToken.objects.get(created_by=haie_instructor_44)
+    token = InvitationToken.objects.get(created_by=haie_coordinator_44)
     assert token.petition_project == project
 
 
-def test_invitation_token_create_returns_html(client, haie_instructor_44, site):
+def test_invitation_token_create_returns_html(client, haie_coordinator_44, site):
     """Test that token creation returns HTML template instead of JSON"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3361,8 +4295,8 @@ def test_invitation_token_create_returns_html(client, haie_instructor_44, site):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
-    response = client.post(create_url)
+    client.force_login(haie_coordinator_44)
+    response = client.post(create_url, {"invitee": "other"})
 
     assert response.status_code == 200
     assert response["Content-Type"].startswith("text/html")
@@ -3374,7 +4308,7 @@ def test_invitation_token_create_returns_html(client, haie_instructor_44, site):
 
 
 def test_invitation_token_create_generates_unique_token(
-    client, haie_instructor_44, site
+    client, haie_coordinator_44, site
 ):
     """Test that each creation generates a unique token"""
     DCConfigHaieFactory()
@@ -3384,21 +4318,40 @@ def test_invitation_token_create_generates_unique_token(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Create first token
-    response1 = client.post(create_url)
+    response1 = client.post(create_url, {"invitee": "other"})
     assert response1.status_code == 200
-    token1 = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
+    token1 = InvitationToken.objects.filter(created_by=haie_coordinator_44).first()
 
     # Create second token
-    response2 = client.post(create_url)
+    response2 = client.post(create_url, {"invitee": "other"})
     assert response2.status_code == 200
-    token2 = InvitationToken.objects.filter(created_by=haie_instructor_44).last()
+    token2 = InvitationToken.objects.filter(created_by=haie_coordinator_44).last()
 
     # Tokens should be different
     assert token1.token != token2.token
-    assert InvitationToken.objects.filter(created_by=haie_instructor_44).count() == 2
+    assert InvitationToken.objects.filter(created_by=haie_coordinator_44).count() == 2
+
+
+@pytest.mark.parametrize("data", [{}, {"invitee": "unknown"}])
+def test_invitation_token_create_requires_invitee_choice(
+    client, haie_coordinator_44, site, data
+):
+    """A missing or unknown invitee choice is rejected and creates no token"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(create_url, data)
+
+    assert response.status_code == 400
+    assert not InvitationToken.objects.filter(created_by=haie_coordinator_44).exists()
 
 
 # =============================================================================
@@ -3437,12 +4390,12 @@ def test_invitation_token_delete_requires_change_permission(client, haie_user):
     assert response.status_code == 403
 
 
-def test_invitation_token_delete_success(client, haie_instructor_44):
+def test_invitation_token_delete_success(client, haie_coordinator_44):
     """Test successful token deletion"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
+        petition_project=project, created_by=haie_coordinator_44
     )
 
     delete_url = reverse(
@@ -3450,7 +4403,7 @@ def test_invitation_token_delete_success(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(delete_url, {"token_id": token.id})
 
     assert response.status_code == 302
@@ -3459,7 +4412,7 @@ def test_invitation_token_delete_success(client, haie_instructor_44):
     assert not InvitationToken.objects.filter(id=token.id).exists()
 
 
-def test_invitation_token_delete_requires_token_id(client, haie_instructor_44):
+def test_invitation_token_delete_requires_token_id(client, haie_coordinator_44):
     """Test that token deletion requires token_id parameter"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3469,14 +4422,14 @@ def test_invitation_token_delete_requires_token_id(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(delete_url)
 
     assert response.status_code == 400
     assert "Identifiant de token manquant" in response.content.decode()
 
 
-def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
+def test_invitation_token_delete_token_not_found(client, haie_coordinator_44):
     """Test deletion of non-existent token"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3486,13 +4439,13 @@ def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(delete_url, {"token_id": 99999})
 
     assert response.status_code == 404
 
 
-def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44):
+def test_invitation_token_delete_token_wrong_project(client, haie_coordinator_44):
     """Test deletion of token from different project"""
     DCConfigHaieFactory()
     project_a = PetitionProjectFactory()
@@ -3500,7 +4453,7 @@ def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44)
 
     # Create token for project A
     token = InvitationTokenFactory(
-        petition_project=project_a, created_by=haie_instructor_44
+        petition_project=project_a, created_by=haie_coordinator_44
     )
 
     # Try to delete from project B
@@ -3509,7 +4462,7 @@ def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44)
         kwargs={"reference": project_b.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(delete_url, {"token_id": token.id})
 
     assert response.status_code == 404
@@ -3519,12 +4472,12 @@ def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44)
     assert InvitationToken.objects.filter(id=token.id).exists()
 
 
-def test_invitation_token_delete_logs_analytics_event(client, haie_instructor_44):
+def test_invitation_token_delete_logs_analytics_event(client, haie_coordinator_44):
     """Test that token deletion logs analytics event"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
+        petition_project=project, created_by=haie_coordinator_44
     )
 
     delete_url = reverse(
@@ -3532,18 +4485,18 @@ def test_invitation_token_delete_logs_analytics_event(client, haie_instructor_44
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.post(delete_url, {"token_id": token.id})
 
     assert response.status_code == 302
 
 
-def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
+def test_invitation_token_delete_only_accepts_post(client, haie_coordinator_44):
     """Test that deletion only accepts POST method"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
+        petition_project=project, created_by=haie_coordinator_44
     )
 
     delete_url = reverse(
@@ -3551,7 +4504,7 @@ def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # GET should not work
     response = client.get(delete_url, {"token_id": token.id})
@@ -3566,7 +4519,7 @@ def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
 # =============================================================================
 
 
-def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, site):
+def test_invitation_workflow_full_cycle(client, haie_coordinator_44, haie_user, site):
     """Test complete invitation workflow from creation to acceptance"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3577,8 +4530,8 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
-    response = client.post(create_url)
+    client.force_login(haie_coordinator_44)
+    response = client.post(create_url, {"invitee": "other"})
     assert response.status_code == 200
 
     # Step 2: Verify token does NOT appear in consultations list (not accepted yet)
@@ -3594,7 +4547,7 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
     assert "Aucun invité n'a encore consulté le dossier" in content
 
     # Step 3: Get the token and simulate user acceptance
-    token = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
+    token = InvitationToken.objects.filter(created_by=haie_coordinator_44).first()
     token.user = haie_user
     token.save()
 
@@ -3613,7 +4566,7 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
 
 
 def test_instructor_view_token_matomo_invitation(
-    client, haie_instructor_44, haie_user, site
+    client, haie_coordinator_44, haie_user, site
 ):
     """Test that instructor view returns 403 when user uses an invalid token"""
     DCConfigHaieFactory()
@@ -3622,10 +4575,10 @@ def test_instructor_view_token_matomo_invitation(
     # GIVEN a token
     invitation_token = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
     )
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
     # WHEN haie_user tries to get page using this token
@@ -3637,18 +4590,15 @@ def test_instructor_view_token_matomo_invitation(
     assert_matomo_url(response, "/projet/+ref_projet+/instruction/invitation/accepted")
 
 
-def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):
+def test_instructor_view_token_expired_403(
+    client, haie_coordinator_44, haie_user, site
+):
     """Test that instructor view returns 403 when user use an invalid token"""
-    DCConfigHaieFactory(
-        demarche_numerique_display_fields={
-            "project_url": "ABC123",
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
 
@@ -3656,7 +4606,7 @@ def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user
     past_date = timezone.now() - timedelta(days=31)
     invitation_token = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         valid_until=past_date,
     )
     # WHEN haie_user tries to get page using this token
@@ -3674,7 +4624,7 @@ def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user
     other_haie_user = UserFactory(is_haie_user=True)
     invitation_token = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         user=other_haie_user,
     )
     # WHEN haie_user tries to get page using this token
@@ -3687,26 +4637,26 @@ def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user
     assert response.template_name == "haie/petitions/403_token_expired.html"
 
 
-def test_invitation_token_expiration_display(client, haie_instructor_44, haie_user):
+def test_invitation_token_expiration_display(client, haie_coordinator_44, haie_user):
     """Test that only accepted tokens are displayed, regardless of expiration"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     # Create pending token (not accepted - should NOT be displayed)
-    InvitationTokenFactory(petition_project=project, created_by=haie_instructor_44)
+    InvitationTokenFactory(petition_project=project, created_by=haie_coordinator_44)
 
     # Create expired but not accepted token (should NOT be displayed)
     past_date = timezone.now() - timedelta(days=31)
     InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         valid_until=past_date,
     )
 
     # Create accepted token (should be displayed)
     accepted_token = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         user=haie_user,
     )
 
@@ -3715,7 +4665,7 @@ def test_invitation_token_expiration_display(client, haie_instructor_44, haie_us
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(consultations_url)
 
     assert response.status_code == 200
@@ -3737,16 +4687,16 @@ def test_invitation_token_expiration_display(client, haie_instructor_44, haie_us
 
 
 def test_menu_consultations_link_visible_only_for_department_instructor(
-    client, haie_instructor_44, haie_user
+    client, haie_coordinator_44, haie_user
 ):
     """Test that consultations link in menu is visible only for department instructors"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     # Department instructor should see the link
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     instructor_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     response = client.get(instructor_url)
     assert response.status_code == 200
@@ -3779,7 +4729,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
     )
 
 
-def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_user):
+def test_revoke_button_shown_for_all_tokens(client, haie_coordinator_44, haie_user):
     """Test that revoke button is shown for all accepted tokens"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3789,19 +4739,19 @@ def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_use
 
     # Create pending token (should NOT be displayed)
     pending_token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
+        petition_project=project, created_by=haie_coordinator_44
     )
 
     # Create accepted tokens (should be displayed)
     accepted_token1 = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         user=haie_user,
     )
 
     accepted_token2 = InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         user=haie_user2,
     )
 
@@ -3810,7 +4760,7 @@ def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_use
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(consultations_url)
 
     assert response.status_code == 200
@@ -3831,7 +4781,7 @@ def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_use
     assert content.count("revoke-token-form") == 2
 
 
-def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_user):
+def test_tokens_ordered_by_creation_date_desc(client, haie_coordinator_44, haie_user):
     """Test that accepted tokens are ordered by creation date (newest first)"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3841,24 +4791,24 @@ def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_u
 
     # Create accepted tokens with different creation dates
     old_token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44, user=haie_user
+        petition_project=project, created_by=haie_coordinator_44, user=haie_user
     )
     old_token.created_at = timezone.now() - timedelta(days=5)
     old_token.save()
 
     medium_token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44, user=haie_user2
+        petition_project=project, created_by=haie_coordinator_44, user=haie_user2
     )
     medium_token.created_at = timezone.now() - timedelta(days=2)
     medium_token.save()
 
     new_token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44, user=haie_user
+        petition_project=project, created_by=haie_coordinator_44, user=haie_user
     )
 
     # Create a pending token (should NOT be in results)
     pending_token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
+        petition_project=project, created_by=haie_coordinator_44
     )
 
     consultations_url = reverse(
@@ -3866,7 +4816,7 @@ def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_u
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(consultations_url)
 
     assert response.status_code == 200
@@ -3878,16 +4828,16 @@ def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_u
 
 
 def test_consultations_page_shows_creator_and_accepted_user_info(
-    client, haie_instructor_44, haie_user
+    client, haie_coordinator_44, haie_user
 ):
     """Test that consultations page shows accepted user email"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     # Set user names
-    haie_instructor_44.first_name = "Jean"
-    haie_instructor_44.last_name = "Dupont"
-    haie_instructor_44.save()
+    haie_coordinator_44.first_name = "Jean"
+    haie_coordinator_44.last_name = "Dupont"
+    haie_coordinator_44.save()
 
     haie_user.first_name = "Marie"
     haie_user.last_name = "Martin"
@@ -3896,7 +4846,7 @@ def test_consultations_page_shows_creator_and_accepted_user_info(
     # Create accepted token
     InvitationTokenFactory(
         petition_project=project,
-        created_by=haie_instructor_44,
+        created_by=haie_coordinator_44,
         user=haie_user,
     )
 
@@ -3905,7 +4855,7 @@ def test_consultations_page_shows_creator_and_accepted_user_info(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get(consultations_url)
 
     assert response.status_code == 200
@@ -3918,7 +4868,7 @@ def test_consultations_page_shows_creator_and_accepted_user_info(
     # We're not checking for creator email absence since it might appear in other parts of the page
 
 
-def test_old_invitation_url_updated(client, haie_instructor_44, site):
+def test_old_invitation_url_updated(client, haie_coordinator_44, site):
     """Test that the URL pattern has been updated from /invitations/ to /invitations/create/"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3930,12 +4880,12 @@ def test_old_invitation_url_updated(client, haie_instructor_44, site):
     )
     assert "/invitations/create/" in new_create_url
 
-    client.force_login(haie_instructor_44)
-    response = client.post(new_create_url)
+    client.force_login(haie_coordinator_44)
+    response = client.post(new_create_url, {"invitee": "other"})
     assert response.status_code == 200
 
 
-def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
+def test_analytics_events_have_correct_names(client, haie_coordinator_44, site):
     """Test that analytics events use the new event names"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -3946,8 +4896,8 @@ def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(haie_instructor_44)
-    client.post(create_url)
+    client.force_login(haie_coordinator_44)
+    client.post(create_url, {"invitee": "other"})
 
     # Should log "invitation_creation" not "invitation"
     creation_event = Event.objects.filter(
@@ -3956,7 +4906,7 @@ def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
     assert creation_event is not None
 
     # Test deletion event
-    token = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
+    token = InvitationToken.objects.filter(created_by=haie_coordinator_44).first()
     delete_url = reverse(
         "petition_project_invitation_token_delete",
         kwargs={"reference": project.reference},
@@ -4062,3 +5012,69 @@ class TestGetProjectConfig:
             view.get_project_config(project2)
 
             mock_filter.assert_called_once()
+
+
+def test_state_change_modal_hides_to_be_processed_for_single_procedure(
+    client, haie_coordinator_44, site
+):
+    """The view must pass single_procedure down to StateChangeForm.
+
+    The form filters the "to_be_processed" choice out on its own, but only if
+    the view tells it the department runs a single procedure.
+    """
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_coordinator_44)
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
+    assert "to_be_processed" not in stage_choices
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_without_compensation(
+    mock_post,
+    haie_coordinator_44,
+    ep_normandie_criteria,
+    client,
+    site,
+):
+    """The EP page renders without the compensation table.
+
+    Hedges under 10 m get a null coefficient, so the quality condition does not apply.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[HedgeFactory(length=8), HedgeFactory(length=4)])
+    project = PetitionProjectFactory(hedge_data=hedges)
+
+    # EP Normandie asks for the PACAGE number of PAC-located projects
+    project.moulinette_url = update_qs(
+        project.moulinette_url, {"numero_pacage": "012345678"}
+    )
+    project.save()
+
+    moulinette = project.get_moulinette()
+    assert moulinette.ep.hru__ep_normandie.result_code == "dispense_10m"
+
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(instructor_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    # The section renders; only the compensation table inside it is skipped
+    assert "Précisions sur le calcul" in content
+    assert "normandie_plantation_table" not in content

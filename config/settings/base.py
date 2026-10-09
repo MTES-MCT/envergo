@@ -79,6 +79,7 @@ LOCAL_APPS = [
     "envergo.evaluations",
     "envergo.geodata",
     "envergo.stats",
+    "envergo.demarchenumerique",
     "envergo.moulinette",
     "envergo.analytics",
     "envergo.confs.apps.ConfsConfig",
@@ -288,13 +289,25 @@ STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 # Handle file uploads
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "envergo.utils.storages.LocalFileStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
-    "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "upload": {"BACKEND": "envergo.utils.storages.LocalFileStorage"},
+    "public": {"BACKEND": "envergo.utils.storages.LocalFileStorage"},
 }
+
+# Should files be served by Django or proxied through nginx?
+SERVE_FILES_LOCALLY = True
+
+# Browser-facing routes for proxied S3 downloads (see envergo.utils.storages).
+PUBLIC_FILES_URL_PREFIX = "fichiers"
+PRIVATE_FILES_URL_PREFIX = "fichiers-prives"
+
+# Bucket names — only meaningful in production (set via env vars).
+AWS_PRIVATE_BUCKET_NAME = ""
+AWS_PUBLIC_BUCKET_NAME = ""
 
 # CELERY
 if USE_TZ:
@@ -365,11 +378,21 @@ TEST_EMAIL = "test@test.fr"
 MATTERMOST_ENDPOINT_AMENAGEMENT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
 MATTERMOST_ENDPOINT_HAIE = env("DJANGO_MATTERMOST_ENDPOINT_HAIE", default=None)
 
+
+TCHAP_HOMESERVER_URL = env("DJANGO_TCHAP_HOMESERVER_URL", default=None)
+TCHAP_ACCESS_TOKEN = env("DJANGO_TCHAP_ACCESS_TOKEN", default=None)
+TCHAP_ROOM_ID_AMENAGEMENT = env("DJANGO_TCHAP_ROOM_ID_AMENAGEMENT", default=None)
+TCHAP_ROOM_ID_HAIE = env("DJANGO_TCHAP_ROOM_ID_HAIE", default=None)
+
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
 
+# Amenagement Matomo dimensions
 MATOMO_EVALREQ_DIMENSION_ID = 1
 MATOMO_SIMULATION_DIMENSION_ID = 2
+
+# GUH Matomo dimensions
+MATOMO_HAIE_USER_TYPE_DIMENSION_ID = 1
 
 CRISP = {
     "AMENAGEMENT": {
@@ -433,7 +456,7 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
 
 CONTACT_TEAM_ANCHOR = "#contact-accordion-2-equipe"
-CONTACT_DOSSIER_ANCHOR = "#contact-accordion-3-dossier"
+CONTACT_GUH_ANCHOR = "#contact-accordion-3-guh"
 
 MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
     "MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH", default=10000
@@ -441,8 +464,9 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
 
 HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
-HAIE_SINGLE_PROCEDURE_ACTIVATED = env.bool(
-    "DJANGO_HAIE_SINGLE_PROCEDURE_ACTIVATED", default=False
+# Kill switch for the « Éviter / réduire » gate on the haie simulation form
+HAIE_EVITER_REDUIRE_ENABLED = env.bool(
+    "DJANGO_HAIE_EVITER_REDUIRE_ENABLED", default=True
 )
 
 DEMARCHE_NUMERIQUE = {
@@ -516,7 +540,8 @@ HAIE_FAQ_URLS = {
     "IDENTIFY_NATURAL_AREA_MANAGER": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-une-reserve-naturelle-et-son-gestionnaire",  # noqa: E501
     "GUIDE_FORM_HEDGE_DESTRUCTION": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/formulaire-de-declaration-prealable-pour-une-destruction-de-haie-ou-alignement-darbres",  # noqa: E501
     "IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-les-protections-sur-les-haies-dans-le-geoportail-de-lurbanisme#methode-preferentielle",  # noqa: E501
-    "EMERGENCY_PROCEDURE": "https://aide.haie.beta.gouv.fr/",
+    "EMERGENCY_PROCEDURE": "https://aide.haie.beta.gouv.fr/faire-une-simulation-ou-deposer-un-dossier#je-dois-realiser-mes-travaux-en-urgence-quelle-est-la-procedure",  # noqa: E501
+    "INSTRUCTORS_SIMULATIONS_ALTERNATIVES": "https://instruction.haie.beta.gouv.fr/a-propos-du-portail-numerique/utiliser-la-simulation-alternative",  # noqa: E501
 }
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload

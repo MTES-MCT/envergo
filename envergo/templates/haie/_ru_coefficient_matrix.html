@@ -1,6 +1,8 @@
+{% load utils %}
+
 {% for zone_id, ru_zone_config in ru_zone_configs.items %}
   {% if config.has_ru_zonage %}
-    <p>
+    <p id="title-{{ zone_id }}">
       <strong>Zone : « {{ zone_id }} »</strong>
     </p>
   {% endif %}
@@ -8,7 +10,7 @@
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
         <div class="fr-table__content">
-          <table>
+          <table {% if config.has_ru_zonage %}aria-describedby="title-{{ zone_id }}"{% endif %}>
             <tbody>
               <tr>
                 <th scope="col"></th>
@@ -24,14 +26,19 @@
                 </th>
               </tr>
               <tr>
-                <th scope="row">Non arborée</th>
-                <td>{{ ru_zone_config.R1_non_arboree_HD|floatformat:"1g" }}</td>
-                <td>{{ ru_zone_config.R2_non_arboree_LD|floatformat:"1g" }}</td>
+                <th scope="row">{{ RuHedgeType.choices|get_choice_label:'mixte' }}</th>
+                <td>{{ ru_zone_config.R5_arboree_HD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R6_arboree_LD|floatformat:"1g" }}</td>
               </tr>
               <tr>
-                <th scope="row">Arborée</th>
-                <td>{{ ru_zone_config.R3_arboree_HD|floatformat:"1g" }}</td>
-                <td>{{ ru_zone_config.R4_arboree_LD|floatformat:"1g" }}</td>
+                <th scope="row">{{ RuHedgeType.choices|get_choice_label:'arbustive' }}</th>
+                <td>{{ ru_zone_config.R3_arbustive_HD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R4_arbustive_LD|floatformat:"1g" }}</td>
+              </tr>
+              <tr>
+                <th scope="row">{{ RuHedgeType.choices|get_choice_label:'buissonnante' }}</th>
+                <td>{{ ru_zone_config.R1_buissonnante_HD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R2_buissonnante_LD|floatformat:"1g" }}</td>
               </tr>
             </tbody>
           </table>

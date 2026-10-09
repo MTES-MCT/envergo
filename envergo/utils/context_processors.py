@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.templatetags.static import static
-from django.urls import NoReverseMatch, reverse
+from django.urls import reverse
 
 from envergo.users.forms import NewsletterOptInForm
+
+# Crisp breaks those pages
+CHATBOX_BLACKLIST = ["demo_catchment_area", "input_hedges"]
 
 
 def settings_context(_request):
@@ -10,14 +13,10 @@ def settings_context(_request):
     # Note: we intentionally do NOT expose the entire settings
     # to prevent accidental leaking of sensitive information
 
-    # We disable the chatbox on the catchment area page
-    # Because it breaks the map, for reasons I just don't understand
-    try:
-        catchment_area_page_url = reverse("demo_catchment_area")
-    except NoReverseMatch:
-        catchment_area_page_url = None
-
-    if _request.path == catchment_area_page_url:
+    # resolver_match is None on error pages, whose path matched no view
+    resolver_match = _request.resolver_match
+    view_name = resolver_match.view_name if resolver_match else None
+    if view_name in CHATBOX_BLACKLIST:
         chatbox_enabled = False
     else:
         chatbox_enabled = (
@@ -58,7 +57,7 @@ def multi_sites_context(_request):
         "base_template": _request.base_template,
         "contact_url": f"{reverse("contact_us")}"
         f"{settings.CONTACT_TEAM_ANCHOR if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN else ''}",
-        "contact_dossier_anchor": settings.CONTACT_DOSSIER_ANCHOR,
+        "contact_guh_anchor": settings.CONTACT_GUH_ANCHOR,
         "preview_image_url": (
             _request.build_absolute_uri(static("images/preview_haie.png"))
             if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN

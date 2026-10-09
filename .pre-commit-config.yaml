@@ -35,7 +35,7 @@ repos:
       - id: djlint-django
 
   # Use the project's own stylelint (locked by package-lock.json) so it can't
-  # drift from the gulp build. Requires `npm ci` beforehand.
+  # drift from the project build. Requires `npm ci` beforehand.
   - repo: local
     hooks:
       - id: stylelint

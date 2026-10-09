@@ -12,32 +12,31 @@
 
 {% block main %}
 
+  {{ hedge_data|json_script:"hedge-data" }}
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
        data-conditions-url="{{ hedge_conditions_url }}"
-       data-hedges-data='{{ hedge_data_json|safe }}'
+       data-date="{{ moulinette.date|date:'Y-m-d' }}"
        data-department-lat='{{ department_centroid.lat|unlocalize }}'
        data-department-lng='{{ department_centroid.lng|unlocalize }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
     {% if is_alternative %}
-      <div class="fr-notice fr-notice--info">
-        <div class="fr-notice__body fr-ml-2w">
-          <p>
-            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-            <span><b>Simulation alternative</b> pour ce dossier</span>
-          </p>
-        </div>
-      </div>
+      {% include 'haie/moulinette/_alternative_simulation_notice.html' %}
     {% endif %}
     <div id="saisie-ui">
       <div id="map">
 
-        <div v-if="helpBubble" class="help-bubble">
+        <div id="help-bubble"
+             v-show="helpBubble && (helpBubble === 'initialHelp' || isPointerOverMap)"
+             class="help-bubble"
+             :class="{ 'help-bubble--cursor': helpBubble !== 'initialHelp' }">
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
-          <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
-          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
+          <span v-if="helpBubble === 'drawingHelp'">Clic simple pour continuer le tracé.
+            <br>
+          Double-clic pour terminer.</span>
+          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquer sur la carte pour commencer le tracé</span>
           <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l’emplacement des haies</span>
         </div>
       </div>
@@ -137,7 +136,7 @@
                 </div>
               </div>
               {% if config.single_procedure %}
-                <p v-if="mode === 'removal' && hedges.TO_REMOVE.completelyDrawn().some(h => h.category() !== 'ru')"
+                <p v-if="mode === 'removal' && hedges.TO_REMOVE.hedges.some(h => h.isDrawingCompleted && h.category() !== 'ru')"
                    class="fr-m-2w fr-text--light fr-text--sm">
                   <i>Les alignements d'arbres et les haies en bordure de bâtiment, de place publique ou dans un parc ou
                     un
@@ -282,6 +281,34 @@
         </div>
       </dialog>
 
+      <dialog id="hedge-input-small-screen-warning"
+              class="fr-hidden-md fr-modal"
+              role="dialog"
+              aria-labelledby="hedge-input-small-screen-warning-title">
+        <div class="fr-container fr-container--fluid fr-container-md">
+          <div class="fr-grid-row fr-grid-row--center">
+            <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+              <div class="fr-modal__body">
+                <div class="fr-modal__content fr-pt-4w">
+                  <h1 id="hedge-input-small-screen-warning-title" class="fr-modal__title">Poursuivre sur un ordinateur</h1>
+                  <p>
+                    Hélas, le module de saisie de haie n’est pas adapté aux petits écrans. Merci de reprendre la démarche
+                    sur un ordinateur.
+                  </p>
+                </div>
+                <div class="fr-modal__footer">
+                  <div class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
+                    <button class="fr-btn"
+                            type="button"
+                            aria-controls="hedge-input-small-screen-warning">Fermer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </dialog>
+
       <dialog id="save-modal" class="fr-modal" role="dialog">
         <div class="fr-container fr-container--fluid fr-container-md">
           <div class="fr-grid-row fr-grid-row--center">
@@ -336,6 +363,22 @@
 
   <script defer src="{% static 'vue/dist/vue.global.prod.js' %}"></script>
   <script defer type="module" src="{% static 'hedge_input/app.js' %}"></script>
+
+  {% if mode != "read_only" %}
+    <script>
+      window.addEventListener("load", function () {
+        if (window.matchMedia("(min-width: 48em)").matches) {
+          return;
+        }
+
+        const warning = document.getElementById("hedge-input-small-screen-warning");
+        const modal = warning && window.dsfr ? dsfr(warning).modal : null;
+        if (modal) {
+          modal.disclose();
+        }
+      });
+    </script>
+  {% endif %}
 {% endblock %}
 
 {% block css %}

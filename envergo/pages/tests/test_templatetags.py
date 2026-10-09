@@ -3,6 +3,9 @@ from datetime import date, timedelta
 import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
+from django.template import Context, Template, TemplateSyntaxError
+from django.test import RequestFactory
+from django.urls import reverse
 
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
@@ -15,8 +18,8 @@ pytestmark = pytest.mark.django_db
 @pytest.mark.haie
 def test_petition_department_list(
     inactive_haie_user_44,
-    haie_instructor_no_dept,
-    haie_instructor_44,
+    haie_coordinator_no_dept,
+    haie_coordinator_44,
     haie_user,
     admin_user,
     client,
@@ -44,7 +47,7 @@ def test_petition_department_list(
     assert "Paramétrage" not in content
 
     # GIVEN an authenticated user with no department
-    client.force_login(haie_instructor_no_dept)
+    client.force_login(haie_coordinator_no_dept)
     response = client.get("/")
 
     # THEN department menu is not displayed
@@ -52,7 +55,7 @@ def test_petition_department_list(
     assert "Paramétrage" not in content
 
     # GIVEN an authenticated user instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get("/")
 
     # THEN department menu is displayed with only 44
@@ -70,6 +73,40 @@ def test_petition_department_list(
     assert "Paramétrage" in content
     assert "/parametrage/44/" in content
     assert "/parametrage/34/" in content
+
+
+@pytest.mark.haie
+class TestInstructorFaqMenu:
+    """The "FAQ instructeur" is reserved to users with instruction access.
+
+    Guests and anonymous only get the public one.
+    """
+
+    ADMIN_FAQ_MARKER = "Pour l'administration"
+
+    def test_anonymous_visitor_sees_only_public_faq(self, client):
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER not in content
+
+    def test_guest_sees_only_public_faq(self, client, haie_user):
+        client.force_login(haie_user)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER not in content
+
+    def test_consulted_instructor_sees_instructor_faq(self, client, haie_user_44):
+        client.force_login(haie_user_44)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER in content
+
+    def test_coordinator_sees_instructor_faq(self, client, haie_coordinator_44):
+        client.force_login(haie_coordinator_44)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER in content
+
+    def test_administrator_sees_instructor_faq(self, client, admin_user):
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER in content
 
 
 def test_urlize_html():
@@ -421,11 +458,11 @@ class TestParametrageDepartmentsMenu:
 
         assert "Paramétrage" not in content
 
-    def test_instructor_sees_only_own_department(self, client, haie_instructor_44):
+    def test_instructor_sees_only_own_department(self, client, haie_coordinator_44):
         DCConfigHaieFactory()  # dept 44
         DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
 
-        client.force_login(haie_instructor_44)
+        client.force_login(haie_coordinator_44)
         content = client.get("/").content.decode()
 
         assert "Paramétrage" in content
@@ -538,3 +575,60 @@ class TestParametrageDepartmentsMenu:
         earlier_date = one_year_ago.strftime("%d/%m/%Y")
         later_date = one_year_later.strftime("%d/%m/%Y")
         assert content.index(earlier_date) < content.index(later_date)
+
+
+class TestSidemenuItem:
+    """Tests for the sidemenu_item template tag."""
+
+    def render(self, path, tag_call, **context):
+        """Render a sidemenu_item tag call as if the browser were on ``path``."""
+        request = RequestFactory().get(path)
+        template = Template("{% load pages %}" + tag_call)
+        return template.render(Context({"request": request, **context}))
+
+    def test_marks_the_current_page(self):
+        """The entry pointing to the request path carries aria-current."""
+        url = reverse("faq_news")
+        content = self.render(url, '{% sidemenu_item "Nouveautés" "faq_news" %}')
+        assert f'href="{url}"' in content
+        assert 'aria-current="page"' in content
+        assert "Nouveautés" in content
+
+    def test_leaves_other_pages_unmarked(self):
+        """An entry pointing elsewhere renders without aria-current."""
+        content = self.render("/", '{% sidemenu_item "Nouveautés" "faq_news" %}')
+        assert 'href="{}"'.format(reverse("faq_news")) in content
+        assert "aria-current" not in content
+
+    @pytest.mark.haie
+    def test_forwards_url_arguments_like_the_url_tag(self):
+        """Positional arguments after the route reach reverse, as with {% url %}."""
+        route = "petition_project_instructor_regulation_view"
+        url = reverse(route, args=["ABC123", "natura2000"])
+        tag_call = '{% sidemenu_item "Natura 2000" "' + route + '" reference slug %}'
+        content = self.render(url, tag_call, reference="ABC123", slug="natura2000")
+        assert f'href="{url}"' in content
+        assert 'aria-current="page"' in content
+
+    def test_escapes_the_label(self):
+        """Labels coming from data cannot inject markup."""
+        content = self.render(
+            "/", '{% sidemenu_item label "faq_news" %}', label="<b>Nouveautés</b>"
+        )
+        assert "<b>" not in content
+        assert "&lt;b&gt;Nouveautés&lt;/b&gt;" in content
+
+    def test_marker_renders_a_glyph_with_screen_reader_text(self):
+        """The marker glyph is decorative; its label is what screen readers get."""
+        tag_call = '{% sidemenu_item "Messagerie" "faq_news" marker="●" marker_label="Messages non lus" %}'  # noqa: E501
+        content = self.render("/", tag_call)
+        assert '<span class="sidemenu-marker" aria-hidden="true">●</span>' in content
+        assert '<span class="fr-sr-only">Messages non lus</span>' in content
+
+        content = self.render("/", '{% sidemenu_item "Messagerie" "faq_news" %}')
+        assert "sidemenu-marker" not in content
+
+    def test_marker_without_label_is_refused(self):
+        """A decoration screen readers cannot name is a template error."""
+        with pytest.raises(TemplateSyntaxError):
+            self.render("/", '{% sidemenu_item "Messagerie" "faq_news" marker="●" %}')

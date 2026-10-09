@@ -20,6 +20,9 @@ DEPARTMENT_CHOICES = tuple(
     [(dep[0], f"{dep[1]} ({dep[0]})") for dep in DEPARTMENT_CHOICES_PER_REGION]
 )
 
+# Only the codes (01, 02…)
+DEPARTMENT_CODES = [d[0] for d in DEPARTMENT_CHOICES]
+
 
 MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
@@ -45,6 +48,24 @@ STATUSES = Choices(
     ("partial_success", _("Partial success")),
     ("failure", _("Failure")),
 )
+
+
+class MapQuerySet(models.QuerySet):
+    """Custom query set with common filters for maps."""
+
+    def of_type(self, map_type):
+        if map_type not in MAP_TYPES:
+            raise ValueError(f"{map_type} is not an existing map type")
+
+        return self.filter(map_type=map_type)
+
+    def for_department(self, department_code):
+        if department_code not in DEPARTMENT_CODES:
+            raise ValueError(
+                f"{department_code} doesn't seem to be a valid department code"
+            )
+
+        return self.filter(departments__contains=[department_code])
 
 
 class Map(models.Model):
@@ -127,6 +148,7 @@ class Map(models.Model):
     batch_updated_at = models.DateTimeField(
         "Mise à jour par lot le", null=True, blank=True
     )
+    objects = MapQuerySet.as_manager()
 
     class Meta:
         verbose_name = _("Map")

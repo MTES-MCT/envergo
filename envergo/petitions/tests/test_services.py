@@ -3,28 +3,45 @@ from decimal import Decimal
 from unittest.mock import ANY, patch
 
 import pytest
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 from gql.transport.exceptions import TransportQueryError
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.hedges.models import HedgeTypeBase
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeTypeBase
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.conditionnalitepac import (
+    Bcae8BeforeRu,
+    Bcae8Hru,
+    Bcae8L3503,
+    Bcae8Ru,
+)
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    DemarcheConfigFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
-from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
+from envergo.moulinette.tests.utils import (
+    make_hedge,
+    make_hedge_factory,
+    make_moulinette_haie_data,
+)
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
+from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
+    alignement_arbres_regulation_get_instructor_view_context,
 )
 from envergo.petitions.regulations.conditionnalitepac import (
+    bcae8_before_ru_get_instructor_view_context,
     bcae8_get_instructor_view_context,
 )
 from envergo.petitions.regulations.ep import (
@@ -36,6 +53,7 @@ from envergo.petitions.regulations.loi_sur_leau_haie import (
 )
 from envergo.petitions.services import (
     compute_instructor_informations_ds,
+    declaration_receipt_message,
     get_context_from_dn,
     get_demarche_numerique_dossier,
     get_messages_and_senders_from_ds,
@@ -65,14 +83,17 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarche_numerique_display_fields={
+    demarche_numerique = DemarcheConfigFactory()
+    demarche_numerique.display_fields.update(
+        {
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
             "organization": "Q2hhbXAtNDcyOTE3MQ==",
             "pacage": "Q2hhbXAtNDU0MzkzOA==",
         }
     )
+    demarche_numerique.save()
+    DCConfigHaieFactory(demarche_numerique_config=demarche_numerique)
     petition_project = PetitionProjectFactory()
 
     # WHEN I fetch it from « Démarche numérique » for the first time
@@ -87,7 +108,7 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     assert project_details["ds_info"]["city"] == "Laon (02000)"
     assert project_details["ds_info"]["pacage"] == "123456789"
     assert project_details["ds_info"]["organization"] == "GAEC Choupi"
-    assert project_details["ds_info"]["applicant"] == "Mme LAMARR Hedy"
+    assert project_details["ds_info"]["applicant"] == "LAMARR Hedy"
     assert project_details["ds_info"]["applicant_email"] == "hedy.lamarr@example.com"
     assert project_details["ds_info"]["usager"] == "grace.hopper@example.com"
     assert project_details["ds_info"]["representative"] == "HOPPER Grace"
@@ -163,7 +184,13 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 ):
     petition_project = PetitionProjectFactory()
 
-    DCConfigHaieFactory()
+    incomplete_dn_config = DemarcheConfigFactory(
+        display_fields={
+            "project_url": "ABC123",
+        }
+    )
+    DCConfigHaieFactory(demarche_numerique_config=incomplete_dn_config)
+
     get_context_from_dn(petition_project)
 
     args, kwargs = mock_notify.call_args
@@ -381,7 +408,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare à moins de 200\xa0m",
+                "label": "Mare ou pièce d’eau à moins de 500\xa0m",
             },
             "ripisylve": {
                 "TO_PLANT": [ANY],
@@ -397,9 +424,8 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs "
-                "vieux arbres, fissurés ou "
-                "avec cavités",
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
             },
         },
         "replantation_coefficient": Decimal("1.5"),
@@ -521,7 +547,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare à moins de 200\xa0m",
+                "label": "Mare ou pièce d’eau à moins de 500\xa0m",
             },
             "recemment_plantee": {
                 "TO_PLANT": None,
@@ -543,9 +569,8 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs "
-                "vieux arbres, fissurés ou "
-                "avec cavités",
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
             },
         },
         "ordered_hedge_types": [
@@ -594,7 +619,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     assert info == expected_result
 
 
-def test_bcae8_get_instructor_view_context(france_map):  # noqa
+def test_bcae8_before_ru_get_instructor_view_context(france_map):  # noqa
     hedges = HedgeDataFactory(
         data=[
             {
@@ -654,7 +679,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Bonnes conditions agricoles et environnementales - Fiche VIII",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -663,8 +688,8 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
 
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
-    info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.hru__bcae8._evaluator,
+    info = bcae8_before_ru_get_instructor_view_context(
+        moulinette.conditionnalite_pac.bcae8_before_ru._evaluator,
         petition_project,
         moulinette,
     )
@@ -804,11 +829,19 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
-    context = alignement_arbres_get_instructor_view_context(
-        moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
+    context = alignement_arbres_regulation_get_instructor_view_context(
+        moulinette.alignement_arbres._evaluator,
         petition_project,
         moulinette,
         plantation_eval,
+    )
+    context.update(
+        alignement_arbres_get_instructor_view_context(
+            moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
+            petition_project,
+            moulinette,
+            plantation_eval,
+        )
     )
     assert "Modification de parcelle agricole" in context["motif"]
 
@@ -1063,3 +1096,272 @@ def test_update_demarches_numerique_state():
     petition_project.refresh_from_db()
     assert petition_project.demarche_numerique_state == DossierState.sans_suite.value
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
+
+
+def test_bcae8_get_instructor_view_context():  # noqa
+    """bcae8_get_instructor_view_context (Ru/Hru/L3503) only reads petition_project.hedge_data,
+    dispatching hedges into three category buckets (régime unique, alignements
+    d'arbres, hors régime unique), each split into pac / non_pac and
+    to_plant / to_remove. evaluator and moulinette aren't used by this getter,
+    so they're passed as None.
+    """
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D-ru-pac",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {"type_haie": "arbustive", "sur_parcelle_pac": True},
+            },
+            {
+                "id": "P-ru-nonpac",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "type_haie": "arbustive",
+                    "sur_parcelle_pac": False,
+                },
+            },
+            {
+                "id": "D-aa-pac",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "type_haie": "alignement",
+                    "bord_voie": True,
+                    "sur_parcelle_pac": True,
+                },
+            },
+            {
+                "id": "P-hru-nonpac",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "type_haie": "mixte",
+                    "bord_batiment": True,
+                    "sur_parcelle_pac": False,
+                },
+            },
+        ]
+    )
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+
+    info = bcae8_get_instructor_view_context(None, petition_project, None)
+
+    details = info["pac_hedges_details"]
+
+    def ids(hedge_list):
+        return {h.id for h in hedge_list}
+
+    assert ids(details["Haies régime unique"]["pac"][TO_REMOVE]) == {"D-ru-pac"}
+    assert ids(details["Haies régime unique"]["pac"][TO_PLANT]) == set()
+    assert ids(details["Haies régime unique"]["non_pac"][TO_PLANT]) == {"P-ru-nonpac"}
+    assert ids(details["Haies régime unique"]["non_pac"][TO_REMOVE]) == set()
+
+    assert ids(details["Alignements d'arbres"]["pac"][TO_REMOVE]) == {"D-aa-pac"}
+    assert ids(details["Alignements d'arbres"]["pac"][TO_PLANT]) == set()
+    assert ids(details["Alignements d'arbres"]["non_pac"][TO_PLANT]) == set()
+    assert ids(details["Alignements d'arbres"]["non_pac"][TO_REMOVE]) == set()
+
+    assert ids(details["Haies hors régime uniques"]["non_pac"][TO_PLANT]) == {
+        "P-hru-nonpac"
+    }
+    assert ids(details["Haies hors régime uniques"]["non_pac"][TO_REMOVE]) == set()
+    assert ids(details["Haies hors régime uniques"]["pac"][TO_PLANT]) == set()
+    assert ids(details["Haies hors régime uniques"]["pac"][TO_REMOVE]) == set()
+
+
+@pytest.mark.parametrize(
+    "evaluator_class,expected_getter",
+    [
+        (Bcae8BeforeRu, bcae8_before_ru_get_instructor_view_context),
+        (Bcae8Hru, bcae8_get_instructor_view_context),
+        (Bcae8L3503, bcae8_get_instructor_view_context),
+        (Bcae8Ru, bcae8_get_instructor_view_context),
+    ],
+)
+def test_every_bcae8_evaluator_has_an_instructor_view_context(
+    evaluator_class, expected_getter
+):
+    """Instructor-view context getters are dispatched on the exact evaluator class.
+
+    A BCAE8 evaluator that is not registered silently loses the PAC figures on
+    the instructor page, so the registration is asserted for each of them.
+    Bcae8BeforeRu has its own dedicated getter, distinct from the other three
+    evaluators (which share one).
+    """
+    assert (
+        _evaluator_instructors_information_registry.get(evaluator_class)
+        is expected_getter
+    )
+
+
+class TestDeclarationReceiptMessage:
+    """The receipt the applicant gets on deposit and on resumption of instruction."""
+
+    PROHIBITION_RANGE = DateRange(datetime.date(2026, 3, 18), datetime.date(2026, 9, 1))
+    RECEIVED_ON = datetime.date(2026, 10, 5)
+    DUE_DATE = datetime.date(2026, 12, 5)
+
+    CONFIG_DEFAULTS = {
+        "prohibition_range": PROHIBITION_RANGE,
+        "guh_structure": "Direction départementale des territoires",
+        "guh_service_name": "Service Eau et Environnement",
+        "guh_address": "50, Bd de Lyon\n02011 LAON",
+        "guh_phone": "+33323246400",
+    }
+
+    def make_project(self, hedges=None, raw_dossier=None, **config_overrides):
+        """An RU project whose département has GUH contacts and a prohibition period."""
+        config = {**self.CONFIG_DEFAULTS, **config_overrides}
+        RUConfigHaieFactory(**config)
+
+        if hedges is None:
+            hedges = [
+                make_hedge_factory(30, type_haie="arbustive", id="D1"),
+                make_hedge_factory(22, type_haie="mixte", id="D2"),
+                make_hedge_factory(60, type_haie="arbustive", id="P1", to_plant=True),
+            ]
+        return PetitionProjectFactory(
+            hedge_data=HedgeDataFactory(hedges=hedges),
+            demarche_numerique_raw_dossier=raw_dossier or {},
+        )
+
+    def render(self, project, received_on=RECEIVED_ON, due_date=DUE_DATE):
+        return declaration_receipt_message(project, received_on, due_date)
+
+    def test_receipt_lists_the_hedges_to_remove_and_to_plant(self):
+        message = self.render(self.make_project())
+
+        assert "Linéaires de haie à détruire :" in message
+        assert "- D1 : haie arbustive, 30\u00a0m" in message
+        # Under the régime unique, a "mixte" hedge reads "arborée"
+        assert "- D2 : haie arborée, 22\u00a0m" in message
+        assert "Linéaires à planter en compensation :" in message
+        assert "- P1 : haie arbustive, 60\u00a0m" in message
+
+    def test_receipt_drops_the_plantation_block_when_nothing_is_planted(self):
+        project = self.make_project(
+            hedges=[make_hedge_factory(30, type_haie="arbustive", id="D1")]
+        )
+
+        message = self.render(project)
+
+        assert "Linéaires de haie à détruire :" in message
+        assert "Linéaires à planter en compensation" not in message
+
+    def test_receipt_names_the_commune_declared_in_the_dossier(self):
+        """The commune is the one shown in the dossier header, ds_info.city."""
+        project = self.make_project(
+            raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+            demarche_numerique_config__display_fields={
+                "project_url": "ABC123",
+                "city": "Q2hhbXAtNDcyOTE4Nw==",
+            },
+        )
+
+        message = self.render(project)
+
+        commune_sentence = "situés principalement sur la commune de Laon (02000)."
+        assert commune_sentence in message
+        assert message.index(commune_sentence) < message.index(
+            "Linéaires à planter en compensation :"
+        )
+
+    def test_receipt_keeps_french_apostrophes_unescaped(self):
+        """The body goes to the messagerie as plain text, never as HTML."""
+        project = self.make_project(guh_service_name="Service de l'Eau")
+
+        message = self.render(project)
+
+        assert "Service de l'Eau" in message
+
+    def test_receipt_omits_the_commune_when_the_dossier_does_not_carry_one(self):
+        message = self.render(self.make_project())
+
+        assert "sur la commune de" not in message
+
+    def test_receipt_states_the_reception_date_the_due_date_and_the_project_url(self):
+        project = self.make_project()
+
+        message = self.render(project)
+
+        assert "réceptionnée le 5 octobre 2026" in message
+        assert (
+            "Vous ne pouvez pas commencer le projet avant le 5 décembre 2026" in message
+        )
+        consultation_url = (
+            f"https://{settings.ENVERGO_HAIE_DOMAIN}"
+            f"/projet/{project.reference}/consultation/"
+        )
+        assert consultation_url in message
+
+    def test_receipt_names_the_prohibition_period_of_the_department(self):
+        message = self.render(self.make_project())
+
+        assert "sur les haies dans le département, du 18 mars au 31 août," in message
+
+    def test_receipt_falls_back_on_the_prefectural_order_without_a_prohibition_period(
+        self,
+    ):
+        message = self.render(self.make_project(prohibition_range=None))
+
+        assert "(fixée par arrêté préfectoral)" in message
+        assert "du 18 mars au 31 août" not in message
+
+    def test_due_date_outside_the_prohibition_period_frees_the_works(self):
+        message = self.render(self.make_project())
+
+        assert "accord tacite et vous pourrez commencer vos travaux." in message
+
+    def test_due_date_inside_the_prohibition_period_defers_the_works(self):
+        project = self.make_project()
+
+        # The period repeats every year, so a 2026 range answers a 2027 due date.
+        message = self.render(
+            project,
+            received_on=datetime.date(2027, 5, 1),
+            due_date=datetime.date(2027, 7, 1),
+        )
+
+        assert (
+            "Vous pourrez commencer vos travaux à la fin de la période "
+            "d’interdiction du département, le 1 septembre 2027." in message
+        )
+
+    def test_receipt_signs_with_the_guh_contacts_of_the_department(self):
+        message = self.render(self.make_project())
+
+        assert "Le guichet unique de la haie – Loire-Atlantique (44)" in message
+        assert "Direction départementale des territoires" in message
+        assert "Service Eau et Environnement" in message
+        assert "50, Bd de Lyon\n02011 LAON" in message
+        assert "Tel. : 03 23 24 64 00" in message
+
+    def test_receipt_omits_the_guh_contact_lines_left_blank(self):
+        """A blank contact leaves no empty line behind in the signature."""
+        project = self.make_project(guh_service_name="")
+
+        message = self.render(project)
+
+        _, signature = message.split("Le guichet unique de la haie – ")
+        assert signature.strip() == (
+            "Loire-Atlantique (44)\n"
+            "\n"
+            "Direction départementale des territoires\n"
+            "50, Bd de Lyon\n"
+            "02011 LAON\n"
+            "Tel. : 03 23 24 64 00"
+        )
