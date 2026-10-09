@@ -1001,18 +1001,19 @@ class EspecesProtegeesRu(
         """Weighted average of the effective (bonus-included) coefficients."""
         return evaluator_replantation_coefficient(self)
 
+    def get_hedge_detail_rows(self):
+        """Return the RU detail rows, with the EP columns."""
+        rows = build_ru_hedge_detail_rows(self.catalog, self)
+        for row in rows:
+            row["partial_result"] = self.per_hedge_results.get(row["hedge_id"], "-")
+        return rows
+
     def get_debug_context(self):
         """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
-
-        hedge_rows = build_ru_hedge_detail_rows(self.catalog, self)
-        per_hedge_results = self.per_hedge_results
-        for row in hedge_rows:
-            row["partial_result"] = per_hedge_results.get(row["hedge_id"], "-")
-
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
-        context["hedge_debug_rows"] = hedge_rows
+        context["hedge_debug_rows"] = self.get_hedge_detail_rows()
         context["ep_ru_settings"] = self.params
         context["ru_zone_configs"] = collect_zone_configs(
             self.catalog.get("ru_hedge_data", {})
