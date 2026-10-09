@@ -606,6 +606,26 @@ def test_ep_ru_dispense_hedge_detail_rows_have_no_increased_coefficient(
     assert row["applied_ep_bonus"] is None
 
 
+@pytest.mark.parametrize("in_zone_sensible", [True, False])
+def test_ep_ru_hedge_detail_rows_flag_zone_sensible(ep_ru_criteria, in_zone_sensible):
+    """Each row tells whether its hedge lies in a zone sensible."""
+    RUConfigHaieFactory()
+    if in_zone_sensible:
+        MapFactory(
+            map_type=MAP_TYPES.zone_sensible_ep,
+            zones__geometry=MultiPolygon([france_polygon]),
+        )
+    moulinette = make_moulinette_haie_with_density(
+        density=65,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+
+    evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
+    [row] = evaluator.get_hedge_detail_rows()
+    assert row["in_zone_sensible"] is in_zone_sensible
+
+
 def test_ru_zone_query_runs_once(
     france_map,
     ep_ru_criteria,

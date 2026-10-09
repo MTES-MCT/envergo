@@ -1021,6 +1021,7 @@ class EspecesProtegeesRu(
 
             row["applied_ep_bonus"] = applied_ep_bonus
             row["coeff_ru_majore"] = coeff_majore
+            row["in_zone_sensible"] = hedge_id in self.hedges_in_zone_sensible
             row["partial_result"] = self.per_hedge_results.get(hedge_id, "-")
         return rows
 
