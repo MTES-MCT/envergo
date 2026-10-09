@@ -1265,20 +1265,25 @@ def test_messagerie_file_too_large_error(
     assert "20 Mo" in content
 
 
+def _new_message_modal_tag(content):
+    """Return the opening tag of the new message modal."""
+    match = re.search(r'<dialog[^>]*id="modal-new-message"[^>]*>', content)
+    assert match
+    return match.group(0)
+
+
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_opens_on_error(
     mock_ds_query_execute, haie_coordinator_44, client, site
 ):
-    """Après soumission invalide, la modale s'ouvre au chargement."""
+    """Après soumission invalide, la modale est rendue ouverte."""
     url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": ""})
     content = response.content.decode()
-    assert (
-        "dsfr(document.getElementById('modal-new-message')).modal.disclose()" in content
-    )
+    assert 'data-fr-opened="true"' in _new_message_modal_tag(content)
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -1286,16 +1291,13 @@ def test_messagerie_modal_opens_on_error(
 def test_messagerie_modal_not_opened_on_success(
     mock_ds_query_execute, haie_coordinator_44, client, site
 ):
-    """Après soumission valide, le script d'ouverture de modale n'est pas présent."""
+    """Après soumission valide, la modale n'est pas rendue ouverte."""
     url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": "Bonjour"}, follow=True)
     content = response.content.decode()
-    assert (
-        "dsfr(document.getElementById('modal-new-message')).modal.disclose()"
-        not in content
-    )
+    assert 'data-fr-opened="true"' not in _new_message_modal_tag(content)
 
 
 def test_petition_project_list(

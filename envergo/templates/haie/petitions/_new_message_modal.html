@@ -3,7 +3,8 @@
 <dialog id="modal-new-message"
         class="fr-modal"
         aria-labelledby="modal-new-message-title"
-        data-fr-concealing-backdrop="true">
+        data-fr-concealing-backdrop="true"
+        {% if form.errors %}data-fr-opened="true"{% endif %}>
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
@@ -41,7 +42,3 @@
     </div>
   </div>
 </dialog>
-
-{% if form.errors %}
-  <script type="text/after-dsfr">dsfr(document.getElementById('modal-new-message')).modal.disclose();</script>
-{% endif %}
