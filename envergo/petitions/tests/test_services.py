@@ -189,7 +189,7 @@ def test_dossier_not_found_on_demarche_numerique(
     errors = [
         r
         for r in caplog.records
-        if r.levelname == "ERROR" and "not found" in r.getMessage()
+        if r.levelname == "ERROR" and "Could not get the dossier" in r.getMessage()
     ]
     assert bool(errors) is expect_error
     mock_notify.assert_not_called()
