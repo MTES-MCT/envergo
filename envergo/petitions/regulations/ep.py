@@ -12,10 +12,7 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesRu,
     EspecesProtegeesSimple,
 )
-from envergo.moulinette.regulations.utils import (
-    build_ru_hedge_detail_rows,
-    collect_zone_configs,
-)
+from envergo.moulinette.regulations.utils import collect_zone_configs
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
@@ -119,10 +116,7 @@ def ep_regime_unique_get_instructor_view_context(
     context["show_ep_ru_params"] = True
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
 
-    # Per-hedge rows with zone info and coefficients
-    context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
-        moulinette.catalog, evaluator
-    )
+    context["hedge_detail_rows"] = evaluator.get_hedge_detail_rows()
 
     # Zone configs for the coefficient matrix accordion
     context["ru_zone_configs"] = collect_zone_configs(

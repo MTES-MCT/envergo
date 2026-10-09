@@ -1001,44 +1001,35 @@ class EspecesProtegeesRu(
         """Weighted average of the effective (bonus-included) coefficients."""
         return evaluator_replantation_coefficient(self)
 
-    def build_hedge_rows(self):
-        """Build per-hedge display rows for the RU hedges to remove.
+    def get_hedge_detail_rows(self):
+        """Return the RU detail rows, with the EP columns.
 
-        Returns a list of dicts with id, hedge_type (human-readable), and
-        in_zone_sensible — used by both the debug page and the instructor view.
+        The EP bonus and the increased coefficient are None when no compensation is due.
         """
-        if not self.hedges:
-            return []
+        rows = build_ru_hedge_detail_rows(self.catalog.get("ru_hedge_data", {}))
+        effective_coefficients = self.effective_coefficients
 
-        hedges_in_zone_sensible = self.hedges_in_zone_sensible
-        hedges = self.hedges.to_remove()
-        HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
+        for row in rows:
+            hedge_id = row["hedge_id"]
 
-        rows = []
-        for h in hedges:
-            rows.append(
-                {
-                    "id": h.id,
-                    "hedge_type": get_human_readable_value(
-                        HedgeType.choices, h.hedge_type
-                    ),
-                    "in_zone_sensible": h.id in hedges_in_zone_sensible,
-                }
-            )
+            if hedge_id in effective_coefficients:
+                coeff_majore = round(effective_coefficients[hedge_id], 2)
+                applied_ep_bonus = round(coeff_majore - row["coeff_ru_brut"], 2)
+            else:
+                coeff_majore = None
+                applied_ep_bonus = None
+
+            row["applied_ep_bonus"] = applied_ep_bonus
+            row["coeff_ru_majore"] = coeff_majore
+            row["partial_result"] = self.per_hedge_results.get(hedge_id, "-")
         return rows
 
     def get_debug_context(self):
         """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
-
-        hedge_rows = build_ru_hedge_detail_rows(self.catalog, self)
-        per_hedge_results = self.per_hedge_results
-        for row in hedge_rows:
-            row["partial_result"] = per_hedge_results.get(row["hedge_id"], "-")
-
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
-        context["hedge_debug_rows"] = hedge_rows
+        context["hedge_debug_rows"] = self.get_hedge_detail_rows()
         context["ep_ru_settings"] = self.params
         context["ru_zone_configs"] = collect_zone_configs(
             self.catalog.get("ru_hedge_data", {})
