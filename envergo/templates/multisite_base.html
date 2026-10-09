@@ -52,21 +52,6 @@
               type="text/javascript"
               nomodule
               src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}"></script>
-      <script>
-        // Scripts flagged type="text/after-dsfr" depend on DSFR component
-        // instances (dsfr(element)), which only exist once DSFR has started.
-        // We run them when it dispatches "dsfr.start".
-        document.documentElement.addEventListener('dsfr.start', function () {
-          document.querySelectorAll('script[type="text/after-dsfr"]').forEach(function (placeholder) {
-            const script = document.createElement('script');
-            Array.from(placeholder.attributes).forEach(function (attr) {
-              if (attr.name !== 'type') script.setAttribute(attr.name, attr.value);
-            });
-            script.text = placeholder.text;
-            placeholder.replaceWith(script);
-          });
-        }, { once: true });
-      </script>
       <script defer src="{% static 'js/libs/spinner.js' %}"></script>
 
       <script>
