@@ -606,24 +606,34 @@ def test_ep_ru_dispense_hedge_detail_rows_have_no_increased_coefficient(
     assert row["applied_ep_bonus"] is None
 
 
-@pytest.mark.parametrize("in_zone_sensible", [True, False])
-def test_ep_ru_hedge_detail_rows_flag_zone_sensible(ep_ru_criteria, in_zone_sensible):
-    """Each row tells whether its hedge lies in a zone sensible."""
+def test_ep_ru_hedge_in_zone_sensible_is_flagged(ep_ru_criteria):
+    """A hedge inside a zone sensible is flagged in its detail row."""
     RUConfigHaieFactory()
-    if in_zone_sensible:
-        MapFactory(
-            map_type=MAP_TYPES.zone_sensible_ep,
-            zones__geometry=MultiPolygon([france_polygon]),
-        )
+    MapFactory(
+        map_type=MAP_TYPES.zone_sensible_ep,
+        zones__geometry=MultiPolygon([france_polygon]),
+    )
     moulinette = make_moulinette_haie_with_density(
-        density=65,
+        density=60,
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-
     evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
     [row] = evaluator.get_hedge_detail_rows()
-    assert row["in_zone_sensible"] is in_zone_sensible
+    assert row["in_zone_sensible"]
+
+
+def test_ep_ru_hedge_outside_zone_sensible_is_not_flagged(ep_ru_criteria):
+    """A hedge outside any zone sensible is not flagged in its detail row."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
+    [row] = evaluator.get_hedge_detail_rows()
+    assert not row["in_zone_sensible"]
 
 
 def test_ru_zone_query_runs_once(
