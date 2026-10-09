@@ -1,0 +1,62 @@
+{% load utils %}
+
+<div class="fr-modal__header">
+  <button aria-controls="{{ dialog_id }}"
+          title="Fermer"
+          type="button"
+          class="fr-btn--close fr-btn">Fermer</button>
+</div>
+<div class="fr-modal__content fr-pt-4w" v-if="selectedHedge">
+  <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
+    Description de la haie <span>[[ selectedHedge?.id ]]</span>
+  </h1>
+  {% if config.single_procedure %}
+    <span class="fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm"
+          v-show="selectedHedge?.category() === 'hru'">{{ HedgeCategory.hru.badge_label }}</span>
+    <span class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm"
+          v-show="selectedHedge?.category() === 'l350_3'">{{ HedgeCategory.l350_3.badge_label }}</span>
+  {% endif %}
+
+  <ul class="hedge-data-dialog-properties fr-mb-3w">
+    <li>
+      <strong>Longueur</strong> : [[ selectedHedge?.length.toFixed(0) ]] m
+    </li>
+    <li>
+      <strong>Type</strong> :
+      {% for value, label in form.fields.type_haie.choices %}
+        <span v-show="selectedHedge.additionalData.type_haie === '{{ value }}'">{{ label }}</span>
+      {% endfor %}
+    </li>
+    {% for fieldset_fields in form.fieldsets.values %}
+      {% for name in fieldset_fields %}
+        {% if name != "type_haie" %}
+          {% with form.fields|get_item:name as field %}
+            {% include "hedges/_hedge_data_dialog_readonly_property.html" with visibility_check="isPropertySet" %}
+          {% endwith %}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </ul>
+  <section class="fr-accordion" v-show="selectedHedge.hasUnsetProperties()">
+    <h2 class="fr-accordion__title">
+      <button type="button"
+              class="fr-accordion__btn"
+              aria-expanded="false"
+              aria-controls="{{ dialog_id }}-other-properties">Caractéristiques non applicables</button>
+    </h2>
+    <div class="fr-collapse hedge-data-dialog-other-properties"
+         id="{{ dialog_id }}-other-properties">
+      <ul class="hedge-data-dialog-properties">
+        {% for fieldset_fields in form.fieldsets.values %}
+          {% for name in fieldset_fields %}
+            {% if name != "type_haie" %}
+              {% with form.fields|get_item:name as field %}
+                {% include "hedges/_hedge_data_dialog_readonly_property.html" with unset=True visibility_check="isPropertyUnset" %}
+              {% endwith %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+</div>

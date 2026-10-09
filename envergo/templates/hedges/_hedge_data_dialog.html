@@ -1,37 +1,40 @@
 <dialog id="{{ dialog_id }}"
         aria-labelledby="{{ dialog_id }}-title"
         role="dialog"
-        class="fr-modal hedge-data-dialog{% if dialog_mode != mode %} read-only{% endif %}">
+        class="fr-modal hedge-data-dialog">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col-12 fr-col-md-10 fr-col-xl-9">
+      <div class="fr-col-12 {% if dialog_mode != mode %}fr-col-md-8 fr-col-lg-6{% else %}fr-col-md-10 fr-col-xl-9{% endif %}">
         <div class="fr-modal__body">
-
-          <form method="dialog">
-            <div class="fr-modal__content fr-pt-4w">
-              <div class="hedge-data-dialog-header">
-                <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
-                  Description de la haie <span class="hedge-data-dialog-hedge-name"></span>
-                </h1>
-                {% if config.single_procedure %}
-                  <div class="fr-mb-1w">
-                    <span class="hedge-data-dialog-hedge-badges hedge-badge-hru fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm"
-                          style="display: none">{{ HedgeCategory.hru.badge_label }}</span>
-                    <span class="hedge-data-dialog-hedge-badges hedge-badge-l350-3 fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm"
-                          style="display: none">{{ HedgeCategory.l350_3.badge_label }}</span>
-                  </div>
-                {% endif %}
+          {% if dialog_mode != mode %}
+            {% include "hedges/_hedge_data_dialog_readonly.html" %}
+          {% else %}
+            <form method="dialog" @submit.prevent="saveHedgeData('{{ dialog_mode }}')">
+              <div class="fr-modal__content fr-pt-4w">
+                <div class="hedge-data-dialog-header">
+                  <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
+                    Description de la haie <span>[[ selectedHedge?.id ]]</span>
+                  </h1>
+                  {% if config.single_procedure %}
+                    <div class="fr-mb-1w">
+                      <span class="fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm"
+                            v-show="selectedHedge?.category() === 'hru'">{{ HedgeCategory.hru.badge_label }}</span>
+                      <span class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm"
+                            v-show="selectedHedge?.category() === 'l350_3'">{{ HedgeCategory.l350_3.badge_label }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+                <p class="fr-tag fr-mb-3w">
+                  Longueur : <span>[[ selectedHedge?.length.toFixed(0) ]]</span> m
+                </p>
+                {% include '_form_with_fieldsets_snippet.html' with form=form %}
               </div>
-              <p class="fr-tag fr-mb-3w">
-                Longueur : <span class="hedge-data-dialog-hedge-length"></span> m
-              </p>
-              {% include '_form_with_fieldsets_snippet.html' with form=form %}
-            </div>
 
-            <div class="fr-modal__footer">
-              <button type="submit" class="fr-btn">Enregistrer</button>
-            </div>
-          </form>
+              <div class="fr-modal__footer">
+                <button type="submit" class="fr-btn">Enregistrer</button>
+              </div>
+            </form>
+          {% endif %}
         </div>
       </div>
     </div>

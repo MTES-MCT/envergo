@@ -19,16 +19,16 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 300, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 310, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText("Alignement d'arbres").check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('En bordure de route, voie ou chemin').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText('En bordure de route, voie ou chemin').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByRole('button', { name: 'Enregistrer' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('button', { name: 'Tracer une haie à détruire' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 400, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 410, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText('Haie mixte').check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText("Mare ou pièce d’eau à moins de 500 m").click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText("Mare ou pièce d’eau à moins de 500 m").click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByRole('button', { name: 'Enregistrer' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
     await page.getByRole('button', { name: 'Valider' }).click();
@@ -52,9 +52,9 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 440, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 400, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText("Alignement d'arbres").check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('En bordure de route, voie ou chemin').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText('En bordure de route, voie ou chemin').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByRole('button', { name: 'Enregistrer' }).click();
 
     const condition = page.locator('#hedge-input-iframe').contentFrame().locator('div.condition-content', {
         hasText: 'Alignements d’arbres (L350-3)',
@@ -67,9 +67,45 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 400, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 440, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByText('Haie mixte').check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByText('Sur une parcelle PAC').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByRole('button', { name: 'Enregistrer' }).click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByText('Sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.locator('#hedge-input-iframe').contentFrame().getByText('Plantation adéquate')).toBeVisible();
+
+    // In plantation mode, the hedges to remove are shown in a read-only dialog
+    const frame = page.locator('#hedge-input-iframe').contentFrame();
+    const removedHedgeRows = frame.locator('.hedge-list.to-remove .hedge-row');
+    const readOnlyDialog = frame.getByRole('dialog', { name: 'Description de la haie D1' });
+
+    await removedHedgeRows.nth(0).getByRole('button', { name: 'Voir la description' }).click();
+    await expect(readOnlyDialog).toBeVisible();
+    // No form: neither inputs nor a save button
+    await expect(readOnlyDialog.getByRole('button', { name: 'Enregistrer' })).toHaveCount(0);
+    await expect(readOnlyDialog.locator('input')).toHaveCount(0);
+    // Only the properties set on the hedge are listed
+    await expect(readOnlyDialog.getByText("Alignement d'arbres")).toBeVisible();
+    const properties = readOnlyDialog.locator('ul.hedge-data-dialog-properties').first();
+    await expect(properties.getByText('En bordure de route, voie ou chemin ouvert au public')).toBeVisible();
+    await expect(properties.getByText('Sur une parcelle PAC')).toBeVisible();
+    await expect(properties.getByText('Mare ou pièce d’eau à moins de 500 m')).toBeHidden();
+    // The other ones are folded in the "non applicables" accordion
+    const unsetProperties = readOnlyDialog.locator('.hedge-data-dialog-other-properties');
+    await expect(unsetProperties).toBeHidden();
+    await readOnlyDialog.getByRole('button', { name: 'Caractéristiques non applicables' }).click();
+    await expect(unsetProperties.getByText('Mare ou pièce d’eau à moins de 500 m')).toBeVisible();
+    await expect(unsetProperties.getByText('En bordure de route, voie ou chemin ouvert au public')).toBeHidden();
+    // The close button closes the dialog
+    await readOnlyDialog.getByRole('button', { name: 'Fermer' }).click();
+    await expect(readOnlyDialog).toBeHidden();
+
+    // The dialog content follows the selected hedge: D2 is a "haie mixte"
+    const otherReadOnlyDialog = frame.getByRole('dialog', { name: 'Description de la haie D2' });
+    await removedHedgeRows.nth(1).getByRole('button', { name: 'Voir la description' }).click();
+    await expect(otherReadOnlyDialog).toBeVisible();
+    await expect(otherReadOnlyDialog.getByText('Haie mixte')).toBeVisible();
+    const otherProperties = otherReadOnlyDialog.locator('ul.hedge-data-dialog-properties').first();
+    await expect(otherProperties.getByText('Mare ou pièce d’eau à moins de 500 m')).toBeVisible();
+    await otherReadOnlyDialog.getByRole('button', { name: 'Fermer' }).click();
+    await expect(otherReadOnlyDialog).toBeHidden();
 
     await page.locator('#hedge-input-iframe').contentFrame().locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
