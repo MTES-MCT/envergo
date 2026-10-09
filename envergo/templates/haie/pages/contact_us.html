@@ -114,13 +114,13 @@
   <script defer
           src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
   <script defer src="{% static 'js/libs/department_combobox.js' %}"></script>
-  <script type="text/after-dsfr">
-    (function () {
-      /* Add analytics */
+  <script>
+    /* Add analytics */
+    window.addEventListener('load', function() {
       const elt = document.getElementById('contactus-accordion');
       const accordion = new AccordionAnalytics(elt, customizeMatomoUrl);
       accordion.init();
-    })();
+    });
   </script>
 {% endblock %}
 
