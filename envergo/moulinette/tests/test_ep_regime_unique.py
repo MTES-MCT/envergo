@@ -588,6 +588,54 @@ def test_ep_ru_dispense_effective_empty(
     assert evaluator.get_replantation_coefficient() == 0.0
 
 
+def test_ep_ru_dispense_hedge_detail_rows_have_no_increased_coefficient(
+    ep_ru_criteria,
+):
+    """A dispense requires no compensation. Its rows show no increased coefficient."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=8)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == "dispense"
+
+    [row] = criterion.get_evaluator().get_hedge_detail_rows()
+    assert row["coeff_ru_majore"] is None
+    assert row["applied_ep_bonus"] is None
+
+
+def test_ep_ru_hedge_in_zone_sensible_is_flagged(ep_ru_criteria):
+    """A hedge inside a zone sensible is flagged in its detail row."""
+    RUConfigHaieFactory()
+    MapFactory(
+        map_type=MAP_TYPES.zone_sensible_ep,
+        zones__geometry=MultiPolygon([france_polygon]),
+    )
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
+    [row] = evaluator.get_hedge_detail_rows()
+    assert row["in_zone_sensible"]
+
+
+def test_ep_ru_hedge_outside_zone_sensible_is_not_flagged(ep_ru_criteria):
+    """A hedge outside any zone sensible is not flagged in its detail row."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
+    [row] = evaluator.get_hedge_detail_rows()
+    assert not row["in_zone_sensible"]
+
+
 def test_ru_zone_query_runs_once(
     france_map,
     ep_ru_criteria,

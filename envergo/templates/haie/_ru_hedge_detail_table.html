@@ -12,13 +12,20 @@
               <th scope="col">Zone</th>
               <th scope="col">Seuil densité</th>
               <th scope="col">Densité</th>
+              {% if show_ep_columns %}
+                <th scope="col">
+                  En zone sensible
+                  <br />
+                  (ZNIEFF 1)
+                </th>
+              {% endif %}
               {% if show_partial_result %}<th scope="col">Résultat partiel</th>{% endif %}
               <th scope="col">
                 Coefficient compensation
                 <br />
                 régime unique
               </th>
-              {% if show_coeff_majore %}
+              {% if show_ep_columns %}
                 <th scope="col">
                   Majoration
                   <br />
@@ -49,9 +56,10 @@
                   {% endif %}
                 </td>
                 <td>{{ row.high_density|yesno:"Haute,Basse,-" }}</td>
+                {% if show_ep_columns %}<td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>{% endif %}
                 {% if show_partial_result %}<td>{{ row.partial_result }}</td>{% endif %}
                 <td>{{ row.coeff_ru_brut|floatformat:"2" }}</td>
-                {% if show_coeff_majore %}
+                {% if show_ep_columns %}
                   <td>{{ row.applied_ep_bonus|floatformat:"2"|default:"—" }}</td>
                   <td>{{ row.coeff_ru_majore|floatformat:"2"|default:"—" }}</td>
                 {% endif %}

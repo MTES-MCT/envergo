@@ -217,30 +217,13 @@ def collect_zone_configs(hedge_data):
     return seen
 
 
-def build_ru_hedge_detail_rows(catalog, evaluator):
-    """Build per-hedge display rows from the catalog records.
-
-    ``applied_ep_bonus`` is the bonus the evaluator really applied.
-    It differs from the record's ``ep_bonus``, which is only potential.
-    It is ``None`` when no coefficient is due.
-    """
-    hedge_data = catalog.get("ru_hedge_data", {})
-    effective_coefficients = evaluator.effective_coefficients
-
+def build_ru_hedge_detail_rows(hedge_data):
+    """Return one row of the per-hedge detail table for each coefficient record."""
     # RU labels have no degradee entry. That type can still appear in the RU category.
     ru_types = HedgeTypeFactory.build_from_context(single_procedure=True)
 
     rows = []
     for hedge_id, record in hedge_data.items():
-        coeff_brut = round(record["raw_coefficient"], 2)
-
-        if hedge_id in effective_coefficients:
-            coeff_majore = round(effective_coefficients[hedge_id], 2)
-            applied_ep_bonus = round(coeff_majore - coeff_brut, 2)
-        else:
-            coeff_majore = None
-            applied_ep_bonus = None
-
         ru_label = get_human_readable_value(ru_types.choices, record["hedge_type"])
         base_label = get_human_readable_value(
             HedgeTypeBase.choices, record["hedge_type"]
@@ -254,9 +237,7 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
                 "zone_id": record["zone_id"],
                 "x_densite": record["x_densite"],
                 "high_density": record["high_density"],
-                "coeff_ru_brut": coeff_brut,
-                "applied_ep_bonus": applied_ep_bonus,
-                "coeff_ru_majore": coeff_majore,
+                "coeff_ru_brut": round(record["raw_coefficient"], 2),
             }
         )
     return rows

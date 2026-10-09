@@ -10,7 +10,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeCategory, HedgeTypeFactory
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     RUMinLengthCondition,
@@ -23,7 +23,6 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
 )
 from envergo.moulinette.regulations.utils import (
-    collect_zone_configs,
     ensure_ru_hedge_data,
     evaluator_replantation_coefficient,
 )
@@ -132,17 +131,6 @@ class RegimeUniqueHaieRu(
             catalog.update(self.get_density_catalog_data())
             ensure_ru_hedge_data(self.moulinette, self.hedges)
         return catalog
-
-    def get_debug_context(self):
-        """Return density and zone config data for the debug template."""
-        context = super().get_debug_context()
-        context["ru_zone_configs"] = collect_zone_configs(
-            self.catalog.get("ru_hedge_data", {})
-        )
-        context["RuHedgeType"] = HedgeTypeFactory.build_from_context(
-            single_procedure=True
-        )
-        return context
 
     @property
     def effective_coefficients(self):
