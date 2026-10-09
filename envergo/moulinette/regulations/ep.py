@@ -1004,9 +1004,7 @@ class EspecesProtegeesRu(
     def get_hedge_detail_rows(self):
         """Return the RU detail rows, with the EP columns.
 
-        applied_ep_bonus is the bonus really applied. The record's ep_bonus is
-        only potential. applied_ep_bonus and coeff_ru_majore are None when no
-        compensation is due.
+        The EP bonus and the increased coefficient are None when no compensation is due.
         """
         rows = build_ru_hedge_detail_rows(self.catalog.get("ru_hedge_data", {}))
         effective_coefficients = self.effective_coefficients
