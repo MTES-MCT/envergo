@@ -365,13 +365,16 @@
   <script defer type="module" src="{% static 'hedge_input/app.js' %}"></script>
 
   {% if mode != "read_only" %}
-    <script type="text/after-dsfr">
-      if (!window.matchMedia("(min-width: 48em)").matches) {
-        const warning = document.getElementById("hedge-input-small-screen-warning");
-        if (warning) {
-          dsfr(warning).modal.disclose();
+    <script>
+      // dsfr(element) only returns a component once DSFR has started
+      document.documentElement.addEventListener("dsfr.start", function () {
+        if (!window.matchMedia("(min-width: 48em)").matches) {
+          const warning = document.getElementById("hedge-input-small-screen-warning");
+          if (warning) {
+            dsfr(warning).modal.disclose();
+          }
         }
-      }
+      }, { once: true });
     </script>
   {% endif %}
 {% endblock %}
