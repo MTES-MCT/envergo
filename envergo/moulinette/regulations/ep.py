@@ -1001,32 +1001,6 @@ class EspecesProtegeesRu(
         """Weighted average of the effective (bonus-included) coefficients."""
         return evaluator_replantation_coefficient(self)
 
-    def build_hedge_rows(self):
-        """Build per-hedge display rows for the RU hedges to remove.
-
-        Returns a list of dicts with id, hedge_type (human-readable), and
-        in_zone_sensible — used by both the debug page and the instructor view.
-        """
-        if not self.hedges:
-            return []
-
-        hedges_in_zone_sensible = self.hedges_in_zone_sensible
-        hedges = self.hedges.to_remove()
-        HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
-
-        rows = []
-        for h in hedges:
-            rows.append(
-                {
-                    "id": h.id,
-                    "hedge_type": get_human_readable_value(
-                        HedgeType.choices, h.hedge_type
-                    ),
-                    "in_zone_sensible": h.id in hedges_in_zone_sensible,
-                }
-            )
-        return rows
-
     def get_debug_context(self):
         """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
