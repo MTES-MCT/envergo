@@ -18,7 +18,7 @@ from envergo.hedges.models import (
     SpeciesHabitatFile,
 )
 from envergo.hedges.species_stubs import make_stub_scientific_name
-from envergo.utils.storages import download_source
+from envergo.utils.storages import stored_file_location
 
 logger = logging.getLogger(__name__)
 
@@ -118,13 +118,13 @@ def do_species_habitat_import(habitat_file, import_log):
 def extract_file(field_file):
     """Return the file's csv content, whatever the storage backend."""
 
-    source = download_source(field_file)
+    location = stored_file_location(field_file)
     if settings.SERVE_FILES_LOCALLY:
-        with open(source, "rb") as f:
+        with open(location, "rb") as f:
             raw = f.read()
     else:
         r = requests.get(
-            source, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
+            location, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
         )
         raw = r.content
 

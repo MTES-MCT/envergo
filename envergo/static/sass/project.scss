@@ -2658,6 +2658,11 @@ section#actions-to-take {
   text-align: right;
 }
 
+// Spam honeypot field, see HoneypotInput. The neutral name keeps bots from spotting it.
+.secondary-contact {
+  display: none;
+}
+
 section#pick-appointment > div {
   display: flex;
   flex-direction: row;

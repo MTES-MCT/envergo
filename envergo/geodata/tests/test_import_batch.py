@@ -1,6 +1,7 @@
 import io
 import shutil
 import zipfile
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
@@ -52,9 +53,14 @@ def make_batch_form(upload):
     return form_class(data={"name": "Lot"}, files={"csv_file": upload})
 
 
+@contextmanager
+def fake_open_map_file(file):
+    yield [range(42)]
+
+
 def run_task(batch):
     with (
-        patch("envergo.geodata.tasks.count_features", return_value=42),
+        patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
         patch("envergo.geodata.tasks.process_map.delay") as mock_delay,
     ):
         process_map_import_batch.apply(args=(batch.id,))
@@ -258,7 +264,7 @@ def test_batch_metadata_only_update_skips_reimport():
     csv_content = f"{CSV_HEADER}\nr1,,Nouveau nom,Nouvelle description,44\n"
     batch = make_batch(csv_content)
     with (
-        patch("envergo.geodata.tasks.count_features") as mock_count,
+        patch("envergo.geodata.tasks.open_map_file") as mock_open,
         patch("envergo.geodata.tasks.process_map.delay") as mock_delay,
     ):
         process_map_import_batch.apply(args=(batch.id,))
@@ -271,7 +277,7 @@ def test_batch_metadata_only_update_skips_reimport():
     assert existing.departments == ["44"]
     # Geometry is left untouched: no re-import, no re-copy, no recount.
     assert mock_delay.call_count == 0
-    assert mock_count.call_count == 0
+    assert mock_open.call_count == 0
     assert existing.expected_geometries == 7
     assert existing.file.name == original_file
 

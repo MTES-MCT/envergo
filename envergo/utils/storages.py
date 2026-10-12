@@ -5,7 +5,7 @@ from django.utils.encoding import filepath_to_uri
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
-def download_source(field_file):
+def stored_file_location(field_file):
     """Where to read a stored file from: an S3 url, or a local filesystem path."""
     url = field_file.storage.s3_url(field_file.name)
     if url.startswith("http"):

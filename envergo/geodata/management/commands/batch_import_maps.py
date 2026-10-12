@@ -22,7 +22,7 @@ from envergo.geodata.management.helpers import (
     refuse_production_settings,
 )
 from envergo.geodata.models import DATA_TYPES, Map
-from envergo.geodata.utils import count_features
+from envergo.geodata.utils import open_map_file
 
 logger = getLogger(__name__)
 
@@ -251,6 +251,8 @@ sits at), e.g.:
         full_path = dir_path / row.file
         with open(full_path, "rb") as f:
             map_file = DjangoFile(f)
+            with open_map_file(map_file) as data_source:
+                expected_geometries = len(data_source[0])
             map_obj = Map.objects.create(
                 name=row.name,
                 display_name=row.display_name,
@@ -261,7 +263,7 @@ sits at), e.g.:
                 departments=row.departments or None,
                 map_type=row.map_type,
                 data_type=row.data_type,
-                expected_geometries=count_features(map_file),
+                expected_geometries=expected_geometries,
             )
             self.stdout.write(f"Importing {row.file} as {row.map_type}/{row.data_type}")
             map_obj.file.save(row.file, map_file)
