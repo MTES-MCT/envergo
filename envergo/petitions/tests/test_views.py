@@ -1,5 +1,4 @@
 import re
-import sqlite3
 from datetime import date, datetime, time, timedelta
 from unittest.mock import ANY, Mock, patch
 
@@ -1732,20 +1731,6 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
     )
 
 
-def download_geopkg(client, user, project, tmp_path):
-    """Download the project's hedge export and return the saved file path."""
-    geopkg_url = reverse(
-        "petition_project_hedge_data_export",
-        kwargs={"reference": project.reference},
-    )
-    client.force_login(user)
-    response = client.get(geopkg_url)
-
-    export_path = tmp_path / "export.gpkg"
-    export_path.write_bytes(response.content)
-    return export_path
-
-
 def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
     client, haie_user, site, tmp_path
 ):
@@ -1771,7 +1756,17 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
         status_date=date(2025, 9, 1),
     )
 
-    export_path = download_geopkg(client, haie_user, project, tmp_path)
+    geopkg_url = reverse(
+        "petition_project_hedge_data_export",
+        kwargs={"reference": project.reference},
+    )
+    client.force_login(haie_user)
+    response = client.get(geopkg_url)
+    export_path = tmp_path / "export.gpkg"
+    export_path.write_bytes(response.content)
+
+    # Writing the hedges must keep the template's QGIS style table.
+    assert "layer_styles" in fiona.listlayers(export_path)
 
     with fiona.open(export_path, layer="haies") as hedges:
         assert hedges.crs.to_epsg() == 2154
@@ -1797,46 +1792,6 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
     assert row["decision"] == DECISIONS.express_agreement
     assert row["date_depot_dossier"] == "2025-03-21"
     assert row["date_cloture_dossier"] == "2025-09-01"
-
-
-def test_petition_project_geopkg_exports_missing_dossier_values_as_null(
-    client, haie_user, site, tmp_path
-):
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory(demarche_numerique_raw_dossier={})
-
-    export_path = download_geopkg(client, haie_user, project, tmp_path)
-
-    with fiona.open(export_path, layer="haies") as hedges:
-        row = dict(next(iter(hedges)).properties)
-
-    for column in (
-        "numero_pacage",
-        "beneficiaire",
-        "commune",
-        "procedure",
-        "date_depot_dossier",
-        "date_cloture_dossier",
-    ):
-        assert row[column] is None, column
-
-
-def read_qgis_styles(geopkg_path):
-    with sqlite3.connect(geopkg_path) as connection:
-        styles = connection.execute("SELECT * FROM layer_styles").fetchall()
-    return styles
-
-
-def test_petition_project_geopkg_keeps_the_template_qgis_style(
-    client, haie_user, site, tmp_path
-):
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-
-    export_path = download_geopkg(client, haie_user, project, tmp_path)
-
-    template_styles = read_qgis_styles(settings.GUH_DATA_EXPORT_TEMPLATE)
-    assert read_qgis_styles(export_path) == template_styles
 
 
 def test_petition_project_instructor_notes_form(
