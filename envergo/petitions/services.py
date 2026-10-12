@@ -334,15 +334,23 @@ def send_message_dossier_ds(petition_project, message_body, attachment_file=None
     return response
 
 
-def declared_commune(petition_project):
-    """The commune the applicant declared, or "" when the dossier carries none."""
+def declared_dn_field(petition_project, field_name):
+    """The value the applicant declared in a display field, or "" when the dossier carries none.
+
+    Reads the stored dossier, so it never calls the « Démarche numérique » API.
+    """
     dossier = petition_project.prefetched_dossier
     if not dossier:
         return ""
 
     dn_config = petition_project.config.demarche_numerique_config
-    commune_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
-    return commune_item.value if commune_item else ""
+    item = get_field_data_from_dn_dossier(field_name, dn_config, dossier)
+    return item.value if item else ""
+
+
+def declared_commune(petition_project):
+    """The commune the applicant declared, or "" when the dossier carries none."""
+    return declared_dn_field(petition_project, "city")
 
 
 def declaration_receipt_message(petition_project, received_on, due_date):

@@ -3,6 +3,7 @@ from datetime import date, datetime, time, timedelta
 from unittest.mock import ANY, Mock, patch
 
 import factory
+import fiona
 import pytest
 from django.conf import settings
 from django.contrib import messages
@@ -1730,7 +1731,69 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         f'filename="haies_dossier_{project.demarche_numerique_dossier_number}.gpkg"'
         in response.get("Content-Disposition")
     )
-    # TODO: check the features
+
+
+def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
+    client, haie_user, site, tmp_path
+):
+    DCConfigHaieFactory(
+        demarche_numerique_config__display_fields={
+            "project_url": "ABC123",
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        },
+    )
+    hedge = HedgeFactory(id="D1", additionalData__bord_batiment=False)
+    project = PetitionProjectFactory(
+        hedge_data=HedgeDataFactory(hedges=[hedge]),
+        demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+        demarche_numerique_date_depot=datetime.fromisoformat(
+            "2025-03-21T11:08:34+01:00"
+        ),
+    )
+    StatusLogFactory(
+        petition_project=project,
+        stage=STAGES.closed,
+        decision=DECISIONS.express_agreement,
+        status_date=date(2025, 9, 1),
+    )
+
+    geopkg_url = reverse(
+        "petition_project_hedge_data_export",
+        kwargs={"reference": project.reference},
+    )
+    client.force_login(haie_user)
+    response = client.get(geopkg_url)
+    export_path = tmp_path / "export.gpkg"
+    export_path.write_bytes(response.content)
+
+    # Writing the hedges must keep the template's QGIS style table.
+    assert "layer_styles" in fiona.listlayers(export_path)
+
+    with fiona.open(export_path, layer="haies") as hedges:
+        assert hedges.crs.to_epsg() == 2154
+        rows = [dict(feature.properties) for feature in hedges]
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["id"] == "D1"
+    assert row["type"] == "A_DETRUIRE"
+    assert row["type_haie"] == "degradee"
+    assert row["sur_parcelle_pac"] == "oui"
+    assert row["category"] == "ru"
+    assert row["longueur"] > 0
+    assert row["bord_batiment"] == "non"
+    assert row["bord_voie"] is None
+    assert row["mode_destruction"] == "autre"
+    assert row["numero_dossier"] == project.demarche_numerique_dossier_number
+    assert row["lien_dossier"].endswith(f"/projet/{project.reference}/instruction/")
+    assert row["numero_pacage"] == "123456789"
+    assert row["beneficiaire"] == "LAMARR Hedy"
+    assert row["commune"] == "Laon (02000)"
+    assert row["procedure"] is None
+    assert row["decision"] == DECISIONS.express_agreement
+    assert row["date_depot_dossier"] == "2025-03-21"
+    assert row["date_cloture_dossier"] == "2025-09-01"
 
 
 def test_petition_project_instructor_notes_form(

@@ -309,6 +309,21 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             .first()
         )
 
+    @property
+    def closed_on(self):
+        """Effective date of the latest closing, or None when the project is not closed."""
+        if not self.is_closed:
+            return None
+
+        closing_log = (
+            self.status_history.filter(
+                type=LOG_TYPES.status_change, stage=STAGES.closed
+            )
+            .order_by("-created_at")
+            .first()
+        )
+        return closing_log.status_date if closing_log else None
+
     @cached_property
     def latest_suspension(self):
         """Get the latest suspension log."""
