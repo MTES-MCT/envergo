@@ -48,6 +48,7 @@ from django.views.generic import (
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.list import MultipleObjectMixin
 from fiona import Feature, Geometry, Properties
+from fiona.crs import CRS
 from pyproj import Transformer
 from shapely.ops import transform
 
@@ -2307,36 +2308,46 @@ class PetitionProjectHedgeDataExport(DetailView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
 
+    # Columns of the `haies` table, in file order. Rows must have exactly these keys.
+    hedge_schema = {
+        "geometry": "LineString",
+        "properties": {
+            "id": "str",
+            "type": "str",
+            "type_haie": "str",
+            "sur_parcelle_pac": "str",
+            "category": "str",
+            "longueur": "float",
+            "bord_voie": "str",
+            "proximite_mare": "str",
+            "vieil_arbre": "str",
+            "ripisylve": "str",
+            "sous_ligne_electrique": "str",
+            "parc_jardin": "str",
+            "bord_batiment": "str",
+            "place_publique": "str",
+            "mode_destruction": "str",
+            "numero_dossier": "int",
+            "lien_dossier": "str",
+            "numero_pacage": "str",
+            "beneficiaire": "str",
+            "commune": "str",
+            "procedure": "str",
+            "decision": "str",
+            "date_depot_dossier": "date",
+            "date_cloture_dossier": "date",
+        },
+    }
+
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
         project = self.object
-        data = project.hedge_data
-        dossier_properties = self.export_dossier_properties(project)
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            template_file = settings.GUH_DATA_EXPORT_TEMPLATE
             export_file = os.path.join(tmpdirname, "output.gpkg")
-            shutil.copy(template_file, export_file)
-
-            # Fiona cannot append to an existing file
-            # By opening a layer in write mode, it will squash the layer data
-            # Luckily for us, that's the behaviour we want
-            with fiona.open(template_file) as src, fiona.open(
-                export_file, "w", layer="haies", **src.meta
-            ) as dst:
-                for hedge in data.hedges():
-                    transformer = Transformer.from_crs(
-                        EPSG_WGS84, EPSG_LAMB93, always_xy=True
-                    )
-                    geometry = Geometry.from_dict(
-                        transform(transformer.transform, hedge.geometry)
-                    )
-                    hedge_properties = self.export_hedge_properties(hedge)
-                    properties = Properties.from_dict(
-                        {**hedge_properties, **dossier_properties}
-                    )
-                    feat = Feature(geometry=geometry, properties=properties)
-                    dst.write(feat)
+            # The template carries the QGIS style of the `haies` table.
+            shutil.copy(settings.GUH_DATA_EXPORT_TEMPLATE, export_file)
+            self.write_hedges(export_file, project)
 
             # Create a response with the GeoPackage file
             export_filename = "haies_dossier.gpkg"
@@ -2350,6 +2361,31 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+    def write_hedges(self, path, project):
+        """Replace the `haies` table with the project hedges, in Lambert-93.
+
+        The file's other tables stay untouched.
+        """
+        dossier_properties = self.export_dossier_properties(project)
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+
+        with fiona.open(
+            path,
+            "w",
+            driver="GPKG",
+            layer="haies",
+            crs=CRS.from_epsg(EPSG_LAMB93),
+            schema=self.hedge_schema,
+        ) as dst:
+            for hedge in project.hedge_data.hedges():
+                lambert_line = transform(transformer.transform, hedge.geometry)
+                geometry = Geometry.from_dict(lambert_line)
+                hedge_properties = self.export_hedge_properties(hedge)
+                properties = Properties.from_dict(
+                    {**hedge_properties, **dossier_properties}
+                )
+                dst.write(Feature(geometry=geometry, properties=properties))
 
     def export_hedge_properties(self, hedge) -> dict:
         """Build data exported as geojson for each hedge."""
