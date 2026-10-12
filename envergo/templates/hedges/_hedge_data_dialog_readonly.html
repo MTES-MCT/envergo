@@ -7,7 +7,7 @@
           class="fr-btn--close fr-btn">Fermer</button>
 </div>
 <div class="fr-modal__content fr-pt-4w" v-if="selectedHedge">
-  <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
+  <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1v">
     Description de la haie <span>[[ selectedHedge?.id ]]</span>
   </h1>
   {% if config.single_procedure %}
@@ -17,7 +17,7 @@
           v-show="selectedHedge?.category() === 'l350_3'">{{ HedgeCategory.l350_3.badge_label }}</span>
   {% endif %}
 
-  <ul class="hedge-data-dialog-properties fr-mb-3w">
+  <ul class="hedge-data-dialog-properties fr-my-3w">
     <li>
       <strong>Longueur</strong> : [[ selectedHedge?.length.toFixed(0) ]] m
     </li>
