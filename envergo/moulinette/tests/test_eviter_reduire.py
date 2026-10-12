@@ -309,6 +309,60 @@ def test_checkbox_is_never_prefilled_from_the_url(client):
     assert ACK_ERROR not in content
 
 
+def test_checkbox_is_prechecked_after_an_acknowledged_submission(client):
+    """Once the simulation was acknowledged, editing it starts with the box checked."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+
+    res = client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+    assert res.status_code == 302
+
+    tag = checkbox_tag(client.get(form_url(params)).content.decode())
+    assert tag is not None
+    assert "checked" in tag
+
+
+def test_checkbox_is_not_prechecked_on_another_simulation(client):
+    """The acknowledgment only applies to the motif and hedges it was given for."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    other_hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+    client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+
+    other_motif = simulation_data(hedges, motif="amenagement")
+    other_haies = simulation_data(other_hedges)
+    for other in (other_motif, other_haies):
+        tag = checkbox_tag(client.get(form_url(other)).content.decode())
+        assert tag is not None
+        assert "checked" not in tag
+
+
+def test_checkbox_is_prechecked_despite_tracking_params(client):
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+    client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+
+    tracked = {**params, "mtm_campaign": "test", "zoom": "12"}
+    tag = checkbox_tag(client.get(form_url(tracked)).content.decode())
+    assert "checked" in tag
+
+
+def test_checkbox_flag_is_reset_on_a_new_unacknowledged_submission(client):
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+    client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+
+    res = client.post(form_url(), params)
+    assert res.status_code == 302
+
+    tag = checkbox_tag(client.get(form_url(params)).content.decode())
+    assert "checked" not in tag
+
+
 def test_checkbox_state_is_kept_when_another_field_fails(client):
     """Within a single submission, the checked state survives an error re-render."""
     DCConfigHaieFactory()
