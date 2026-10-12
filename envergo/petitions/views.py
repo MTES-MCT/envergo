@@ -98,6 +98,8 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    declared_commune,
+    declared_dn_field,
     get_context_from_dn,
     get_field_data_from_dn_dossier,
     get_messages_and_senders_from_ds,
@@ -109,7 +111,7 @@ from envergo.petitions.tasks import send_closing_message_async
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
-from envergo.utils.tools import generate_key
+from envergo.utils.tools import generate_key, get_base_url
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
@@ -2307,7 +2309,9 @@ class PetitionProjectHedgeDataExport(DetailView):
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
-        data = self.object.hedge_data
+        project = self.object
+        data = project.hedge_data
+        dossier_properties = self.export_dossier_properties(project)
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             template_file = settings.GUH_DATA_EXPORT_TEMPLATE
@@ -2327,15 +2331,9 @@ class PetitionProjectHedgeDataExport(DetailView):
                     geometry = Geometry.from_dict(
                         transform(transformer.transform, hedge.geometry)
                     )
+                    hedge_properties = self.export_hedge_properties(hedge)
                     properties = Properties.from_dict(
-                        {
-                            "id": hedge.id,
-                            "type": (
-                                "A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE"
-                            ),
-                            "type_haie": hedge.hedge_type,
-                            "sur_parcelle_pac": "oui" if hedge.is_on_pac else "non",
-                        }
+                        {**hedge_properties, **dossier_properties}
                     )
                     feat = Feature(geometry=geometry, properties=properties)
                     dst.write(feat)
@@ -2352,6 +2350,67 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+    def export_hedge_properties(self, hedge) -> dict:
+        """Build data exported as geojson for each hedge."""
+
+        def yesno(val):
+            if val is None:
+                return ""
+
+            return "oui" if val else "non"
+
+        # Legacy fields
+        # Only exported fields before the RU was activated
+        props = (
+            ("id", hedge.id),
+            ("type", ("A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE")),
+            ("type_haie", hedge.hedge_type),
+            ("sur_parcelle_pac", yesno(hedge.is_on_pac)),
+        )
+
+        # Additional hedge fields
+        props += (
+            ("category", hedge.category),
+            ("longueur", hedge.length),
+            ("bord_voie", yesno(hedge.prop("bord_voie"))),
+            ("proximite_mare", yesno(hedge.prop("proximite_mare"))),
+            ("vieil_arbre", yesno(hedge.prop("vieil_arbre"))),
+            ("ripisylve", yesno(hedge.prop("ripisylve"))),
+            ("sous_ligne_electrique", yesno(hedge.prop("sous_ligne_electrique"))),
+            ("parc_jardin", yesno(hedge.prop("parc_jardin"))),
+            ("bord_batiment", yesno(hedge.prop("bord_batiment"))),
+            ("place_publique", yesno(hedge.prop("place_publique"))),
+            ("mode_destruction", hedge.prop("mode_destruction")),
+        )
+
+        return dict(props)
+
+    def export_dossier_properties(self, project) -> dict:
+        """Build the dossier columns, identical on every exported row."""
+        summary_path = reverse(
+            "petition_project_summary",
+            args=[project.reference],
+        )
+        base_url = get_base_url(settings.ENVERGO_HAIE_DOMAIN)
+
+        dossier = project.prefetched_dossier
+        applicant = dossier.applicant_name if dossier else None
+
+        date_depot = project.demarche_numerique_date_depot
+        filed_on = timezone.localdate(date_depot) if date_depot else None
+
+        return {
+            "numero_dossier": project.demarche_numerique_dossier_number,
+            "lien_dossier": f"{base_url}{summary_path}",
+            "numero_pacage": declared_dn_field(project, "pacage"),
+            "beneficiaire": applicant or "",
+            "commune": declared_commune(project),
+            "procedure": "",
+            "decision": project.decision,
+            "date_depot_dossier": filed_on,
+            "date_cloture_dossier": project.closed_on,
+        }
 
 
 class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
