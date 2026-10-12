@@ -1,0 +1,9 @@
+{% load moulinette %}
+{% load petitions %}
+
+<p class="fr-my-2w">{% field_summary moulinette.triage_form.contexte %}</p>
+{% if with_urba_fields and moulinette.triage_form.contexte.value == "projet-urba" %}
+  {% display_dn_field "description_projet_urba" "inline" label="Description du projet de construction ou d’aménagement" %}
+  {% display_dn_field "auto_urba_dejadepose" "inline" %}
+  {% display_dn_field "numero_auto_urba" "inline" label="N° d’autorisation d’urbanisme" %}
+{% endif %}
