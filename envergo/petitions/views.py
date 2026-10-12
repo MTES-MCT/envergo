@@ -2392,7 +2392,7 @@ class PetitionProjectHedgeDataExport(DetailView):
 
         def yesno(val):
             if val is None:
-                return ""
+                return None
 
             return "oui" if val else "non"
 
@@ -2423,7 +2423,10 @@ class PetitionProjectHedgeDataExport(DetailView):
         return dict(props)
 
     def export_dossier_properties(self, project) -> dict:
-        """Build the dossier columns, identical on every exported row."""
+        """Build the dossier columns, identical on every exported row.
+
+        Missing values are None, so they export as NULL rather than "".
+        """
         summary_path = reverse(
             "petition_project_summary",
             args=[project.reference],
@@ -2439,10 +2442,10 @@ class PetitionProjectHedgeDataExport(DetailView):
         return {
             "numero_dossier": project.demarche_numerique_dossier_number,
             "lien_dossier": f"{base_url}{summary_path}",
-            "numero_pacage": declared_dn_field(project, "pacage"),
-            "beneficiaire": applicant or "",
-            "commune": declared_commune(project),
-            "procedure": "",
+            "numero_pacage": declared_dn_field(project, "pacage") or None,
+            "beneficiaire": applicant,
+            "commune": declared_commune(project) or None,
+            "procedure": None,
             "decision": project.decision,
             "date_depot_dossier": filed_on,
             "date_cloture_dossier": project.closed_on,

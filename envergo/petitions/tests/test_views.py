@@ -1786,17 +1786,39 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
     assert row["category"] == "ru"
     assert row["longueur"] > 0
     assert row["bord_batiment"] == "non"
-    assert row["bord_voie"] == ""
+    assert row["bord_voie"] is None
     assert row["mode_destruction"] == "autre"
     assert row["numero_dossier"] == project.demarche_numerique_dossier_number
     assert row["lien_dossier"].endswith(f"/projet/{project.reference}/instruction/")
     assert row["numero_pacage"] == "123456789"
     assert row["beneficiaire"] == "LAMARR Hedy"
     assert row["commune"] == "Laon (02000)"
-    assert row["procedure"] == ""
+    assert row["procedure"] is None
     assert row["decision"] == DECISIONS.express_agreement
     assert row["date_depot_dossier"] == "2025-03-21"
     assert row["date_cloture_dossier"] == "2025-09-01"
+
+
+def test_petition_project_geopkg_exports_missing_dossier_values_as_null(
+    client, haie_user, site, tmp_path
+):
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(demarche_numerique_raw_dossier={})
+
+    export_path = download_geopkg(client, haie_user, project, tmp_path)
+
+    with fiona.open(export_path, layer="haies") as hedges:
+        row = dict(next(iter(hedges)).properties)
+
+    for column in (
+        "numero_pacage",
+        "beneficiaire",
+        "commune",
+        "procedure",
+        "date_depot_dossier",
+        "date_cloture_dossier",
+    ):
+        assert row[column] is None, column
 
 
 def read_qgis_styles(geopkg_path):
