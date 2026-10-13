@@ -1036,7 +1036,7 @@ def test_instructor_regulation_page_shows_dn_fields(
 
     # Then the mapped « Démarche numérique » field is displayed
     assert (
-        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
         in content
     )
     assert "La motivation" in content
