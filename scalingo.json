@@ -77,8 +77,11 @@
     "SYNC_STATS_ENABLED": {
       "value": "false"
     },
-    "ENVERGO_AMENAGEMENT_DOMAIN": {
-      "value": "$APP.$REGION_NAME.scalingo.io"
+    "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN": {
+      "value": "to_be_done"
+    },
+    "DJANGO_ENVERGO_HAIE_DOMAIN": {
+      "value": "to_be_done"
     }
   },
   "scripts": {
