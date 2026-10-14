@@ -73,6 +73,19 @@ class MapForm(forms.ModelForm):
         return file
 
 
+class StalledImportListFilter(admin.SimpleListFilter):
+    title = "Import bloqué"
+    parameter_name = "stalled_import"
+
+    def lookups(self, request, model_admin):
+        return [("1", "Oui")]
+
+    def queryset(self, request, queryset):
+        if self.value() == "1":
+            queryset = queryset.stalled()
+        return queryset
+
+
 class DepartmentsListFilter(admin.SimpleListFilter):
     title = _("Departments")
     parameter_name = "departments"
@@ -124,7 +137,13 @@ class MapAdmin(gis_admin.GISModelAdmin):
     actions = ["process", "generate_preview"]
     exclude = ["task_id", "geometry", "import_batch"]
     search_fields = ["name", "display_name", "reference"]
-    list_filter = ["import_status", "map_type", "data_type", DepartmentsListFilter]
+    list_filter = [
+        "import_status",
+        StalledImportListFilter,
+        "map_type",
+        "data_type",
+        DepartmentsListFilter,
+    ]
     enable_nav_sidebar = False
 
     def lookup_allowed(self, lookup, value, *args, **kwargs):
@@ -224,6 +243,13 @@ class MapAdmin(gis_admin.GISModelAdmin):
     )
     def col_import_status(self, obj):
         if not obj.import_status:
+            if obj.is_import_stalled:
+                label = "Import bloqué"
+                return format_html(
+                    '<img src="/static/admin/img/icon-alert.svg" title="{}" alt="{}"/>',
+                    label,
+                    label,
+                )
             return ""
 
         icons = {
@@ -470,12 +496,12 @@ class MapImportBatchAdmin(admin.ModelAdmin):
 
         uploaded_files = []
         for batch_file in batch.files.all():
-            try:
-                size = batch_file.file.size
-            except FileNotFoundError:
-                size = 0
             uploaded_files.append(
-                {"id": batch_file.id, "name": batch_file.name, "size": size}
+                {
+                    "id": batch_file.id,
+                    "name": batch_file.name,
+                    "size": self.stored_size(batch_file) or 0,
+                }
             )
 
         context = {
@@ -494,8 +520,23 @@ class MapImportBatchAdmin(admin.ModelAdmin):
             request, "geodata/admin/mapimportbatch_upload.html", context
         )
 
+    @staticmethod
+    def stored_size(batch_file):
+        """Size of the stored file, or None if it cannot be read."""
+        try:
+            return batch_file.file.size
+        except (FileNotFoundError, OSError):
+            return None
+
     def handle_upload(self, request, batch):
         """This is called when a file is uploaded with dropzone."""
+        file = request.FILES.get("map_files")
+
+        # A retry of an upload that actually completed is a success, not a duplicate
+        if file:
+            existing = batch.files.filter(name=file.name).first()
+            if existing is not None and self.stored_size(existing) == file.size:
+                return JsonResponse({"id": existing.id})
 
         max_files = settings.MAX_MAP_BATCH_FILES
         if batch.files.count() >= max_files:
@@ -504,7 +545,6 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 status=400,
             )
 
-        file = request.FILES.get("map_files")
         if not file:
             return JsonResponse({"error": "Aucun fichier n'a été reçu."}, status=400)
 

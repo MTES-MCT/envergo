@@ -77,7 +77,7 @@ window.initDropzoneUpload = function (options) {
         if (!xhr || xhr.status === 0 || xhr.status >= 500) {
           var errorSpan = file.previewElement && file.previewElement.querySelector('.dz-error-message span');
           if (errorSpan) {
-            errorSpan.textContent = "Le fichier a mis trop de temps à être envoyé. Réessayez, ou contactez-nous si le problème persiste.";
+            errorSpan.textContent = "Réception non confirmée. Rechargez la page pour vérifier, réessayez, ou contactez-nous si le problème persiste.";
           }
         }
       }.bind(this));

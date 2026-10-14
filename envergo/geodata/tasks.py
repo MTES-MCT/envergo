@@ -5,7 +5,7 @@ from django.core.files import File
 from django.db import transaction
 from django.utils import timezone
 
-from config.celery_app import app
+from config.celery_app import BaseTaskWithRetry, app
 from envergo.geodata.import_batch import is_blank_row, parse_batch_row, validate_headers
 from envergo.geodata.models import STATUSES, Map, MapImportBatch
 from envergo.geodata.utils import (
@@ -21,8 +21,27 @@ from envergo.geodata.utils import (
 logger = logging.getLogger(__name__)
 
 
-@app.task(bind=True)
-@transaction.atomic
+class ProcessMapTask(BaseTaskWithRetry):
+    """Make sure a map never stays silently unprocessed."""
+
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
+        # The task is waiting for its next attempt, not stalled: restart the
+        # stalled import delay.
+        Map.objects.filter(pk=args[0] if args else kwargs.get("map_id")).update(
+            import_date=timezone.now()
+        )
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        map_id = args[0] if args else kwargs.get("map_id")
+        Map.objects.filter(pk=map_id).update(
+            import_status=STATUSES.failure,
+            import_error_msg=f"Erreur d'import ({exc})",
+            import_date=timezone.now(),
+            task_id=None,
+        )
+
+
+@app.task(bind=True, base=ProcessMapTask)
 def process_map(task, map_id):
     logger.info(f"Starting import on map {map_id}")
 
@@ -33,6 +52,7 @@ def process_map(task, map_id):
     map.task_id = task.request.id
     map.import_error_msg = ""
     map.import_status = None
+    map.import_date = timezone.now()
     map.save()
 
     # Proceed with the map import
