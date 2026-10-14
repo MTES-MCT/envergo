@@ -2,14 +2,14 @@
 
 <h3 class="fr-h4 fr-mt-3w fr-mb-1w">Questions complémentaires du simulateur</h3>
 
-{% for regulation_form in regulation.criteria_forms %}
-  <ul class="instructor-view-list fr-mb-3w">
-    {% for field in regulation_form %}
-      <li>{% field_summary field %}</li>
-    {% endfor %}
-  </ul>
-{% empty %}
-  <p>
-    <i>Aucune question complémentaire demandée</i>
-  </p>
+{% for criterion in regulation.criteria.all %}
+  {% with criterion.get_form as regulation_form %}
+    {% if regulation_form %}
+      <ul class="instructor-view-list fr-mb-3w">
+        {% for field in regulation_form %}
+          <li>{% field_summary field %}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
 {% endfor %}
