@@ -1030,9 +1030,10 @@ def test_instructor_regulation_page_shows_dn_fields(
 
     # Then the page is structured in sections
     assert "Linéaires concernés" in content
-    assert "Informations saisies dans le formulaire" in content
-    assert ">Justification du projet</h4>" in content
-    assert ">Évitement et réduction</h4>" in content
+    assert ">Informations saisies par le demandeur</h2>" in content
+    assert ">Questions complémentaires du simulateur</h3>" in content
+    assert ">Justification du projet</h3>" in content
+    assert ">Évitement et réduction</h3>" in content
 
     # Then the mapped « Démarche numérique » field is displayed
     assert (
