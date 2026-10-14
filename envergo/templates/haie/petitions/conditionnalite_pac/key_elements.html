@@ -1,14 +1,4 @@
-{% load petitions %}
-{% load moulinette %}
-
 {% if config.single_procedure %}
-  <ul class="instructor-view-list">
-    <li>
-      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
-    </li>
-    <li>{% display_dn_field "pacage" "inline" %}</li>
-  </ul>
-
   <div class="fr-table">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
@@ -66,16 +56,6 @@
   <p class="fr-callout fr-icon-information-line">
     Les décomptes de cette section n'incluent que les haies déclarées sur parcelle PAC. Les alignements d’arbres sont également exclus.
   </p>
-
-  <ul class="instructor-view-list">
-
-    <li>
-      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
-    </li>
-    {% if ds_info.pacage %}
-      {% include "haie/petitions/_item.html" with label="N° PACAGE" value=ds_info.pacage %}
-    {% endif %}
-  </ul>
   <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
   <ul class="instructor-view-list">
     {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur parcelle PAC" value=lineaire_detruit_pac|floatformat:"0g" unit="m" %}

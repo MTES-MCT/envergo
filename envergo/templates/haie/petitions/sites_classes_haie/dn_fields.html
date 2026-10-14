@@ -1,0 +1,13 @@
+{% load petitions %}
+
+<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Justification du projet</h4>
+{% include "haie/petitions/_dn_justification.html" %}
+{% display_dn_field "photos" "inline" %}
+{% display_dn_field "urgence_photo" "inline" %}
+
+{% include "haie/petitions/_dn_erc.html" %}
+
+<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Sites classés</h4>
+{% display_dn_field "sites_classes_analyse_paysagere" "inline" %}
+{% display_dn_field "sites_classes_photos_environnement" "inline" %}
+{% display_dn_field "sites_classes_montages_photos" "inline" %}

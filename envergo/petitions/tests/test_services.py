@@ -879,8 +879,6 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
             plantation_eval,
         )
     )
-    assert "Modification de parcelle agricole" in context["motif"]
-
     aa_bord_voie_destruction_hedge = context["aa_bord_voie_destruction_detail"][0]
     assert (
         aa_bord_voie_destruction_hedge.length

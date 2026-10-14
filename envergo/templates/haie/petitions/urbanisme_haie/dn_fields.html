@@ -1,0 +1,16 @@
+{% load petitions %}
+
+<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Contexte de la destruction</h4>
+{% include "haie/petitions/_dn_contexte.html" with with_urba_fields=True %}
+
+<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Justification du projet</h4>
+{% include "haie/petitions/_dn_justification.html" %}
+{% display_dn_field "projet_amenagement_cas" "inline" %}
+{% display_dn_field "plan_masse" "inline" %}
+{% display_dn_field "tech_bocager" "inline" %}
+{% display_dn_field "tech_bocager_organisme" "inline" %}
+{% display_dn_field "tech_bocager_rapport" "inline" %}
+{% display_dn_field "photos" "inline" %}
+{% display_dn_field "urgence_photo" "inline" %}
+
+{% include "haie/petitions/_dn_erc.html" %}
