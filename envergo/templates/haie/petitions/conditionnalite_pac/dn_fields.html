@@ -1,12 +1,12 @@
 {% load petitions %}
 
-<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Bénéficiaire</h4>
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Bénéficiaire</h3>
 {% display_dn_field "beneficiaire_profil" "inline" %}
 {% display_dn_field "pacage" "inline" %}
 
-<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Justification du projet</h4>
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Justification du projet</h3>
 {% include "haie/petitions/_dn_justification.html" %}
 
-<h4 class="fr-h6 fr-mt-3w fr-mb-1w">Conditionnalité PAC</h4>
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Conditionnalité PAC</h3>
 {% display_dn_field "pac_localisation_destruction" "inline" %}
 {% display_dn_field "pac_localisation_plantation" "inline" %}
