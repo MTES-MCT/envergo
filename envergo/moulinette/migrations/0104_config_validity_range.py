@@ -99,7 +99,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="configamenagement",
             constraint=models.CheckConstraint(
-                check=models.Q(("validity_range__isempty", False)),
+                condition=models.Q(("validity_range__isempty", False)),
                 name="configamenagement_validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début.",
             ),
@@ -124,7 +124,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(("validity_range__isempty", False)),
+                condition=models.Q(("validity_range__isempty", False)),
                 name="confighaie_validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début.",
             ),
