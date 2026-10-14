@@ -27,7 +27,7 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     await frame.locator('#map').click({ position: { x: 300, y: 215 } });
     await frame.locator('#map').dblclick({ position: { x: 310, y: 215 } });
     await frame.getByRole('dialog', { name: 'Description de la haie D1' }).getByText('Haie mixte').check();
-    await frame.getByLabel('Description de la haie D1').getByRole('button', { name: 'Enregistrer' }).click();
+    await frame.getByRole('dialog', { name: 'Description de la haie D1' }).getByRole('button', { name: 'Enregistrer' }).click();
     await frame.locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
     // First submission: the block appears, unchecked, without error

@@ -38,12 +38,13 @@ class HedgePropertiesBaseForm(forms.Form):
         label="En bordure de route, voie ou chemin ouvert au public",
         required=False,
     )
-    ripisylve = forms.BooleanField(
+    ripisylve = DisplayBooleanField(
         label=mark_safe(
             "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)"
             "<span class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>"
         ),
         required=False,
+        display_label="En bordure de cours d'eau ou de plan d'eau (haie ripisylve)",
     )
     proximite_mare = forms.BooleanField(
         label="Mare ou pièce d’eau à moins de 500 m",
@@ -76,6 +77,20 @@ class HedgePropertiesBaseForm(forms.Form):
         """
         )
 
+        # The hedge data dialog is bound to the vue app: each input edits the
+        # matching property of the `hedgeDraft` object (see hedge_input/app.js).
+        for name, field in self.fields.items():
+            field.widget.attrs["v-model"] = f"hedgeDraft.{name}"
+
+    @property
+    def defaults(self):
+        """Value of every property of a hedge that was not edited yet."""
+        return {
+            name: self.get_initial_for_field(field, name)
+            or (False if isinstance(field, forms.BooleanField) else "")
+            for name, field in self.fields.items()
+        }
+
 
 MODE_DESTRUCTION_CHOICES = (
     ("arrachage", "Arrachage", "Arrachage"),
@@ -101,15 +116,17 @@ class HedgeToRemovePropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
     mode_destruction = DisplayChoiceField(
         choices=extract_choices(MODE_DESTRUCTION_CHOICES),
         label="",
+        display_label="Mode de destruction",
         widget=forms.RadioSelect,
         initial="arrachage",
         get_display_value=extract_display_function(MODE_DESTRUCTION_CHOICES),
     )
-    vieil_arbre = forms.BooleanField(
+    vieil_arbre = DisplayBooleanField(
         label=mark_safe(
             "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
             '<span class="fr-hint-text">Arbres à partir de 20 cm de diamètre</span>'
         ),
+        display_label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
         required=False,
     )
 
@@ -267,11 +284,13 @@ class HedgeToPlantPropertiesCalvadosForm(
 ):
     """Hedge to plant properties form : Calvados specific"""
 
-    mode_plantation = forms.ChoiceField(
-        choices=[(first, second) for first, second, _ in MODE_PLANTATION_CHOICES],
+    mode_plantation = DisplayChoiceField(
+        choices=extract_choices(MODE_PLANTATION_CHOICES),
         label="",
+        display_label="Type de plantation",
         widget=forms.RadioSelect,
         initial="plantation",
+        get_display_value=extract_display_function(MODE_PLANTATION_CHOICES),
     )
 
     fieldsets = {

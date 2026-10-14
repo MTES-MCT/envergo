@@ -413,8 +413,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "ripisylve": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
-                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -424,8 +423,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
-                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
             },
         },
         "replantation_coefficient": Decimal("1.5"),
@@ -557,8 +555,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "ripisylve": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
-                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -569,8 +566,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
-                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
             },
         },
         "ordered_hedge_types": [
