@@ -489,6 +489,21 @@ class TestUploadView:
         assert res.status_code == 400
         assert "déjà été téléversé" in res.json()["error"]
 
+    def test_upload_retry_of_completed_upload_returns_existing_file(
+        self, admin_client, tmp_path
+    ):
+        """The first response may have been lost: the retry must succeed."""
+        batch = MapImportBatchFactory()
+        gpkg = make_gpkg(tmp_path, "carte.gpkg")
+        with open(gpkg, "rb") as f:
+            first = admin_client.post(self.upload_url(batch), {"map_files": f})
+        with open(gpkg, "rb") as f:
+            retry = admin_client.post(self.upload_url(batch), {"map_files": f})
+
+        assert retry.status_code == 200
+        assert retry.json() == first.json()
+        assert MapImportBatchFile.objects.filter(batch=batch).count() == 1
+
     def test_upload_rejects_wrong_extension(self, admin_client, tmp_path):
         batch = MapImportBatchFactory()
         bad = tmp_path / "carte.txt"

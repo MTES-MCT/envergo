@@ -496,12 +496,12 @@ class MapImportBatchAdmin(admin.ModelAdmin):
 
         uploaded_files = []
         for batch_file in batch.files.all():
-            try:
-                size = batch_file.file.size
-            except FileNotFoundError:
-                size = 0
             uploaded_files.append(
-                {"id": batch_file.id, "name": batch_file.name, "size": size}
+                {
+                    "id": batch_file.id,
+                    "name": batch_file.name,
+                    "size": self.stored_size(batch_file) or 0,
+                }
             )
 
         context = {
@@ -520,8 +520,23 @@ class MapImportBatchAdmin(admin.ModelAdmin):
             request, "geodata/admin/mapimportbatch_upload.html", context
         )
 
+    @staticmethod
+    def stored_size(batch_file):
+        """Size of the stored file, or None if it cannot be read."""
+        try:
+            return batch_file.file.size
+        except (FileNotFoundError, OSError):
+            return None
+
     def handle_upload(self, request, batch):
         """This is called when a file is uploaded with dropzone."""
+        file = request.FILES.get("map_files")
+
+        # A retry of an upload that actually completed is a success, not a duplicate
+        if file:
+            existing = batch.files.filter(name=file.name).first()
+            if existing is not None and self.stored_size(existing) == file.size:
+                return JsonResponse({"id": existing.id})
 
         max_files = settings.MAX_MAP_BATCH_FILES
         if batch.files.count() >= max_files:
@@ -530,7 +545,6 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 status=400,
             )
 
-        file = request.FILES.get("map_files")
         if not file:
             return JsonResponse({"error": "Aucun fichier n'a été reçu."}, status=400)
 
