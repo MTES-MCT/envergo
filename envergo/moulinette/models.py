@@ -660,11 +660,6 @@ class Regulation(models.Model):
         """Check if the regulation has a template for key elements."""
         return self.has_template("haie/petitions/{}/key_elements.html")
 
-    def criteria_forms(self) -> list:
-        """Get the forms of additional questions asked by the regulation criteria."""
-        forms = (criterion.get_form() for criterion in self.criteria.all())
-        return [form for form in forms if form]
-
     def has_dn_fields_template(self) -> bool:
         """Check if the regulation has a template for « Démarche numérique » fields."""
         return self.has_template("haie/petitions/{}/dn_fields.html")

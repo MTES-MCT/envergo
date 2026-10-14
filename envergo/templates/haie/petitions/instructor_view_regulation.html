@@ -42,10 +42,11 @@
 
       <section class="fr-mb-4w">
         <h2 class="fr-mt-4w">Informations saisies par le demandeur</h2>
-        {% include "haie/petitions/_regulation_form.html" %}
+        {% if not config.single_procedure %}
+          {% include "haie/petitions/_regulation_form.html" %}
+        {% endif %}
 
         {% if regulation.has_dn_fields_template %}
-          <h3 class="fr-h4 fr-mt-4w">Informations saisies dans le formulaire</h3>
           {% instructor_view_part "dn_fields" regulation petition_project moulinette %}
         {% endif %}
       </section>
