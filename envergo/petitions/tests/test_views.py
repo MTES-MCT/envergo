@@ -1779,7 +1779,7 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
     assert row["type_haie"] == "degradee"
     assert row["sur_parcelle_pac"] == "oui"
     assert row["category"] == "regime_unique"
-    assert row["longueur"] > 0
+    assert row["longueur"] == round(hedge.length, 3)
     assert row["bord_batiment"] == "non"
     assert row["bord_voie"] is None
     assert row["mode_destruction"] == "autre"

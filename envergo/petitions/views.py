@@ -2415,7 +2415,7 @@ class PetitionProjectHedgeDataExport(DetailView):
         # Additional hedge fields
         props += (
             ("category", self.exported_categories[hedge.category]),
-            ("longueur", hedge.length),
+            ("longueur", round(hedge.length, 3)),
             ("bord_voie", yesno(hedge.prop("bord_voie"))),
             ("proximite_mare", yesno(hedge.prop("proximite_mare"))),
             ("vieil_arbre", yesno(hedge.prop("vieil_arbre"))),
