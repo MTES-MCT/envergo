@@ -11,7 +11,7 @@
   {% include 'haie/petitions/_item.html' with label="Coefficient de compensation moyen :" value=replantation_coefficient|floatformat:"2g" %}
 </ul>
 {% if hedge_detail_rows %}
-  {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_detail_rows show_coeff_majore=show_ep_majorations %}
+  {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_detail_rows %}
 {% endif %}
 
 {% if ru_zone_configs %}

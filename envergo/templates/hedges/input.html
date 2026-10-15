@@ -13,6 +13,8 @@
 {% block main %}
 
   {{ hedge_data|json_script:"hedge-data" }}
+  {{ hedge_to_plant_data_form.defaults|json_script:"plantation-hedge-defaults" }}
+  {{ hedge_to_remove_data_form.defaults|json_script:"removal-hedge-defaults" }}
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"

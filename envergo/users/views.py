@@ -32,6 +32,17 @@ class Register(AnonymousRequiredMixin, CreateView):
     form_class = RegisterForm
     success_url = reverse_lazy("register_success")
 
+    def post(self, request, *args, **kwargs):
+        """Fake a successful signup for bots, so they learn nothing."""
+        form = self.get_form()
+        if form.is_bot_submission():
+            return HttpResponseRedirect(self.get_success_url())
+        return super().post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        """The success page does not depend on the created account."""
+        return self.success_url
+
     def form_valid(self, form):
         """Send a connection/confirmation link to the user."""
 
@@ -66,7 +77,7 @@ class Register(AnonymousRequiredMixin, CreateView):
             send_account_activation_email.delay(
                 user_email, self.request.site.id, activate_url
             )
-            return HttpResponseRedirect(self.success_url)
+            return HttpResponseRedirect(self.get_success_url())
         else:
             return super().form_invalid(form)
 
