@@ -228,6 +228,8 @@ class EvaluationAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
+        # The rendered content is heavy and admin views rarely need it.
+        versions = EvaluationVersion.objects.order_by("-created_at").defer("content")
         qs = (
             super()
             .get_queryset(request)
@@ -236,12 +238,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 nb_versions=Count("versions", distinct=True),
                 nb_emails_sent=Count("regulatory_notice_logs", distinct=True),
             )
-            .prefetch_related(
-                Prefetch(
-                    "versions",
-                    queryset=EvaluationVersion.objects.order_by("-created_at"),
-                )
-            )
+            .prefetch_related(Prefetch("versions", queryset=versions))
         )
         return qs
 
