@@ -2308,6 +2308,13 @@ class PetitionProjectHedgeDataExport(DetailView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
 
+    # Reporting codes, kept stable whatever the internal codes and display labels.
+    exported_categories = {
+        HedgeCategory.ru: "regime_unique",
+        HedgeCategory.hru: "hors_regime_unique",
+        HedgeCategory.l350_3: "alignement_bord_voie",
+    }
+
     # Columns of the `haies` table, in file order. Rows must have exactly these keys.
     hedge_schema = {
         "geometry": "LineString",
@@ -2407,8 +2414,8 @@ class PetitionProjectHedgeDataExport(DetailView):
 
         # Additional hedge fields
         props += (
-            ("category", hedge.category.value),
-            ("longueur", hedge.length),
+            ("category", self.exported_categories[hedge.category]),
+            ("longueur", round(hedge.length, 3)),
             ("bord_voie", yesno(hedge.prop("bord_voie"))),
             ("proximite_mare", yesno(hedge.prop("proximite_mare"))),
             ("vieil_arbre", yesno(hedge.prop("vieil_arbre"))),
