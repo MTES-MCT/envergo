@@ -1,6 +1,8 @@
+import re
 from unittest.mock import patch
 
 import pytest
+from django.contrib import messages
 from django.urls import reverse
 
 from envergo.evaluations.models import (
@@ -29,6 +31,12 @@ def form_data():
         "urbanism_department_emails": ["test@example.org"],
         "project_owner_emails": ["sponsor@example.org"],
     }
+
+
+@pytest.fixture
+def published_evaluation(evaluation):
+    evaluation.versions.update(published=True)
+    return evaluation
 
 
 @pytest.fixture(autouse=True)
@@ -109,22 +117,24 @@ def test_create_eval_fails_when_it_already_exists(client, admin_user, eval_reque
     assert qs.count() == 1
 
 
-def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
+def test_evaluation_email_sending(admin_client, published_evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     ConfigAmenagementFactory()
 
     # Force the moulinette result
-    moulinette = evaluation.get_moulinette()
+    moulinette = published_evaluation.get_moulinette()
     assert moulinette.is_valid(), moulinette.form_errors
-    evaluation._moulinette.result = "soumis"
+    published_evaluation._moulinette.result = "soumis"
 
-    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    url = reverse(
+        "admin:evaluations_evaluation_email_avis", args=[published_evaluation.pk]
+    )
     res = admin_client.get(url)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
     assert RegulatoryNoticeLog.objects.count() == 0
 
-    email = evaluation.get_evaluation_email()
+    email = published_evaluation.get_evaluation_email()
     to = email.get_recipients()
     cc = email.get_cc_recipients()
     bcc = email.get_bcc_recipients()
@@ -144,26 +154,28 @@ def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
 
     assert RegulatoryNoticeLog.objects.count() == 1
     log = RegulatoryNoticeLog.objects.first()
-    assert log.evaluation == evaluation
+    assert log.evaluation == published_evaluation
 
 
 def test_evaluation_email_without_to_recipient_should_use_cc_instead(
-    admin_client, evaluation, mailoutbox
+    admin_client, published_evaluation, mailoutbox
 ):
     # Make sure the "loi sur l'eau" result will be set
     ConfigAmenagementFactory()
 
     # Force the moulinette result
-    evaluation.get_moulinette()
-    evaluation._moulinette.result = "soumis"
+    published_evaluation.get_moulinette()
+    published_evaluation._moulinette.result = "soumis"
 
-    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    url = reverse(
+        "admin:evaluations_evaluation_email_avis", args=[published_evaluation.pk]
+    )
     res = admin_client.get(url)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
     assert RegulatoryNoticeLog.objects.count() == 0
 
-    email = evaluation.get_evaluation_email()
+    email = published_evaluation.get_evaluation_email()
     cc = email.get_cc_recipients()
     bcc = email.get_bcc_recipients()
     assert cc == ["instructor@example.org"]
@@ -181,21 +193,23 @@ def test_evaluation_email_without_to_recipient_should_use_cc_instead(
 
     assert RegulatoryNoticeLog.objects.count() == 1
     log = RegulatoryNoticeLog.objects.first()
-    assert log.evaluation == evaluation
+    assert log.evaluation == published_evaluation
 
 
-def test_evaluation_email_throttling(admin_client, evaluation, mailoutbox):
+def test_evaluation_email_throttling(admin_client, published_evaluation, mailoutbox):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
     ConfigAmenagementFactory()
 
-    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    url = reverse(
+        "admin:evaluations_evaluation_email_avis", args=[published_evaluation.pk]
+    )
     res = admin_client.get(url)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
     assert RegulatoryNoticeLog.objects.count() == 0
 
-    email = evaluation.get_evaluation_email()
+    email = published_evaluation.get_evaluation_email()
     to = email.get_recipients()
     cc = email.get_cc_recipients()
     bcc = email.get_bcc_recipients()
@@ -214,12 +228,16 @@ def test_evaluation_email_throttling(admin_client, evaluation, mailoutbox):
     )
 
 
-def test_evaluation_email_recipient_overriding(admin_client, evaluation, mailoutbox):
+def test_evaluation_email_recipient_overriding(
+    admin_client, published_evaluation, mailoutbox
+):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
     ConfigAmenagementFactory()
 
-    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    url = reverse(
+        "admin:evaluations_evaluation_email_avis", args=[published_evaluation.pk]
+    )
     res = admin_client.get(url)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
@@ -238,12 +256,16 @@ def test_evaluation_email_recipient_overriding(admin_client, evaluation, mailout
     assert mail.bcc == bcc
 
 
-def test_evaluation_email_with_empty_recipients(admin_client, evaluation, mailoutbox):
+def test_evaluation_email_with_empty_recipients(
+    admin_client, published_evaluation, mailoutbox
+):
     # Make sure the "loi sur l'eau" result will be set
     CriterionFactory()
     ConfigAmenagementFactory()
 
-    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    url = reverse(
+        "admin:evaluations_evaluation_email_avis", args=[published_evaluation.pk]
+    )
     res = admin_client.get(url)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
@@ -256,6 +278,35 @@ def test_evaluation_email_with_empty_recipients(admin_client, evaluation, mailou
     res = admin_client.post(url, data=data, follow=True)
     assert len(mailoutbox) == 0
     assert "Vous devez spécifier au moins un destinataire" in res.content.decode()
+
+
+def test_evaluation_email_unpublished_disables_sending(admin_client, evaluation):
+    CriterionFactory()
+    ConfigAmenagementFactory()
+
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    res = admin_client.get(url)
+    assert res.status_code == 200
+
+    content = res.content.decode()
+    assert "Aucune version de cet avis n'est publiée" in content
+    assert re.search(r'<input[^>]*name="_save"[^>]*disabled', content)
+
+
+def test_evaluation_email_unpublished_blocks_sending(
+    admin_client, evaluation, mailoutbox
+):
+    CriterionFactory()
+    ConfigAmenagementFactory()
+
+    url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
+    data = {"to": ["sponsor1@example.org"], "cc": [], "bcc": []}
+    res = admin_client.post(url, data=data)
+    assert len(mailoutbox) == 0
+    assert RegulatoryNoticeLog.objects.count() == 0
+
+    message_list = list(messages.get_messages(res.wsgi_request))
+    assert "Aucune version de cet avis n'est publiée" in str(message_list[0])
 
 
 def test_display_published_version_message(evaluation, admin_client, admin_user):
