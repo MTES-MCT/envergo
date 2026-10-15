@@ -5,7 +5,7 @@ import pytest
 from django.contrib.gis.geos import MultiPolygon
 
 from envergo.evaluations.models import Evaluation, EvaluationSnapshot
-from envergo.evaluations.tests.factories import EvaluationFactory
+from envergo.evaluations.tests.factories import EvaluationFactory, VersionFactory
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
@@ -98,6 +98,15 @@ def test_evaluation_edition_triggers_an_automation():
             call(evaluation2.uid),
         ]
     )
+
+
+def test_published_version():
+    evaluation = EvaluationFactory(versions=[])
+    VersionFactory(evaluation=evaluation, published=False)
+    assert evaluation.published_version is None
+
+    published = VersionFactory(evaluation=evaluation, published=True)
+    assert evaluation.published_version == published
 
 
 @pytest.mark.parametrize("footprint", [5000])

@@ -207,9 +207,7 @@ class EvaluationDetail(
             raise PermissionDenied("You cannot preview content")
 
         # By default, we display the published version
-        published_version = next(
-            (v for v in self.object.versions.all() if v.published), None
-        )
+        published_version = self.object.published_version
 
         if is_preview:
             content = self.object.render_content()
