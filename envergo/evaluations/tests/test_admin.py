@@ -2,6 +2,7 @@ import re
 from unittest.mock import patch
 
 import pytest
+from django.contrib import messages
 from django.urls import reverse
 
 from envergo.evaluations.models import (
@@ -300,10 +301,12 @@ def test_evaluation_email_unpublished_blocks_sending(
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
     data = {"to": ["sponsor1@example.org"], "cc": [], "bcc": []}
-    res = admin_client.post(url, data=data, follow=True)
+    res = admin_client.post(url, data=data)
     assert len(mailoutbox) == 0
     assert RegulatoryNoticeLog.objects.count() == 0
-    assert "Aucune version de cet avis n&#x27;est publiée" in res.content.decode()
+
+    message_list = list(messages.get_messages(res.wsgi_request))
+    assert "Aucune version de cet avis n'est publiée" in str(message_list[0])
 
 
 def test_display_published_version_message(evaluation, admin_client, admin_user):
