@@ -17,6 +17,7 @@ import json
 from pathlib import Path
 
 from locust import HttpUser, between, task
+from locust.exception import StopUser
 
 HERE = Path(__file__).parent
 HEDGE_BODY = (HERE / "hedge_body.json").read_text().strip()
@@ -100,6 +101,23 @@ class InstructorUser(HttpUser):
             headers={"Referer": "http://haie.local/comptes/connexion/"},
             name="login",
         )
+        self.check_authenticated()
+
+    def check_authenticated(self):
+        """Stop this user on a failed login, so no figure measures the login form."""
+        with self.client.get(
+            "/projet/liste",
+            name="login_check",
+            allow_redirects=False,
+            catch_response=True,
+        ) as response:
+            is_authenticated = response.status_code == 200
+            if not is_authenticated:
+                response.failure(
+                    f"Login failed: protected page returned {response.status_code}"
+                )
+        if not is_authenticated:
+            raise StopUser()
 
     @task(3)
     def browse_list(self):
