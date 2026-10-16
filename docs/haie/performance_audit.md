@@ -1,7 +1,6 @@
 # Haie — Audit de performance
 
 - **Date** : 6 août 2026
-- **Branche** : `perf_audit`
 
 ## 1. Infrastructure
 
@@ -10,7 +9,7 @@
 - Scalingo : 4 conteneurs web 2XL (4 Go, priorité CPU haute)
   = 36 workers, + 1 worker Celery
 - PostGIS plan Business 4G, CONN_MAX_AGE=60, ATOMIC_REQUESTS=True
-- Redis (rate limiting, sessions)
+- Redis (cache Django, utilisé par le rate limiting)
 - Templates cachés en prod (cached.Loader)
 - Aucun cache applicatif sur les résultats moulinette
 
@@ -133,9 +132,8 @@ Déclenché par le pétitionnaire après la simulation.
 | ----- | ---------- | ------------ | --------- |
 | POST  | `/projet/` | non mesuré   | —         |
 
-Le code exécute 2 évaluations moulinette (pré-remplissage DS
-
-- ResultSnapshot en `on_commit`) plus l'appel à l'API DS.
+Le code exécute 2 évaluations moulinette (pré-remplissage DS et
+ResultSnapshot en `on_commit`) plus l'appel à l'API DS.
 
 ### UC3 — Consulter un dossier déposé
 
@@ -328,11 +326,3 @@ Extrapolation production (4 conteneurs × 9 workers = 36 workers) :
 Réserve : mesures sur machine de dev ; les temps absolus ne sont
 pas transposables tels quels, les ratios et le point de
 saturation par worker le sont raisonnablement.
-
-## 9. Optimisations appliquées
-
-_À venir._
-
-## 10. Estimation de capacité et plan d'action
-
-_À venir._
