@@ -15,11 +15,12 @@ DO NOT MANUALLY edit the .txt files, only the .in files.
 
 ```bash
 cd requirements
-echo "<package name>" >> (base.in|local.in|production.in)
+echo "<package name>" >> (base.in|local.in|production.in|loadtest.in)
 pip-compile base.in
 pip-compile local.in
 pip-compile production.in
-pip-sync (local.txt|production.txt)
+pip-compile loadtest.in
+pip-sync (local.txt|production.txt|loadtest.txt)
 
 # If you are using docker
 docker compose build
@@ -31,6 +32,7 @@ docker compose build
 pip-compile -P <package_name> base.in
 pip-compile -P <package_name> local.in
 pip-compile -P <package_name> production.in
+pip-compile -P <package_name> loadtest.in
 ```
 
 Then run pip-sync / dc build
