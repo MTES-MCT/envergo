@@ -1,6 +1,7 @@
 import csv
 import logging
 
+from celery import chain
 from django.core.files import File
 from django.db import transaction
 from django.utils import timezone
@@ -91,6 +92,15 @@ def process_map(task, map_id):
     map.save()
 
 
+def process_maps(map_ids):
+    """Queue the geometry import of several maps, one after the other.
+
+    Chaining the process avoid a too heavy load on DB and memory for big objects
+    """
+    if map_ids:
+        chain(*(process_map.si(map_id) for map_id in map_ids)).delay()
+
+
 # `autoretry_for=()` opts out of the BaseTaskWithRetry policy: a retry
 # would re-queue `process_map` for maps already handled in a previous run.
 @app.task(bind=True, autoretry_for=())
@@ -100,7 +110,8 @@ def process_map_import_batch(task, batch_id):
     Each CSV row is processed in isolation inside its own transaction:
     a failing row is logged and never prevents the other rows from being
     imported. The geometry extraction itself is delegated to the existing
-    `process_map` task, one per map, once the batch is fully processed.
+    `process_map` task, one per map and one at a time, once the batch is
+    fully processed.
     """
     logger.info(f"Starting import on map batch {batch_id}")
 
@@ -196,8 +207,7 @@ def process_map_import_batch(task, batch_id):
 
     # Queue the geometry imports only once the batch bookkeeping is
     # written, so an operator always sees a consistent batch status.
-    for map_id in maps_to_process:
-        process_map.delay(map_id)
+    process_maps(maps_to_process)
 
 
 def import_batch_row(row, batch, batch_file):

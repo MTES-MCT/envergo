@@ -30,8 +30,8 @@ from envergo.geodata.models import (
 )
 from envergo.geodata.tasks import (
     generate_map_preview,
-    process_map,
     process_map_import_batch,
+    process_maps,
 )
 from envergo.geodata.utils import InvalidMapFile, open_map_file, read_csv_file
 from envergo.utils.validators import detect_mime, validate_mime
@@ -278,8 +278,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
     @admin.action(description=_("Extract and import a map (.shp / gpkg)"))
     def process(self, request, queryset):
 
-        for map in queryset:
-            process_map.delay(map.id)
+        process_maps([map.id for map in queryset])
         msg = _("Your map will be processed soon. It might take up to a few minutes.")
         self.message_user(request, msg, level=messages.INFO)
 

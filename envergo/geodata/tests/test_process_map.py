@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from envergo.geodata.models import STATUSES, Map
-from envergo.geodata.tasks import process_map
+from envergo.geodata.tasks import process_map, process_maps
 from envergo.geodata.tests.factories import MapFactory
 
 pytestmark = pytest.mark.django_db
@@ -104,3 +104,20 @@ def test_admin_filter_lists_stalled_maps(admin_client):
 
     assert response.status_code == 200
     assert [m.pk for m in response.context["cl"].result_list] == [stalled.pk]
+
+
+def test_maps_are_queued_as_a_chain():
+    """Chained tasks run one at a time, whatever the worker concurrency."""
+    with patch("envergo.geodata.tasks.chain") as mock_chain:
+        process_maps([3, 1, 2])
+
+    signatures = mock_chain.call_args.args
+    assert [sig.args for sig in signatures] == [(3,), (1,), (2,)]
+    mock_chain.return_value.delay.assert_called_once_with()
+
+
+def test_nothing_is_queued_without_maps():
+    with patch("envergo.geodata.tasks.chain") as mock_chain:
+        process_maps([])
+
+    mock_chain.assert_not_called()
