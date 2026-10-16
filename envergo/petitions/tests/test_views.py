@@ -1005,6 +1005,45 @@ def test_instructor_ep_page_species_details_without_sensitive_species(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_regulation_page_shows_dn_fields(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """The instructor regulation page shows the « Démarche numérique » fields
+    mapped in the config display fields."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+
+    # Given a « Démarche numérique » config with a mapped display field
+    dn_config = project.config.demarche_numerique_config
+    dn_config.display_fields.update({"motivation": "Q2hhbXAtNDUzNDE0Ng=="})
+    dn_config.save()
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Then the page is structured in sections
+    assert "Linéaires concernés" in content
+    assert ">Informations saisies par le demandeur</h2>" in content
+    assert ">Justification du projet</h3>" in content
+    assert ">Évitement et réduction</h3>" in content
+
+    # Then the mapped « Démarche numérique » field is displayed
+    assert (
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
+        in content
+    )
+    assert "La motivation" in content
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_page_shows_species_cortege(
     mock_post, client, site, france_map  # noqa
 ):

@@ -25,17 +25,31 @@
         </section>
       {% endif %}
 
-      <section class="fr-mb-4w">
-        <h2 class="fr-mt-4w">Informations saisies par le demandeur</h2>
-        {% include "haie/petitions/_regulation_form.html" %}
+      <section id="section-key-elements" class="fr-mb-4w">
+        <h2 class="fr-mt-4w">Linéaires concernés</h2>
+
+        <div class="fr-mb-3w">
+          <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-haie"
+                  type="button"
+                  data-fr-opened="false"
+                  aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
+        </div>
+
+        {% if regulation.has_key_elements_template %}
+          {% instructor_view_part "key_elements" regulation petition_project moulinette %}
+        {% endif %}
       </section>
 
-      {% if regulation.has_key_elements_template %}
-        <section id="section-plantation-evaluation">
-          <h2 class="fr-h4">Éléments clés</h2>
-          {% instructor_view_part "key_elements" regulation petition_project moulinette %}
-        </section>
-      {% endif %}
+      <section class="fr-mb-4w">
+        <h2 class="fr-mt-4w">Informations saisies par le demandeur</h2>
+        {% if not config.single_procedure %}
+          {% include "haie/petitions/_regulation_form.html" %}
+        {% endif %}
+
+        {% if regulation.has_dn_fields_template %}
+          {% instructor_view_part "dn_fields" regulation petition_project moulinette %}
+        {% endif %}
+      </section>
 
       <section class="fr-mb-6w">
         <h2 class="fr-mt-3w fr-h4">Formulaire complet et pièces jointes</h2>

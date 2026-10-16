@@ -660,6 +660,10 @@ class Regulation(models.Model):
         """Check if the regulation has a template for key elements."""
         return self.has_template("haie/petitions/{}/key_elements.html")
 
+    def has_dn_fields_template(self) -> bool:
+        """Check if the regulation has a template for « Démarche numérique » fields."""
+        return self.has_template("haie/petitions/{}/dn_fields.html")
+
     def has_instruction_guidelines_template(self) -> bool:
         """Check if the regulation has a template for guidelines for instruction."""
         return self.has_template("haie/petitions/{}/instruction_guidelines.html")

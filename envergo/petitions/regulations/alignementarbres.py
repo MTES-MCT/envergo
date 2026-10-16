@@ -1,6 +1,5 @@
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.hedges.regulations import TreeAlignmentsCondition
-from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.regulations.alignementarbres import (
     AlignementArbresRegulation,
     AlignementsArbresCalvadosBeforeRu,
@@ -18,10 +17,7 @@ def alignement_arbres_regulation_get_instructor_view_context(
     """Build context for alignement d'arbres regulation instructor view."""
     hedge_data = petition_project.hedge_data
 
-    motif = moulinette.catalog.get("motif", "")
-    context = {
-        "motif": next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
-    }
+    context = {}
 
     # Hedges to remove, alignement_arbres, en bord de voie
     hedges_to_remove_aa_bord_voie = hedge_data.hedges_filter(
