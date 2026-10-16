@@ -274,6 +274,23 @@ Dispositif :
 - exclus : dépôt de dossier et messagerie (API DS), inscription,
   newsletter
 
+Reproduire les mesures (dépendances : `requirements/loadtest.txt`) :
+
+```bash
+export DJANGO_SETTINGS_MODULE=config.settings.loadtest
+
+# Jeu de données et perf/fixtures.json
+python manage.py bootstrap_loadtest
+
+# Serveur : options de bin/start_web.sh, sur un port local
+gunicorn config.wsgi:application --bind 127.0.0.1:8001 --preload \
+    --workers=9 --timeout 120 --max-requests 300 --max-requests-jitter 50
+
+# Un palier : <n> utilisateurs, montée en charge sur ~10 s
+locust -f perf/locustfile.py --host http://127.0.0.1:8001 \
+    --headless -u <n> -r <n/10> -t 90s
+```
+
 Résultats (90 s par palier, 0 erreur à tous les paliers) :
 
 | Utilisateurs actifs | Req/s | p50     | p95    |

@@ -1,0 +1,8 @@
+# Load testing (see docs/haie/performance_audit.md)
+
+-r local.txt
+# Measure against the production server versions
+-c production.txt
+
+gunicorn
+locust
