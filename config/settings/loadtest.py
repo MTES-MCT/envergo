@@ -1,9 +1,10 @@
 """Settings for local load testing.
 
-Production-like performance flags, every outbound channel pinned to a
-local backend and asserted at import: a stray env var (e.g. via .env)
-kills boot instead of arming a real channel.
+Performance flags match production. Every outbound channel stays local.
+Boot fails if an environment variable arms a real channel.
 """
+
+from django.core.exceptions import ImproperlyConfigured
 
 from .base import *  # noqa
 from .base import (
@@ -57,22 +58,33 @@ STORAGES = {
     "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
 }
 
-# Tasks run inline; their side effects stay under the assertions below.
+# Tasks run inline, so the guards below also cover their side effects.
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 
 # A single-IP load generator would hit the per-IP rate limit immediately
 # and measure the limiter, not the app.
+rate_limiting_middleware = "envergo.middleware.rate_limiting.RateLimitingMiddleware"
+if rate_limiting_middleware not in MIDDLEWARE:
+    raise ImproperlyConfigured(
+        f"Rate limiter not found at {rate_limiting_middleware}. If it moved, "
+        "update the path here, or the load test measures the limiter."
+    )
 MIDDLEWARE = [
-    m
-    for m in MIDDLEWARE
-    if m != "envergo.middleware.rate_limiting.RateLimitingMiddleware"
+    middleware for middleware in MIDDLEWARE if middleware != rate_limiting_middleware
 ]
 
 # Fail at boot if any outbound channel is armed.
-assert not DEMARCHE_NUMERIQUE["ENABLED"], "DS API must stay disabled"
-assert MATTERMOST_ENDPOINT_HAIE is None, "Mattermost (haie) must stay unset"
-assert MATTERMOST_ENDPOINT_AMENAGEMENT is None, "Mattermost must stay unset"
-assert MAKE_COM_WEBHOOK is None, "make.com webhook must stay unset"
-assert MAKE_COM_EVALUATION_EDITION_WEBHOOK is None, "make.com webhook must stay unset"
-assert BREVO["API_KEY"] is None, "Brevo API key must stay unset"
+is_armed_by_channel = {
+    "DS API": DEMARCHE_NUMERIQUE["ENABLED"],
+    "Mattermost (haie)": MATTERMOST_ENDPOINT_HAIE is not None,
+    "Mattermost (aménagement)": MATTERMOST_ENDPOINT_AMENAGEMENT is not None,
+    "make.com webhook": MAKE_COM_WEBHOOK is not None,
+    "make.com evaluation webhook": MAKE_COM_EVALUATION_EDITION_WEBHOOK is not None,
+    "Brevo API key": BREVO["API_KEY"] is not None,
+}
+armed_channels = [name for name, is_armed in is_armed_by_channel.items() if is_armed]
+if armed_channels:
+    raise ImproperlyConfigured(
+        f"Outbound channels must stay disabled: {', '.join(armed_channels)}"
+    )
