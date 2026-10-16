@@ -3,7 +3,6 @@
     window.$crisp = window.$crisp || [];
     window.CRISP_WEBSITE_ID="{{ CRISP_WEBSITE_ID }}";
     {% if crisp_url_page %}
-      // Crisp page tracking drops query strings past 240 characters.
       window.$crisp.push(["set", "session:data", [[["url_page", "{{ crisp_url_page|escapejs }}"]]]]);
     {% endif %}
     (function(){
