@@ -1,7 +1,8 @@
 """Create the deterministic dataset used by the load tests in perf/.
 
-Idempotent: re-run after each database import. Writes perf/fixtures.json,
-read by the perf/ scripts. Refuses to run outside a load-test environment.
+Each run deletes and recreates the dataset. Re-run after each database import.
+Writes perf/fixtures.json, read by the perf/ scripts.
+Refuses to run outside a load-test environment.
 """
 
 import json
@@ -12,6 +13,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from django.test import Client
 
 from envergo.geodata.models import Department
@@ -29,6 +31,8 @@ SAFE_EMAIL_BACKENDS = {
 
 INSTRUCTOR_EMAIL = "loadtest-instructor@example.com"
 PROJECT_REFERENCE = "LOADTEST"
+# Stable across runs, so fixtures.json does not churn.
+HEDGE_DATA_ID = uuid.uuid5(uuid.NAMESPACE_URL, "envergo/loadtest/hedges")
 
 FIXTURES_PATH = settings.ROOT_DIR / "perf" / "fixtures.json"
 DEFAULT_HEDGES_PATH = settings.ROOT_DIR / "perf" / "hedge_body.json"
@@ -58,11 +62,14 @@ class Command(BaseCommand):
         self.check_environment()
 
         department = self.get_department(options["department"])
-        hedge_data = self.create_hedge_data(options["hedges_file"])
-        sim_params = self.build_sim_params(department, hedge_data)
-        project = self.create_project(department, hedge_data, sim_params)
-        password = self.create_instructor(department, options["password"])
-        self.self_check(project)
+        # A failed run, self-check included, keeps the previous dataset.
+        with transaction.atomic():
+            self.delete_dataset()
+            hedge_data = self.create_hedge_data(options["hedges_file"])
+            sim_params = self.build_sim_params(department, hedge_data)
+            project = self.create_project(department, hedge_data, sim_params)
+            password = self.create_instructor(department, options["password"])
+            self.self_check(project)
 
         fixtures = {
             "department": department.department,
@@ -119,16 +126,8 @@ class Command(BaseCommand):
         except (OSError, json.JSONDecodeError) as e:
             raise CommandError(f"Cannot read hedges file {hedges_file}: {e}")
 
-        # Stable UUID so fixtures survive re-imports without churn
-        hedge_uuid = uuid.uuid5(uuid.NAMESPACE_URL, "envergo/loadtest/hedges")
-        hedge_data, created = HedgeData.objects.get_or_create(
-            id=hedge_uuid, defaults={"data": data}
-        )
-        if not created:
-            hedge_data.data = data
-            hedge_data.save()
-        label = "created" if created else "updated"
-        self.stdout.write(f"HedgeData {hedge_uuid} {label}")
+        hedge_data = HedgeData.objects.create(id=HEDGE_DATA_ID, data=data)
+        self.stdout.write(f"HedgeData {HEDGE_DATA_ID} created")
         return hedge_data
 
     def build_sim_params(self, department, hedge_data):
@@ -151,45 +150,33 @@ class Command(BaseCommand):
             f"https://{settings.ENVERGO_HAIE_DOMAIN}"
             f"/simulateur/resultat-plantation/?{sim_params}"
         )
-        project, created = PetitionProject.objects.get_or_create(
+        project = PetitionProject.objects.create(
             reference=PROJECT_REFERENCE,
-            defaults={
-                "moulinette_url": moulinette_url,
-                "department": department,
-                "hedge_data": hedge_data,
-                "_category": "hru",
-                "demarche_numerique_state": "en_construction",
-                "demarche_numerique_dossier_number": 99999999,
-            },
+            moulinette_url=moulinette_url,
+            department=department,
+            hedge_data=hedge_data,
+            _category="hru",
+            demarche_numerique_state="en_construction",
+            demarche_numerique_dossier_number=99999999,
         )
-        if not created:
-            project.moulinette_url = moulinette_url
-            project.department = department
-            project.hedge_data = hedge_data
-            project.save()
-
-        if not project.status_history.exists():
-            StatusLog.objects.create(
-                petition_project=project,
-                update_comment="Création initiale (load test)",
-            )
-        simulation, sim_created = Simulation.objects.get_or_create(
+        StatusLog.objects.create(
+            petition_project=project,
+            update_comment="Création initiale (load test)",
+        )
+        Simulation.objects.create(
             project=project,
             is_initial=True,
-            defaults={
-                "is_active": True,
-                "moulinette_url": moulinette_url,
-                "comment": "Simulation initiale (load test)",
-            },
+            is_active=True,
+            moulinette_url=moulinette_url,
+            comment="Simulation initiale (load test)",
         )
-        # Keep the initial simulation in sync: the URL's date param
-        # changes at each bootstrap run.
-        if not sim_created and simulation.moulinette_url != moulinette_url:
-            simulation.moulinette_url = moulinette_url
-            simulation.save()
-        label = "created" if created else "updated"
-        self.stdout.write(f"PetitionProject {PROJECT_REFERENCE} {label}")
+        self.stdout.write(f"PetitionProject {PROJECT_REFERENCE} created")
         return project
+
+    def delete_dataset(self):
+        """Delete the dossier and everything attached to it, then its hedges."""
+        PetitionProject.objects.filter(reference=PROJECT_REFERENCE).delete()
+        HedgeData.objects.filter(id=HEDGE_DATA_ID).delete()
 
     def create_instructor(self, department, password):
         password = password or secrets.token_urlsafe(16)
