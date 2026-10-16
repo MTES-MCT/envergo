@@ -320,6 +320,14 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_TRACK_STARTED = True
+# Time limits are a safety net behind the per-call request timeouts: even an
+# un-timed-out external call can no longer wedge a worker process forever.
+# The soft limit lets the task raise SoftTimeLimitExceeded; the hard limit
+# kills it. The budget is generous because legitimate import tasks (map /
+# species file processing) run for several minutes; a tighter limit would kill
+# them and, combined with the global retry policy, send them into a retry loop.
+CELERY_TASK_SOFT_TIME_LIMIT = 600
+CELERY_TASK_TIME_LIMIT = 900
 
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
@@ -365,6 +373,10 @@ VISITOR_COOKIE_NAME = "visitorid"
 # The max number of files that can be uploaded with a single evaluation request
 MAX_EVALREQ_FILES = 25
 MAX_EVALREQ_FILESIZE = 50
+
+# The max number of map files that can be uploaded with a single import batch
+MAX_MAP_BATCH_FILES = 200
+MAX_MAP_BATCH_FILESIZE = 200
 
 TEST_EMAIL = "test@test.fr"
 
