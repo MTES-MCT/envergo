@@ -11,12 +11,9 @@ from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.moulinette.regulations import HaieCriterionEvaluator
-from envergo.petitions.models import DECISIONS, STAGES
+from envergo.petitions.models import DECISIONS, STAGES, DossierNotSynchronized
 from envergo.petitions.regulations import get_instructor_view_context
-from envergo.petitions.services import (
-    get_demarche_numerique_dossier,
-    get_field_data_from_dn_dossier,
-)
+from envergo.petitions.services import get_field_data_from_dn_dossier
 
 register = template.Library()
 
@@ -103,7 +100,7 @@ def instructor_view_part(
             template_path,
             context=context_dict,
         )
-    except TemplateDoesNotExist:
+    except (TemplateDoesNotExist, DossierNotSynchronized):
         return ""
 
 
@@ -275,7 +272,7 @@ def get_ds_field(context, field_name):
     petition_project = context.get("petition_project", None)
     if petition_project is None:
         return None
-    ds_dossier = get_demarche_numerique_dossier(petition_project)
+    ds_dossier = petition_project.demarche_numerique_dossier
     if ds_dossier is None:
         return None
     dn_config = context.get("moulinette").config.demarche_numerique_config

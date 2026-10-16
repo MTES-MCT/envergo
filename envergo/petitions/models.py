@@ -35,6 +35,11 @@ from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
+
+class DossierNotSynchronized(Exception):
+    """The « Démarche numérique » dossier must be synchronized before being read."""
+
+
 DOSSIER_STATES = Choices(
     ("draft", _("Draft")),
     ("prefilled", _("Prefilled")),
@@ -675,6 +680,25 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.is_regime_unique()
             and self.moulinette_data.get("urgence", None) == "oui"
         )
+
+    @property
+    def needs_demarche_numerique_sync(self):
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+        return (
+            not self.demarche_numerique_raw_dossier
+            or self.demarche_numerique_last_sync is not None
+            and self.demarche_numerique_last_sync < one_hour_ago
+        )
+
+    @cached_property
+    def demarche_numerique_dossier(self):
+        if self.needs_demarche_numerique_sync:
+            raise DossierNotSynchronized(
+                "Project must be synchronized before accessing demarche numérique dossier"
+            )
+
+        dossier = Dossier.from_dict(self.demarche_numerique_raw_dossier)
+        return dossier
 
 
 USER_TYPE = Choices(
