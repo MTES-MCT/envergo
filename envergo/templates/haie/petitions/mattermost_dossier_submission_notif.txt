@@ -10,3 +10,5 @@ Linéaire détruit : {{ length_to_remove|floatformat:0 }} m
 Consulter le dossier : {{instructor_url}}
 
 [Voir le dossier en admin]({{ admin_url }})
+
+[Voir le template pour la notification e-mail manuelle]({{ template_email_url }})
