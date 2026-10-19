@@ -46,7 +46,7 @@
           {% include "haie/petitions/_regulation_form.html" %}
         {% endif %}
 
-        {% if regulation.has_dn_fields_template %}
+        {% if regulation.has_dn_fields_template and config.single_procedure %}
           {% instructor_view_part "dn_fields" regulation petition_project moulinette %}
         {% endif %}
       </section>

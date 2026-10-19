@@ -1,3 +1,8 @@
+{% if not config.single_procedure %}
+  <ul class="instructor-view-list fr-mb-3w">
+    {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
+  </ul>
+{% endif %}
 <h3 class="fr-h6 fr-mb-2w">Destruction</h3>
 <ul class="instructor-view-list">
   {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire marqués en bord de voie ouverte à la circulation du public" value=length_to_remove_aa_bord_voie|floatformat:"0g" unit="m" %}
