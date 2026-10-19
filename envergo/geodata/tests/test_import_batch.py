@@ -560,38 +560,54 @@ class TestUploadView:
         res = client.get(self.upload_url(batch))
         assert res.status_code == 302
 
-    def test_process_action_queues_task(self, admin_client):
+    @staticmethod
+    def process_url(batch):
+        return reverse("admin:geodata_mapimportbatch_process", args=[batch.pk])
+
+    def test_change_page_shows_process_button(self, admin_client):
+        batch = MapImportBatchFactory()
+        url = reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
+
+        res = admin_client.get(url)
+
+        assert res.status_code == 200
+        assert self.process_url(batch) in res.content.decode()
+
+    def test_process_queues_task(self, admin_client):
         batch = MapImportBatchFactory()
         MapImportBatchFileFactory(batch=batch)
-        url = reverse("admin:geodata_mapimportbatch_changelist")
 
         with patch(
             "envergo.geodata.admin.process_map_import_batch.delay"
         ) as mock_delay:
-            res = admin_client.post(
-                url,
-                {"action": "process", "_selected_action": [batch.pk]},
-            )
+            res = admin_client.post(self.process_url(batch))
 
         assert res.status_code == 302
         mock_delay.assert_called_once_with(batch.id)
 
-    def test_process_action_queues_file_less_batch(self, admin_client):
+    def test_process_queues_file_less_batch(self, admin_client):
         """A batch without files is a legitimate metadata-only update."""
         batch = MapImportBatchFactory()
-        url = reverse("admin:geodata_mapimportbatch_changelist")
 
         with patch(
             "envergo.geodata.admin.process_map_import_batch.delay"
         ) as mock_delay:
-            admin_client.post(
-                url,
-                {"action": "process", "_selected_action": [batch.pk]},
-            )
+            admin_client.post(self.process_url(batch))
 
         mock_delay.assert_called_once_with(batch.id)
 
-    def test_process_action_warns_about_missing_files(self, admin_client):
+    def test_process_requires_post(self, admin_client):
+        batch = MapImportBatchFactory()
+
+        with patch(
+            "envergo.geodata.admin.process_map_import_batch.delay"
+        ) as mock_delay:
+            res = admin_client.get(self.process_url(batch))
+
+        assert res.status_code == 302
+        mock_delay.assert_not_called()
+
+    def test_process_warns_about_missing_files(self, admin_client):
         """The operator is told upfront which referenced files are missing."""
         csv_content = (
             f"{CSV_HEADER}\n"
@@ -600,55 +616,14 @@ class TestUploadView:
         )
         batch = MapImportBatchFactory(csv_file__data=csv_content.encode())
         MapImportBatchFileFactory(batch=batch, name="a.gpkg", file__filename="a.gpkg")
-        url = reverse("admin:geodata_mapimportbatch_changelist")
 
         with patch(
             "envergo.geodata.admin.process_map_import_batch.delay"
         ) as mock_delay:
-            res = admin_client.post(
-                url,
-                {"action": "process", "_selected_action": [batch.pk]},
-                follow=True,
-            )
+            res = admin_client.post(self.process_url(batch), follow=True)
 
         content = res.content.decode()
         assert "missing.gpkg" in content
         assert "1 ligne(s) seront ignorées" in content
         # The batch is still queued: the maps that are present still import.
         mock_delay.assert_called_once_with(batch.id)
-
-    def test_process_action_queues_several_batches(self, admin_client):
-        batches = [MapImportBatchFactory(name=f"Lot {i}") for i in range(3)]
-        for batch in batches:
-            MapImportBatchFileFactory(batch=batch)
-        url = reverse("admin:geodata_mapimportbatch_changelist")
-
-        with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
-            res = admin_client.post(
-                url,
-                {"action": "process", "_selected_action": [b.pk for b in batches]},
-            )
-
-        assert res.status_code == 302
-        assert mock_delay.call_count == 3
-        assert {c.args[0] for c in mock_delay.call_args_list} == {b.id for b in batches}
-
-    def test_process_action_queues_batches_with_or_without_files(self, admin_client):
-        """File-less (metadata-only) batches are queued alongside the others."""
-        full = MapImportBatchFactory(name="Lot complet")
-        MapImportBatchFileFactory(batch=full)
-        file_less = MapImportBatchFactory(name="Lot màj seule")
-        url = reverse("admin:geodata_mapimportbatch_changelist")
-
-        with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
-            admin_client.post(
-                url,
-                {"action": "process", "_selected_action": [full.pk, file_less.pk]},
-            )
-
-        assert mock_delay.call_count == 2
-        assert {c.args[0] for c in mock_delay.call_args_list} == {full.id, file_less.id}

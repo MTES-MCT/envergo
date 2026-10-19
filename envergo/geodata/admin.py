@@ -11,7 +11,7 @@ from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
@@ -373,7 +373,7 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         "maps_link",
     ]
     exclude = ["task_id"]
-    actions = ["process"]
+    change_form_template = "geodata/admin/mapimportbatch_change_form.html"
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -431,21 +431,27 @@ class MapImportBatchAdmin(admin.ModelAdmin):
             obj.maps.count(),
         )
 
-    @admin.action(description="Traiter les lots (création / màj des cartes)")
-    def process(self, request, queryset):
-        queued = 0
-        for batch in queryset:
-            self.warn_missing_files(request, batch)
-            process_map_import_batch.delay(batch.id)
-            queued += 1
+    def process_view(self, request, object_id):
+        """Create the maps of the batch and extracts their features"""
+        if not self.has_change_permission(request):
+            raise PermissionDenied
 
-        if queued:
-            self.message_user(
-                request,
-                f"{queued} lot(s) en cours de traitement. "
-                f"Cela peut prendre plusieurs minutes.",
-                level=messages.INFO,
+        batch = self.get_object(request, unquote(object_id))
+        if batch is None or request.method != "POST":
+            return HttpResponseRedirect(
+                reverse("admin:geodata_mapimportbatch_changelist")
             )
+
+        self.warn_missing_files(request, batch)
+        process_map_import_batch.delay(batch.id)
+        self.message_user(
+            request,
+            "Lot en cours de traitement. Cela peut prendre plusieurs minutes.",
+            level=messages.INFO,
+        )
+        return HttpResponseRedirect(
+            reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
+        )
 
     def warn_missing_files(self, request, batch):
         """Flag the files a batch CSV references but that were never uploaded."""
@@ -470,6 +476,11 @@ class MapImportBatchAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
+            path(
+                "<path:object_id>/process/",
+                self.admin_site.admin_view(self.process_view),
+                name="geodata_mapimportbatch_process",
+            ),
             path(
                 "<path:object_id>/upload/",
                 self.admin_site.admin_view(self.upload_view),
