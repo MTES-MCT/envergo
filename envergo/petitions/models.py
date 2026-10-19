@@ -425,6 +425,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 else "non renseigné"
             )
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            # Lien temporaire en attendant les notifs e-mail aux instructeurs
+            template_email_url = update_qs(
+                "https://stats.envergo.beta.gouv.fr/public/dashboard/9ab013dd-295e-4672-b40c-057013d53ba1",
+                {
+                    "departement": department,
+                    "dn_number": self.demarche_numerique_dossier_number,
+                    "reference": self.reference,
+                },
+            )
 
             message_body = render_to_string(
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
@@ -434,6 +443,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
+                    "template_email_url": template_email_url,
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),
                 },
