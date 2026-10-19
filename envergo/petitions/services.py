@@ -1,4 +1,3 @@
-import datetime
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
@@ -454,15 +453,7 @@ def get_demarche_numerique_dossier(
     returns:
         Dossier object if found, None otherwise.
     """
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
-
-    one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
-    if (
-        force_update
-        or not petition_project.demarche_numerique_raw_dossier
-        or petition_project.demarche_numerique_last_sync is not None
-        and petition_project.demarche_numerique_last_sync < one_hour_ago_utc
-    ):
+    if force_update or petition_project.needs_demarche_numerique_sync:
         # If the last sync is older than one hour, we fetch the dossier from « Démarche numérique »
         dossier_number = petition_project.demarche_numerique_dossier_number
         ds_client = DemarcheNumeriqueClient()

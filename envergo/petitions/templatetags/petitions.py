@@ -11,12 +11,9 @@ from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.moulinette.regulations import HaieCriterionEvaluator
-from envergo.petitions.models import DECISIONS, STAGES
+from envergo.petitions.models import DECISIONS, STAGES, DossierNotSynchronized
 from envergo.petitions.regulations import get_instructor_view_context
-from envergo.petitions.services import (
-    get_demarche_numerique_dossier,
-    get_field_data_from_dn_dossier,
-)
+from envergo.petitions.services import get_field_data_from_dn_dossier
 
 register = template.Library()
 
@@ -103,7 +100,7 @@ def instructor_view_part(
             template_path,
             context=context_dict,
         )
-    except TemplateDoesNotExist:
+    except (TemplateDoesNotExist, DossierNotSynchronized):
         return ""
 
 
@@ -275,27 +272,12 @@ def get_ds_field(context, field_name):
     petition_project = context.get("petition_project", None)
     if petition_project is None:
         return None
-    dn_config = context.get("moulinette").config.demarche_numerique_config
-    if not dn_config.display_fields.get(field_name, None):
-        return None
-    ds_dossier = get_dn_dossier_for_display(petition_project)
+    ds_dossier = petition_project.demarche_numerique_dossier
     if ds_dossier is None:
         return None
+    dn_config = context.get("moulinette").config.demarche_numerique_config
 
     return get_field_data_from_dn_dossier(field_name, dn_config, ds_dossier)
-
-
-def get_dn_dossier_for_display(petition_project):
-    """Get the « Démarche numérique » dossier once per petition project instance.
-
-    A page can display dozens of « Démarche numérique » fields: the dossier is
-    parsed (or fetched from the API) only once, then reused for the rest of the request.
-    """
-    if not hasattr(petition_project, "_dn_dossier_for_display"):
-        petition_project._dn_dossier_for_display = get_demarche_numerique_dossier(
-            petition_project
-        )
-    return petition_project._dn_dossier_for_display
 
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
