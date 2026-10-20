@@ -19,7 +19,7 @@ on:
 
 jobs:
   linter:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v6
@@ -45,7 +45,7 @@ jobs:
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # Configure the database service
     services:
