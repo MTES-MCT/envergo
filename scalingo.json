@@ -76,6 +76,12 @@
     },
     "SYNC_STATS_ENABLED": {
       "value": "false"
+    },
+    "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN": {
+      "value": "to_be_done"
+    },
+    "DJANGO_ENVERGO_HAIE_DOMAIN": {
+      "value": "to_be_done"
     }
   },
   "scripts": {

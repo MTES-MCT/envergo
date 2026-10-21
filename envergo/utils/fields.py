@@ -1,5 +1,5 @@
 from django.db.models import TextChoices
-from django.db.models.enums import ChoicesMeta
+from django.db.models.enums import ChoicesType
 from django.forms import ClearableFileInput, EmailField, FileField
 from django.forms.widgets import RadioSelect, Select, TextInput
 
@@ -86,7 +86,7 @@ class ProjectStageField(Select):
         return context
 
 
-class EnrichedChoicesMeta(ChoicesMeta):
+class EnrichedChoicesMeta(ChoicesType):
     """Metaclass that converts dict-style member declarations into TextChoices with extra attributes.
 
     The name (key) is used as the DB stored value. `label` is required and
@@ -101,7 +101,25 @@ class EnrichedChoicesMeta(ChoicesMeta):
                 extra = dict(value)
                 label = extra.pop("label")
                 dict.__setitem__(classdict, key, (key, extra, label))
+            elif isinstance(value, str):
+                label = value
+                dict.__setitem__(classdict, key, (key, {}, label))
         return super().__new__(metacls, classname, bases, classdict, **kwds)
+
+    @property
+    def choices(cls):
+        # override default behaviour to return the whole member as label, instead of member.label
+        # The template will display label.label and possibly label.help_text
+        empty = [(None, cls.__empty__)] if hasattr(cls, "__empty__") else []
+        return empty + [(member.value, member) for member in cls]
+
+    def get_display_value(cls, value):
+        if value not in cls:
+            return None
+        if hasattr(cls[value], "display_label"):
+            return cls[value].display_label
+        else:
+            return cls[value].label
 
 
 class EnrichedChoices(TextChoices, metaclass=EnrichedChoicesMeta):
