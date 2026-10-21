@@ -48,6 +48,7 @@ from django.views.generic import (
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.list import MultipleObjectMixin
 from fiona import Feature, Geometry, Properties
+from fiona.crs import CRS
 from pyproj import Transformer
 from shapely.ops import transform
 
@@ -98,6 +99,8 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    declared_commune,
+    declared_dn_field,
     get_context_from_dn,
     get_field_data_from_dn_dossier,
     get_messages_and_senders_from_ds,
@@ -109,7 +112,7 @@ from envergo.petitions.tasks import send_closing_message_async
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
-from envergo.utils.tools import generate_key
+from envergo.utils.tools import generate_key, get_base_url
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
@@ -2305,40 +2308,53 @@ class PetitionProjectHedgeDataExport(DetailView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
 
+    # Reporting codes, kept stable whatever the internal codes and display labels.
+    exported_categories = {
+        HedgeCategory.ru: "regime_unique",
+        HedgeCategory.hru: "hors_regime_unique",
+        HedgeCategory.l350_3: "alignement_bord_voie",
+    }
+
+    # Columns of the `haies` table, in file order. Rows must have exactly these keys.
+    hedge_schema = {
+        "geometry": "LineString",
+        "properties": {
+            "id": "str",
+            "type": "str",
+            "type_haie": "str",
+            "sur_parcelle_pac": "str",
+            "category": "str",
+            "longueur": "float",
+            "bord_voie": "str",
+            "proximite_mare": "str",
+            "vieil_arbre": "str",
+            "ripisylve": "str",
+            "sous_ligne_electrique": "str",
+            "parc_jardin": "str",
+            "bord_batiment": "str",
+            "place_publique": "str",
+            "mode_destruction": "str",
+            "numero_dossier": "int",
+            "lien_dossier": "str",
+            "numero_pacage": "str",
+            "beneficiaire": "str",
+            "commune": "str",
+            "procedure": "str",
+            "decision": "str",
+            "date_depot_dossier": "date",
+            "date_cloture_dossier": "date",
+        },
+    }
+
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
-        data = self.object.hedge_data
+        project = self.object
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            template_file = settings.GUH_DATA_EXPORT_TEMPLATE
             export_file = os.path.join(tmpdirname, "output.gpkg")
-            shutil.copy(template_file, export_file)
-
-            # Fiona cannot append to an existing file
-            # By opening a layer in write mode, it will squash the layer data
-            # Luckily for us, that's the behaviour we want
-            with fiona.open(template_file) as src, fiona.open(
-                export_file, "w", layer="haies", **src.meta
-            ) as dst:
-                for hedge in data.hedges():
-                    transformer = Transformer.from_crs(
-                        EPSG_WGS84, EPSG_LAMB93, always_xy=True
-                    )
-                    geometry = Geometry.from_dict(
-                        transform(transformer.transform, hedge.geometry)
-                    )
-                    properties = Properties.from_dict(
-                        {
-                            "id": hedge.id,
-                            "type": (
-                                "A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE"
-                            ),
-                            "type_haie": hedge.hedge_type,
-                            "sur_parcelle_pac": "oui" if hedge.is_on_pac else "non",
-                        }
-                    )
-                    feat = Feature(geometry=geometry, properties=properties)
-                    dst.write(feat)
+            # The template carries the QGIS style of the `haies` table.
+            shutil.copy(settings.GUH_DATA_EXPORT_TEMPLATE, export_file)
+            self.write_hedges(export_file, project)
 
             # Create a response with the GeoPackage file
             export_filename = "haies_dossier.gpkg"
@@ -2352,6 +2368,95 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+    def write_hedges(self, path, project):
+        """Replace the `haies` table with the project hedges, in Lambert-93.
+
+        The file's other tables stay untouched.
+        """
+        dossier_properties = self.export_dossier_properties(project)
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+
+        with fiona.open(
+            path,
+            "w",
+            driver="GPKG",
+            layer="haies",
+            crs=CRS.from_epsg(EPSG_LAMB93),
+            schema=self.hedge_schema,
+        ) as dst:
+            for hedge in project.hedge_data.hedges():
+                lambert_line = transform(transformer.transform, hedge.geometry)
+                geometry = Geometry.from_dict(lambert_line)
+                hedge_properties = self.export_hedge_properties(hedge)
+                properties = Properties.from_dict(
+                    {**hedge_properties, **dossier_properties}
+                )
+                dst.write(Feature(geometry=geometry, properties=properties))
+
+    def export_hedge_properties(self, hedge) -> dict:
+        """Build data exported as geojson for each hedge."""
+
+        def yesno(val):
+            if val is None:
+                return None
+
+            return "oui" if val else "non"
+
+        # Legacy fields
+        # Only exported fields before the RU was activated
+        props = (
+            ("id", hedge.id),
+            ("type", ("A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE")),
+            ("type_haie", hedge.hedge_type),
+            ("sur_parcelle_pac", yesno(hedge.is_on_pac)),
+        )
+
+        # Additional hedge fields
+        props += (
+            ("category", self.exported_categories[hedge.category]),
+            ("longueur", round(hedge.length, 3)),
+            ("bord_voie", yesno(hedge.prop("bord_voie"))),
+            ("proximite_mare", yesno(hedge.prop("proximite_mare"))),
+            ("vieil_arbre", yesno(hedge.prop("vieil_arbre"))),
+            ("ripisylve", yesno(hedge.prop("ripisylve"))),
+            ("sous_ligne_electrique", yesno(hedge.prop("sous_ligne_electrique"))),
+            ("parc_jardin", yesno(hedge.prop("parc_jardin"))),
+            ("bord_batiment", yesno(hedge.prop("bord_batiment"))),
+            ("place_publique", yesno(hedge.prop("place_publique"))),
+            ("mode_destruction", hedge.prop("mode_destruction")),
+        )
+
+        return dict(props)
+
+    def export_dossier_properties(self, project) -> dict:
+        """Build the dossier columns, identical on every exported row.
+
+        Missing values are None, so they export as NULL rather than "".
+        """
+        summary_path = reverse(
+            "petition_project_summary",
+            args=[project.reference],
+        )
+        base_url = get_base_url(settings.ENVERGO_HAIE_DOMAIN)
+
+        dossier = project.prefetched_dossier
+        applicant = dossier.applicant_name if dossier else None
+
+        date_depot = project.demarche_numerique_date_depot
+        filed_on = timezone.localdate(date_depot) if date_depot else None
+
+        return {
+            "numero_dossier": project.demarche_numerique_dossier_number,
+            "lien_dossier": f"{base_url}{summary_path}",
+            "numero_pacage": declared_dn_field(project, "pacage") or None,
+            "beneficiaire": applicant,
+            "commune": declared_commune(project) or None,
+            "procedure": None,
+            "decision": project.decision,
+            "date_depot_dossier": filed_on,
+            "date_cloture_dossier": project.closed_on,
+        }
 
 
 class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):

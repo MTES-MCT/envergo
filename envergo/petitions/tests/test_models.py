@@ -9,8 +9,10 @@ from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     LOG_TYPES,
+    STAGES,
     ResultSnapshot,
     StatusLog,
 )
@@ -18,6 +20,7 @@ from envergo.petitions.tests.factories import (
     InvitationTokenFactory,
     PetitionProjectFactory,
     SimulationFactory,
+    StatusLogFactory,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -144,6 +147,38 @@ def test_result_url_active_returns_project_url():
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
     assert "project_reference" not in params
+
+
+def close_project(project, closed_on):
+    StatusLogFactory(
+        petition_project=project,
+        stage=STAGES.closed,
+        decision=DECISIONS.express_agreement,
+        status_date=closed_on,
+    )
+
+
+def reopen_project(project):
+    StatusLogFactory(petition_project=project, stage=STAGES.instruction_d)
+
+
+def test_closed_on_is_the_latest_closing_date():
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    close_project(project, date(2025, 9, 1))
+    reopen_project(project)
+    close_project(project, date(2025, 10, 1))
+
+    assert project.closed_on == date(2025, 10, 1)
+
+
+def test_closed_on_is_none_once_the_project_is_reopened():
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    close_project(project, date(2025, 9, 1))
+    reopen_project(project)
+
+    assert project.closed_on is None
 
 
 @pytest.mark.django_db(transaction=True)
