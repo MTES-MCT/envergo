@@ -1,4 +1,3 @@
-import datetime
 import logging
 from dataclasses import dataclass
 from textwrap import dedent
@@ -446,15 +445,7 @@ def get_demarche_numerique_dossier(
     returns:
         Dossier object if found, None otherwise.
     """
-    now_utc = datetime.datetime.now(datetime.timezone.utc)
-
-    one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
-    if (
-        force_update
-        or not petition_project.demarche_numerique_raw_dossier
-        or petition_project.demarche_numerique_last_sync is not None
-        and petition_project.demarche_numerique_last_sync < one_hour_ago_utc
-    ):
+    if force_update or petition_project.needs_demarche_numerique_sync:
         # If the last sync is older than one hour, we fetch the dossier from « Démarche numérique »
         dossier_number = petition_project.demarche_numerique_dossier_number
         ds_client = DemarcheNumeriqueClient()
@@ -464,6 +455,16 @@ def get_demarche_numerique_dossier(
             # we have got a dossier from « Démarche numérique » for this petition project,
             # let's synchronize project
             petition_project.synchronize_with_demarche_numerique(dossier_as_dict)
+        elif petition_project.is_dossier_submitted:
+            # No dossier, whether missing or unreachable (the client reports the cause).
+            # A draft dossier may legitimately be missing, a submitted one should exist
+            logger.error(
+                "Could not get the dossier of a submitted petition project from « Démarche numérique »",
+                extra={
+                    "petition_project": petition_project.reference,
+                    "dossier_number": dossier_number,
+                },
+            )
     else:
         # If the last sync is recent, we can use the cached dossier from the petition project
         dossier_as_dict = petition_project.demarche_numerique_raw_dossier

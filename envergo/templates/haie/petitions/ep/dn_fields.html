@@ -1,0 +1,46 @@
+{% load petitions %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Contexte de la destruction</h3>
+{% include "haie/petitions/_dn_contexte.html" with with_urba_fields=True %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Justification du projet</h3>
+{% include "haie/petitions/_dn_justification.html" %}
+{% display_dn_field "parcelles_taille_avant_apres" "inline" %}
+{% display_dn_field "maintien_exploitation" "inline" %}
+{% display_dn_field "maintien_exploitation_explication" "inline" %}
+{% display_dn_field "contexte_dup" "inline" %}
+{% display_dn_field "mesures_protection_chantier" "inline" %}
+{% display_dn_field "projet_amenagement_cas" "inline" %}
+{% display_dn_field "plan_masse" "inline" %}
+{% display_dn_field "passage_faune" "inline" %}
+{% display_dn_field "enjeux_socio_economiques" "inline" %}
+{% display_dn_field "motif_securite" "inline" %}
+{% display_dn_field "zone_risque_incendie" "inline" %}
+{% display_dn_field "zone_risque_incendie_document" "inline" %}
+{% display_dn_field "arrete_intervention" "inline" %}
+{% display_dn_field "pieces_motif_paysager" "inline" %}
+{% display_dn_field "tech_bocager" "inline" %}
+{% display_dn_field "tech_bocager_organisme" "inline" %}
+{% display_dn_field "tech_bocager_rapport" "inline" %}
+{% display_dn_field "photos" "inline" %}
+{% display_dn_field "urgence_photo" "inline" %}
+{% display_dn_field "date_travaux" "inline" %}
+
+{% include "haie/petitions/_dn_erc.html" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Description des linéaires à détruire</h3>
+{% display_dn_field "photos_arbres_notables" "inline" %}
+{% display_dn_field "talus" "inline" %}
+{% display_dn_field "fosses" "inline" %}
+{% display_dn_field "topographie" "inline" %}
+{% display_dn_field "precisions_destruction" "inline" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Description du projet de plantation</h3>
+{% display_dn_field "plantation_bande_enherbee" "inline" %}
+{% display_dn_field "compensation_autres_mesures" "inline" %}
+{% display_dn_field "compensation_autres_mesures_plan" "inline" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Espèces protégées</h3>
+{% display_dn_field "ep_cortege_type" "inline" %}
+{% display_dn_field "ep_diagnostic_ecologique" "inline" %}
+{% display_dn_field "ep_diagnostic_ecologique_rapport" "inline" %}

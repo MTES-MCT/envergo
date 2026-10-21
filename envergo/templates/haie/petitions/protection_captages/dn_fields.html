@@ -1,0 +1,11 @@
+{% load petitions %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Justification du projet</h3>
+{% include "haie/petitions/_dn_justification.html" %}
+
+{% include "haie/petitions/_dn_erc.html" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Description des linéaires à détruire</h3>
+{% display_dn_field "talus" "inline" %}
+{% display_dn_field "fosses" "inline" %}
+{% display_dn_field "topographie" "inline" %}

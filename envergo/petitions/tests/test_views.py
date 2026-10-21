@@ -1005,6 +1005,45 @@ def test_instructor_ep_page_species_details_without_sensitive_species(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_regulation_page_shows_dn_fields(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """The instructor regulation page shows the « Démarche numérique » fields
+    mapped in the config display fields."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+
+    # Given a « Démarche numérique » config with a mapped display field
+    dn_config = project.config.demarche_numerique_config
+    dn_config.display_fields.update({"motivation": "Q2hhbXAtNDUzNDE0Ng=="})
+    dn_config.save()
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Then the page is structured in sections
+    assert "Linéaires concernés" in content
+    assert ">Informations saisies par le demandeur</h2>" in content
+    assert ">Justification du projet</h3>" in content
+    assert ">Évitement et réduction</h3>" in content
+
+    # Then the mapped « Démarche numérique » field is displayed
+    assert (
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
+        in content
+    )
+    assert "La motivation" in content
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_page_shows_species_cortege(
     mock_post, client, site, france_map  # noqa
 ):
@@ -1265,20 +1304,25 @@ def test_messagerie_file_too_large_error(
     assert "20 Mo" in content
 
 
+def _new_message_modal_tag(content):
+    """Return the opening tag of the new message modal."""
+    match = re.search(r'<dialog[^>]*id="modal-new-message"[^>]*>', content)
+    assert match
+    return match.group(0)
+
+
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_opens_on_error(
     mock_ds_query_execute, haie_coordinator_44, client, site
 ):
-    """Après soumission invalide, la modale s'ouvre au chargement."""
+    """Après soumission invalide, la modale est rendue ouverte."""
     url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": ""})
     content = response.content.decode()
-    assert (
-        "dsfr(document.getElementById('modal-new-message')).modal.disclose()" in content
-    )
+    assert 'data-fr-opened="true"' in _new_message_modal_tag(content)
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -1286,16 +1330,13 @@ def test_messagerie_modal_opens_on_error(
 def test_messagerie_modal_not_opened_on_success(
     mock_ds_query_execute, haie_coordinator_44, client, site
 ):
-    """Après soumission valide, le script d'ouverture de modale n'est pas présent."""
+    """Après soumission valide, la modale n'est pas rendue ouverte."""
     url = _setup_messagerie(haie_coordinator_44, client)
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     response = client.post(url, {"message_body": "Bonjour"}, follow=True)
     content = response.content.decode()
-    assert (
-        "dsfr(document.getElementById('modal-new-message')).modal.disclose()"
-        not in content
-    )
+    assert 'data-fr-opened="true"' not in _new_message_modal_tag(content)
 
 
 def test_petition_project_list(
