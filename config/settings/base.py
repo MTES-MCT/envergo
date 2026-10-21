@@ -320,12 +320,11 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_TRACK_STARTED = True
-# Time limits are a safety net behind the per-call request timeouts: even an
-# un-timed-out external call can no longer wedge a worker process forever.
-# The soft limit lets the task raise SoftTimeLimitExceeded; the hard limit
-# kills it. The budget is generous because legitimate import tasks (map /
-# species file processing) run for several minutes; a tighter limit would kill
-# them and, combined with the global retry policy, send them into a retry loop.
+# If a task does not respond and we don't set a time limit, the worker could get
+# stuck forever and become unavailable.
+# The soft time limit raises a SoftTimeLimitExceeded exception.
+# The hard time limit kills the worker.
+# The limit is generous become some tasks (e.g map processing) really takes some long minutes.
 CELERY_TASK_SOFT_TIME_LIMIT = 600
 CELERY_TASK_TIME_LIMIT = 900
 

@@ -1,4 +1,3 @@
-import io
 import shutil
 import zipfile
 from contextlib import contextmanager
@@ -10,13 +9,14 @@ from django.forms import modelform_factory
 from django.urls import reverse
 
 from envergo.geodata.admin import MapImportBatchForm
-from envergo.geodata.import_batch import (
-    find_missing_files,
-    parse_batch_row,
-    validate_headers,
-)
+from envergo.geodata.import_batch import parse_batch_row, validate_headers
 from envergo.geodata.models import STATUSES, Map, MapImportBatch, MapImportBatchFile
-from envergo.geodata.tasks import process_map_import_batch
+from envergo.geodata.tasks import (
+    finalize_batch,
+    import_batch_row,
+    process_map,
+    process_map_import_batch,
+)
 from envergo.geodata.tests.factories import (
     MapFactory,
     MapImportBatchFactory,
@@ -59,14 +59,18 @@ def fake_open_map_file(file):
 
 
 def run_task(batch):
-    queued = []
+    """Run the whole batch chain eagerly and return the ids of processed maps.
+
+    `process_map` is stubbed: its geometry import is tested on its own.
+    """
+    processed = []
     with (
         patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
-        patch("envergo.geodata.tasks.process_maps", side_effect=queued.extend),
+        patch.object(process_map, "run", side_effect=processed.append),
     ):
         process_map_import_batch.apply(args=(batch.id,))
     batch.refresh_from_db()
-    return queued
+    return processed
 
 
 def test_validate_headers_reports_missing_columns():
@@ -210,7 +214,7 @@ def test_batch_creates_maps():
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.success
-    assert batch.import_log == "Résumé : 2/2 ligne(s) traitée(s)."
+    assert batch.import_log == "Résumé : 2/2 ligne(s) importée(s)."
 
     map_a = Map.objects.get(reference="r1")
     assert map_a.name == "Carte A"
@@ -267,9 +271,7 @@ def test_batch_metadata_only_update_skips_reimport():
     queued = []
     with (
         patch("envergo.geodata.tasks.open_map_file") as mock_open,
-        patch(
-            "envergo.geodata.tasks.process_maps_sequentially", side_effect=queued.extend
-        ),
+        patch.object(process_map, "run", side_effect=queued.append),
     ):
         process_map_import_batch.apply(args=(batch.id,))
     batch.refresh_from_db()
@@ -309,7 +311,7 @@ def test_batch_metadata_only_update_requires_existing_map():
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
-    assert "un fichier est requis" in batch.import_log
+    assert "fichier manquant pour une carte inexistante" in batch.import_log
     assert Map.objects.count() == 0
     assert len(queued) == 0
 
@@ -330,92 +332,31 @@ def test_batch_mixes_import_and_metadata_only_update():
     assert Map.objects.get(reference="r2").name == "Nom mis à jour"
 
 
-def test_batch_isolates_row_errors():
+def test_batch_with_invalid_csv_imports_nothing():
+    """The CSV is validated as a whole: one bad row rejects the batch.
+
+    Every problem is listed under a summary line, with the line number of the
+    operator's file (blank lines included).
+    """
     csv_content = (
         f"{CSV_HEADER},map_type\n"
-        "r1,a.gpkg,Carte A,Description A,44,nope\n"
-        "r2,missing.gpkg,Carte B,Description B,29,\n"
-        "r3,c.gpkg,Carte C,Description C,29,\n"
-    )
-    batch = make_batch(csv_content, filenames=["a.gpkg", "c.gpkg"])
-    queued = run_task(batch)
-
-    assert batch.import_status == STATUSES.partial_success
-    assert "ligne 2" in batch.import_log
-    assert "map_type inconnu" in batch.import_log
-    assert "ligne 3" in batch.import_log
-    assert "absent des fichiers téléversés" in batch.import_log
-    assert Map.objects.count() == 1
-    assert Map.objects.filter(reference="r3").exists()
-    assert len(queued) == 1
-
-
-def test_batch_line_numbers_account_for_blank_lines():
-    """Reported line numbers match the operator's file, blank lines included."""
-    csv_content = (
-        f"{CSV_HEADER}\n" "\n" "\n" "r1,missing.gpkg,Carte A,Description A,44\n"
-    )
-    batch = make_batch(csv_content)
-    run_task(batch)
-
-    assert "ligne 4" in batch.import_log
-
-
-def test_batch_log_summarises_skipped_rows():
-    """A partial import leads with a summary counting the skipped rows."""
-    csv_content = (
-        f"{CSV_HEADER}\n"
-        "r1,a.gpkg,Carte A,Description A,44\n"
-        "r2,missing.gpkg,Carte B,Description B,29\n"
+        "r0,a.gpkg,Carte 0,Description 0,44,nope\n"
+        "\n"
+        "r1,missing.gpkg,Carte A,Description A,29,\n"
+        "r1,a.gpkg,Carte A bis,Description bis,56,\n"
     )
     batch = make_batch(csv_content, filenames=["a.gpkg"])
-    run_task(batch)
-
-    first_line = batch.import_log.splitlines()[0]
-    assert (
-        first_line
-        == "Résumé : 1/2 ligne(s) traitée(s), 1 ignorée(s) faute de fichier téléversé."
-    )
-
-
-def test_find_missing_files_lists_referenced_but_not_uploaded():
-    import csv as csv_module
-
-    csv_content = (
-        f"{CSV_HEADER}\n"
-        "r1,a.gpkg,Carte A,Description A,44\n"
-        "r2,missing.gpkg,Carte B,Description B,29\n"
-        "r3,,Carte C,Description C,29\n"  # metadata-only, no file expected
-    )
-    reader = csv_module.DictReader(io.StringIO(csv_content))
-    missing = find_missing_files(reader, uploaded_names={"a.gpkg"})
-
-    assert missing == {"missing.gpkg": 1}
-
-
-def test_batch_skips_duplicate_references():
-    csv_content = (
-        f"{CSV_HEADER}\n"
-        "r1,a.gpkg,Carte A,Description A,44\n"
-        "r1,b.gpkg,Carte A bis,Description bis,56\n"
-    )
-    batch = make_batch(csv_content, filenames=["a.gpkg", "b.gpkg"])
-    run_task(batch)
-
-    assert batch.import_status == STATUSES.partial_success
-    assert "en double" in batch.import_log
-    assert Map.objects.count() == 1
-    assert Map.objects.get(reference="r1").name == "Carte A"
-
-
-def test_batch_with_only_errors_fails():
-    csv_content = f"{CSV_HEADER}\nr1,missing.gpkg,Carte A,Description A,44\n"
-    batch = make_batch(csv_content)
-    queued = run_task(batch)
+    processed = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
+    lines = batch.import_log.splitlines()
+    assert lines[0] == "Résumé : aucune ligne importée, csv non valide."
+    assert len(lines) == 4
+    assert "Ligne 2 : map_type inconnu" in lines[1]
+    assert "Ligne 4 : fichier référencé non téléversé : missing.gpkg" in lines[2]
+    assert "Ligne 5 : référence en double" in lines[3]
     assert Map.objects.count() == 0
-    assert len(queued) == 0
+    assert processed == []
 
 
 def test_batch_blank_rows_are_skipped():
@@ -425,6 +366,66 @@ def test_batch_blank_rows_are_skipped():
 
     assert batch.import_status == STATUSES.success
     assert Map.objects.count() == 1
+
+
+def test_import_batch_row_collects_errors_and_skips_the_row():
+    """A row failing validation is reported to the next task, not imported."""
+    batch = make_batch(f"{CSV_HEADER}\n")
+    raw_row = {
+        "reference": "r1",
+        "file": "missing.gpkg",
+        "name": "Carte A",
+        "description": "Description A",
+        "departments": "44",
+    }
+
+    result = import_batch_row.apply(args=(None, batch.id, 0, 2, raw_row)).get()
+
+    assert list(result) == [0]
+    assert "missing.gpkg" in result[0][0]
+    assert Map.objects.count() == 0
+
+    # The dict built by the previous rows is completed, not replaced.
+    result = import_batch_row.apply(
+        args=({"3": ["avant"]}, batch.id, 1, 3, raw_row)
+    ).get()
+    assert set(result) == {"3", 1}
+
+
+def test_finalize_batch_reports_failed_rows():
+    batch = make_batch(f"{CSV_HEADER}\n")
+    # Keys are strings once the dict went through the json serializer.
+    errors_by_line = {"2": ["ligne 5 : a", "ligne 5 : b"], "0": ["ligne 2 : c"]}
+
+    finalize_batch.apply(args=(errors_by_line, batch.id, 4))
+    batch.refresh_from_db()
+
+    assert batch.import_status == STATUSES.partial_success
+    assert batch.import_log.splitlines() == [
+        "Résumé : 2/4 ligne(s) importée(s).",
+        "L'import 1/4 a échoué : ligne 2 : c",
+        "L'import 3/4 a échoué : ligne 5 : a ; ligne 5 : b",
+    ]
+    assert batch.task_id is None
+    assert batch.import_date is not None
+
+
+@pytest.mark.parametrize(
+    "errors_by_line,expected",
+    [
+        (None, STATUSES.success),
+        ({}, STATUSES.success),
+        ({"0": ["e"]}, STATUSES.partial_success),
+        ({"0": ["e"], "1": ["e"]}, STATUSES.failure),
+    ],
+)
+def test_finalize_batch_status(errors_by_line, expected):
+    batch = make_batch(f"{CSV_HEADER}\n")
+
+    finalize_batch.apply(args=(errors_by_line, batch.id, 2))
+    batch.refresh_from_db()
+
+    assert batch.import_status == expected
 
 
 class TestUploadView:
@@ -606,24 +607,3 @@ class TestUploadView:
 
         assert res.status_code == 302
         mock_delay.assert_not_called()
-
-    def test_process_warns_about_missing_files(self, admin_client):
-        """The operator is told upfront which referenced files are missing."""
-        csv_content = (
-            f"{CSV_HEADER}\n"
-            "r1,a.gpkg,Carte A,Description A,44\n"
-            "r2,missing.gpkg,Carte B,Description B,29\n"
-        )
-        batch = MapImportBatchFactory(csv_file__data=csv_content.encode())
-        MapImportBatchFileFactory(batch=batch, name="a.gpkg", file__filename="a.gpkg")
-
-        with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
-            res = admin_client.post(self.process_url(batch), follow=True)
-
-        content = res.content.decode()
-        assert "missing.gpkg" in content
-        assert "1 ligne(s) seront ignorées" in content
-        # The batch is still queued: the maps that are present still import.
-        mock_delay.assert_called_once_with(batch.id)

@@ -1,4 +1,3 @@
-import csv
 import logging
 from os.path import splitext
 
@@ -19,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
-from envergo.geodata.import_batch import find_missing_files, validate_headers
+from envergo.geodata.import_batch import is_file_valid
 from envergo.geodata.models import (
     Department,
     Line,
@@ -33,7 +32,7 @@ from envergo.geodata.tasks import (
     process_map_import_batch,
     process_maps,
 )
-from envergo.geodata.utils import InvalidMapFile, open_map_file, read_csv_file
+from envergo.geodata.utils import InvalidMapFile, open_map_file
 from envergo.utils.validators import detect_mime, validate_mime
 
 # Libmagic reports csv files as plain text, and only recognizes the `text/csv`
@@ -349,6 +348,11 @@ class MapImportBatchForm(forms.ModelForm):
 
         # The extension is declarative; check the actual bytes too.
         validate_mime(file, CSV_MIME_TYPES)
+
+        errors = is_file_valid(file, check_files=False)
+        if errors:
+            raise ValidationError(errors)
+
         return file
 
 
@@ -442,7 +446,6 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 reverse("admin:geodata_mapimportbatch_changelist")
             )
 
-        self.warn_missing_files(request, batch)
         process_map_import_batch.delay(batch.id)
         self.message_user(
             request,
@@ -451,26 +454,6 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         )
         return HttpResponseRedirect(
             reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
-        )
-
-    def warn_missing_files(self, request, batch):
-        """Flag the files a batch CSV references but that were never uploaded."""
-        reader = csv.DictReader(read_csv_file(batch.csv_file))
-        if validate_headers(reader.fieldnames):
-            return
-
-        uploaded_names = {f.name for f in batch.files.all()}
-        missing = find_missing_files(reader, uploaded_names)
-        if not missing:
-            return
-
-        nb_rows = sum(missing.values())
-        self.message_user(
-            request,
-            f"Lot « {batch.name} » : {len(missing)} fichier(s) référencé(s) non "
-            f"téléversé(s) ({', '.join(missing)}) — {nb_rows} ligne(s) seront "
-            f"ignorées, les cartes correspondantes ne seront pas importées.",
-            level=messages.WARNING,
         )
 
     def get_urls(self):
