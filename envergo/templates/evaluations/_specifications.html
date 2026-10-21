@@ -1,6 +1,6 @@
 {% load l10n moulinette %}
 
-<ul class="fr-mb-3w">
+<ul class="fr-mb-0">
   {% if address %}
     <li>
       <strong>Adresse :</strong> {{ address }}
@@ -15,10 +15,21 @@
   {% if moulinette.main_form.created_surface %}
     <li>{% field_summary moulinette.main_form.created_surface %}</li>
   {% endif %}
+</ul>
 
+<ul class="fr-my-0 more fr-collapse fr-pt-0" id="project-details">
   {% if moulinette.main_form.final_surface %}
     <li>{% field_summary moulinette.main_form.final_surface %}</li>
   {% endif %}
-
   {% include 'moulinette/_additional_specifications.html' %}
 </ul>
+
+<div class="fr-btns-group--center hide-print fr-mt-2w">
+  <button class="read-more-btn fr-btn fr-btn--tertiary"
+          aria-expanded="false"
+          aria-controls="project-details">
+    <span class="fr-sr-only">Voir ou masquer le détail</span>
+    <span aria-hidden="true" class="concealed-label">Afficher le détail du projet <span class="fr-icon-arrow-down-s-line" aria-hidden="true"></span></span>
+    <span aria-hidden="true" class="expanded-label">Masquer le détail du projet <span class="fr-icon-arrow-up-s-line" aria-hidden="true"></span></span>
+  </button>
+</div>
