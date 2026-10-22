@@ -256,13 +256,23 @@ def import_batch_row(
     map.import_batch = batch
     map.batch_updated_at = now
 
+    replaced_file_name = None
     if batch_file is not None:
+        replaced_file_name = map.file.name
         with batch_file.file.open("rb") as source:
             with open_map_file(source) as data_source:
                 map.expected_geometries = len(data_source[0])
             map.file.save(row.file, File(source), save=False)
 
-    map.save()
+    try:
+        map.save()
+    except Exception:
+        # The new file is already stored but nothing references it.
+        if batch_file is not None:
+            map.file.storage.delete(map.file.name)
+        raise
+    if replaced_file_name:
+        map.file.storage.delete(replaced_file_name)
     if batch_file:
         return task.replace(
             chain(

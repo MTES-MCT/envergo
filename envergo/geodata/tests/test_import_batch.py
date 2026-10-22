@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.forms import modelform_factory
 from django.urls import reverse
@@ -334,6 +335,65 @@ def test_batch_mixes_import_and_metadata_only_update():
     assert batch.import_status == STATUSES.success
     assert len(queued) == 1
     assert Map.objects.get(reference="r2").name == "Nom mis à jour"
+
+
+def test_batch_reimport_deletes_the_replaced_file():
+    """A re-imported map keeps only its new file in the storage."""
+    existing = MapFactory(reference="r1")
+    storage = existing.file.storage
+    old_name = storage.save("maps/old.gpkg", ContentFile(b"old"))
+    Map.objects.filter(pk=existing.pk).update(file=old_name)
+    batch = make_batch(
+        f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n", filenames=["a.gpkg"]
+    )
+    run_task(batch)
+
+    existing.refresh_from_db()
+    assert existing.file.name != old_name
+    assert storage.exists(existing.file.name)
+    assert not storage.exists(old_name)
+
+
+def test_batch_row_deletes_its_new_file_when_the_save_fails():
+    """No unreferenced file is left behind by a failed save."""
+    existing = MapFactory(reference="r1")
+    storage = existing.file.storage
+    old_name = storage.save("maps/old.gpkg", ContentFile(b"old"))
+    Map.objects.filter(pk=existing.pk).update(file=old_name)
+    batch = make_batch(
+        f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n", filenames=["a.gpkg"]
+    )
+    stored = []
+    original_save = storage.save
+
+    def tracking_save(*args, **kwargs):
+        stored.append(original_save(*args, **kwargs))
+        return stored[-1]
+
+    with (
+        patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
+        patch.object(storage, "save", tracking_save),
+        patch.object(Map, "save", side_effect=RuntimeError("db down")),
+    ):
+        with pytest.raises(RuntimeError):
+            import_batch_row.run(
+                None,
+                batch.id,
+                0,
+                1,
+                2,
+                {
+                    "reference": "r1",
+                    "file": "a.gpkg",
+                    "name": "Carte A",
+                    "description": "Description A",
+                    "departments": "44",
+                },
+            )
+
+    assert stored
+    assert not any(storage.exists(name) for name in stored)
+    assert storage.exists(old_name)
 
 
 def test_batch_with_invalid_csv_imports_nothing():
