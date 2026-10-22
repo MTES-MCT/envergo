@@ -121,3 +121,28 @@ def test_nothing_is_queued_without_maps():
         process_maps([])
 
     mock_chain.assert_not_called()
+
+
+def test_import_stops_once_the_transaction_is_broken():
+    """A swallowed save error must not let the loop run on every feature."""
+    from django.db import connection, transaction
+
+    from envergo.geodata.models import Zone
+    from envergo.geodata.tests.test_open_map_file import DATA_DIR
+    from envergo.geodata.utils import open_map_file, process_zones_file
+
+    map = MapFactory(zones=None)
+    calls = []
+
+    def break_transaction(zone, *args, **kwargs):
+        calls.append(zone)
+        connection.set_rollback(True)
+        raise RuntimeError("timeout")
+
+    with open(DATA_DIR / "zones.gpkg", "rb") as source:
+        with open_map_file(source) as data_source:
+            with transaction.atomic(), patch.object(Zone, "save", break_transaction):
+                with pytest.raises(RuntimeError, match="Import interrompu.*timeout"):
+                    process_zones_file(map, data_source)
+                assert len(calls) == 1
+                connection.set_rollback(False)
