@@ -27,13 +27,6 @@ class ProcessMapTask(BaseTaskWithRetry):
 
     max_retries = 1
 
-    def on_retry(self, exc, task_id, args, kwargs, einfo):
-        # The task is waiting for its next attempt, not stalled: restart the
-        # stalled import delay.
-        Map.objects.filter(pk=args[0] if args else kwargs.get("map_id")).update(
-            import_date=timezone.now()
-        )
-
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         map_id = args[0] if args else kwargs.get("map_id")
         Map.objects.filter(pk=map_id).update(

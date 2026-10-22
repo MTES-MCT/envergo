@@ -72,19 +72,6 @@ class MapForm(forms.ModelForm):
         return file
 
 
-class StalledImportListFilter(admin.SimpleListFilter):
-    title = "Import bloqué"
-    parameter_name = "stalled_import"
-
-    def lookups(self, request, model_admin):
-        return [("1", "Oui")]
-
-    def queryset(self, request, queryset):
-        if self.value() == "1":
-            queryset = queryset.stalled()
-        return queryset
-
-
 class DepartmentsListFilter(admin.SimpleListFilter):
     title = _("Departments")
     parameter_name = "departments"
@@ -138,7 +125,6 @@ class MapAdmin(gis_admin.GISModelAdmin):
     search_fields = ["name", "display_name", "reference"]
     list_filter = [
         "import_status",
-        StalledImportListFilter,
         "map_type",
         "data_type",
         DepartmentsListFilter,
@@ -242,13 +228,6 @@ class MapAdmin(gis_admin.GISModelAdmin):
     )
     def col_import_status(self, obj):
         if not obj.import_status:
-            if obj.is_import_stalled:
-                label = "Import bloqué"
-                return format_html(
-                    '<img src="/static/admin/img/icon-alert.svg" title="{}" alt="{}"/>',
-                    label,
-                    label,
-                )
             return ""
 
         icons = {

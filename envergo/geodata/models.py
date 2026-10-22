@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.gis.db import models as gis_models
@@ -12,8 +11,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES_PER_REGION
 from model_utils import Choices
-
-from config.celery_app import BaseTaskWithRetry
 
 logger = logging.getLogger(__name__)
 
@@ -53,23 +50,8 @@ STATUSES = Choices(
 )
 
 
-# A long ago started task without final status is considered stalled.
-STALLED_IMPORT_DELAY = timedelta(
-    seconds=BaseTaskWithRetry.retry_backoff_max + settings.CELERY_TASK_TIME_LIMIT,
-    minutes=5,
-)
-
-
 class MapQuerySet(models.QuerySet):
     """Custom query set with common filters for maps."""
-
-    def stalled(self):
-        """Maps whose import started but never reached a final status."""
-        return self.filter(
-            import_status__isnull=True,
-            task_id__isnull=False,
-            import_date__lt=timezone.now() - STALLED_IMPORT_DELAY,
-        )
 
     def of_type(self, map_type):
         if map_type not in MAP_TYPES:
@@ -178,16 +160,6 @@ class Map(models.Model):
 
     def __str__(self):
         return self.name
-
-    @property
-    def is_import_stalled(self):
-        """Same condition as `MapQuerySet.stalled`, for a loaded instance."""
-        return bool(
-            self.import_status is None
-            and self.task_id
-            and self.import_date
-            and self.import_date < timezone.now() - STALLED_IMPORT_DELAY
-        )
 
 
 def get_upload_storage():
