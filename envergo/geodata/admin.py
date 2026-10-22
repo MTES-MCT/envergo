@@ -1,4 +1,3 @@
-import csv
 import logging
 from os.path import splitext
 
@@ -11,7 +10,7 @@ from django.contrib.gis import admin as gis_admin
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html, mark_safe
@@ -19,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 
 from envergo.geodata.forms import DepartmentForm
-from envergo.geodata.import_batch import find_missing_files, validate_headers
+from envergo.geodata.import_batch import is_file_valid
 from envergo.geodata.models import (
     Department,
     Line,
@@ -30,10 +29,10 @@ from envergo.geodata.models import (
 )
 from envergo.geodata.tasks import (
     generate_map_preview,
-    process_map,
     process_map_import_batch,
+    process_maps,
 )
-from envergo.geodata.utils import InvalidMapFile, open_map_file, read_csv_file
+from envergo.geodata.utils import InvalidMapFile, open_map_file
 from envergo.utils.validators import detect_mime, validate_mime
 
 # Libmagic reports csv files as plain text, and only recognizes the `text/csv`
@@ -71,19 +70,6 @@ class MapForm(forms.ModelForm):
                 message = _("This file does not seem valid ({e})")
                 raise ValidationError(message.format(e=error))
         return file
-
-
-class StalledImportListFilter(admin.SimpleListFilter):
-    title = "Import bloqué"
-    parameter_name = "stalled_import"
-
-    def lookups(self, request, model_admin):
-        return [("1", "Oui")]
-
-    def queryset(self, request, queryset):
-        if self.value() == "1":
-            queryset = queryset.stalled()
-        return queryset
 
 
 class DepartmentsListFilter(admin.SimpleListFilter):
@@ -139,7 +125,6 @@ class MapAdmin(gis_admin.GISModelAdmin):
     search_fields = ["name", "display_name", "reference"]
     list_filter = [
         "import_status",
-        StalledImportListFilter,
         "map_type",
         "data_type",
         DepartmentsListFilter,
@@ -243,13 +228,6 @@ class MapAdmin(gis_admin.GISModelAdmin):
     )
     def col_import_status(self, obj):
         if not obj.import_status:
-            if obj.is_import_stalled:
-                label = "Import bloqué"
-                return format_html(
-                    '<img src="/static/admin/img/icon-alert.svg" title="{}" alt="{}"/>',
-                    label,
-                    label,
-                )
             return ""
 
         icons = {
@@ -278,8 +256,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
     @admin.action(description=_("Extract and import a map (.shp / gpkg)"))
     def process(self, request, queryset):
 
-        for map in queryset:
-            process_map.delay(map.id)
+        process_maps([map.id for map in queryset])
         msg = _("Your map will be processed soon. It might take up to a few minutes.")
         self.message_user(request, msg, level=messages.INFO)
 
@@ -350,6 +327,11 @@ class MapImportBatchForm(forms.ModelForm):
 
         # The extension is declarative; check the actual bytes too.
         validate_mime(file, CSV_MIME_TYPES)
+
+        errors = is_file_valid(file, check_files=False)
+        if errors:
+            raise ValidationError(errors)
+
         return file
 
 
@@ -368,13 +350,11 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         "created_by",
         "import_status",
         "import_date",
-        "task_status",
         "import_log",
         "upload_link",
         "maps_link",
     ]
-    exclude = ["task_id"]
-    actions = ["process"]
+    change_form_template = "geodata/admin/mapimportbatch_change_form.html"
 
     def save_model(self, request, obj, form, change):
         if not change:
@@ -402,17 +382,6 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         label = obj.get_import_status_display()
         return format_html('<img src="{}" title="{}" alt="{}"/>', icon, label, label)
 
-    def task_status(self, obj):
-        if not obj.task_id:
-            return "ND"
-
-        result = AsyncResult(obj.task_id)
-        try:
-            status = result.info["msg"]
-        except (TypeError, AttributeError, IndexError, KeyError):
-            status = "ND"
-        return status
-
     @admin.display(description="Fichiers de cartes")
     def upload_link(self, obj):
         if not obj.pk:
@@ -432,45 +401,35 @@ class MapImportBatchAdmin(admin.ModelAdmin):
             obj.maps.count(),
         )
 
-    @admin.action(description="Traiter les lots (création / màj des cartes)")
-    def process(self, request, queryset):
-        queued = 0
-        for batch in queryset:
-            self.warn_missing_files(request, batch)
-            process_map_import_batch.delay(batch.id)
-            queued += 1
+    def process_view(self, request, object_id):
+        """Create the maps of the batch and extracts their features"""
+        if not self.has_change_permission(request):
+            raise PermissionDenied
 
-        if queued:
-            self.message_user(
-                request,
-                f"{queued} lot(s) en cours de traitement. "
-                f"Cela peut prendre plusieurs minutes.",
-                level=messages.INFO,
+        batch = self.get_object(request, unquote(object_id))
+        if batch is None or request.method != "POST":
+            return HttpResponseRedirect(
+                reverse("admin:geodata_mapimportbatch_changelist")
             )
 
-    def warn_missing_files(self, request, batch):
-        """Flag the files a batch CSV references but that were never uploaded."""
-        reader = csv.DictReader(read_csv_file(batch.csv_file))
-        if validate_headers(reader.fieldnames):
-            return
-
-        uploaded_names = {f.name for f in batch.files.all()}
-        missing = find_missing_files(reader, uploaded_names)
-        if not missing:
-            return
-
-        nb_rows = sum(missing.values())
+        process_map_import_batch.delay(batch.id)
         self.message_user(
             request,
-            f"Lot « {batch.name} » : {len(missing)} fichier(s) référencé(s) non "
-            f"téléversé(s) ({', '.join(missing)}) — {nb_rows} ligne(s) seront "
-            f"ignorées, les cartes correspondantes ne seront pas importées.",
-            level=messages.WARNING,
+            "Lot en cours de traitement. Cela peut prendre plusieurs minutes.",
+            level=messages.INFO,
+        )
+        return HttpResponseRedirect(
+            reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
         )
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
+            path(
+                "<path:object_id>/process/",
+                self.admin_site.admin_view(self.process_view),
+                name="geodata_mapimportbatch_process",
+            ),
             path(
                 "<path:object_id>/upload/",
                 self.admin_site.admin_view(self.upload_view),

@@ -1,13 +1,10 @@
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.db.models.fields.files import FieldFile
-from django.urls import reverse
-from django.utils import timezone
 
-from envergo.geodata.models import STATUSES, Map
-from envergo.geodata.tasks import process_map
+from envergo.geodata.models import STATUSES
+from envergo.geodata.tasks import process_map, process_maps
 from envergo.geodata.tests.factories import MapFactory
 
 pytestmark = pytest.mark.django_db
@@ -18,16 +15,6 @@ def fake_map_file():
     """The factory maps have no stored file: skip opening it."""
     with patch.object(FieldFile, "open", MagicMock()):
         yield
-
-
-def _stalled_map(**kwargs):
-    return MapFactory(
-        zones=None,
-        import_status=None,
-        task_id="abc",
-        import_date=timezone.now() - timedelta(hours=1),
-        **kwargs,
-    )
 
 
 def test_import_error_is_recorded_on_the_map():
@@ -53,15 +40,6 @@ def test_task_failure_hook_records_the_failure():
     assert "db down" in map.import_error_msg
 
 
-def test_retry_restarts_the_stalled_delay():
-    map = _stalled_map()
-
-    process_map.on_retry(RuntimeError("db down"), "tid", (map.id,), {}, None)
-
-    map.refresh_from_db()
-    assert not map.is_import_stalled
-
-
 def test_started_task_leaves_a_trace():
     """The started state is committed, not rolled back with a dying task."""
     map = MapFactory(zones=None)
@@ -77,30 +55,43 @@ def test_started_task_leaves_a_trace():
     assert map.import_date is not None
 
 
-def test_stalled_queryset_and_property():
-    stalled = _stalled_map()
-    running = MapFactory(
-        zones=None, import_status=None, task_id="abc", import_date=timezone.now()
-    )
-    pending = MapFactory(zones=None, import_status=None)
-    done = MapFactory(
-        zones=None,
-        import_status=STATUSES.success,
-        task_id=None,
-        import_date=timezone.now() - timedelta(hours=1),
-    )
+def test_maps_are_queued_as_a_chain():
+    """Chained tasks run one at a time, whatever the worker concurrency."""
+    with patch("envergo.geodata.tasks.chain") as mock_chain:
+        process_maps([3, 1, 2])
 
-    assert list(Map.objects.stalled()) == [stalled]
-    assert stalled.is_import_stalled
-    assert not any(m.is_import_stalled for m in (running, pending, done))
+    signatures = mock_chain.call_args.args
+    assert [sig.args for sig in signatures] == [(3,), (1,), (2,)]
+    mock_chain.return_value.delay.assert_called_once_with()
 
 
-def test_admin_filter_lists_stalled_maps(admin_client):
-    stalled = _stalled_map(name="stalled")
-    MapFactory(zones=None, name="fine", import_status=STATUSES.success)
+def test_nothing_is_queued_without_maps():
+    with patch("envergo.geodata.tasks.chain") as mock_chain:
+        process_maps([])
 
-    url = reverse("admin:geodata_map_changelist")
-    response = admin_client.get(url, {"stalled_import": "1"})
+    mock_chain.assert_not_called()
 
-    assert response.status_code == 200
-    assert [m.pk for m in response.context["cl"].result_list] == [stalled.pk]
+
+def test_import_stops_once_the_transaction_is_broken():
+    """A swallowed save error must not let the loop run on every feature."""
+    from django.db import connection, transaction
+
+    from envergo.geodata.models import Zone
+    from envergo.geodata.tests.test_open_map_file import DATA_DIR
+    from envergo.geodata.utils import open_map_file, process_zones_file
+
+    map = MapFactory(zones=None)
+    calls = []
+
+    def break_transaction(zone, *args, **kwargs):
+        calls.append(zone)
+        connection.set_rollback(True)
+        raise RuntimeError("timeout")
+
+    with open(DATA_DIR / "zones.gpkg", "rb") as source:
+        with open_map_file(source) as data_source:
+            with transaction.atomic(), patch.object(Zone, "save", break_transaction):
+                with pytest.raises(RuntimeError, match="Import interrompu.*timeout"):
+                    process_zones_file(map, data_source)
+                assert len(calls) == 1
+                connection.set_rollback(False)

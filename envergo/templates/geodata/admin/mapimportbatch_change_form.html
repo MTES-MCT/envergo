@@ -1,0 +1,23 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  {% if original.pk %}
+    <li>
+      <button type="submit" form="process-batch-form">Traiter le lot</button>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
+
+{% block content %}
+  {{ block.super }}
+  {% if original.pk %}
+    <form id="process-batch-form"
+          action="{% url 'admin:geodata_mapimportbatch_process' original.pk %}"
+          method="post">
+      {% csrf_token %}
+    </form>
+  {% endif %}
+{% endblock %}
