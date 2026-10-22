@@ -36,8 +36,10 @@
             {% if user.is_authenticated %}
               <li>
                 <div class="account">
-                  <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
-                  <br>
+                  <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button class="fr-btn fr-fi-lock-line" type="submit">Se déconnecter</button>
+                  </form>
                   <span class="account__email">{{ user.email }}</span>
                 </div>
               </li>
