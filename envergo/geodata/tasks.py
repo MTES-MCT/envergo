@@ -105,6 +105,7 @@ def process_map_import_batch(batch_id):
 
     # Reset the state of a previous run.
     batch.import_log = ""
+    batch.import_date = timezone.now()
     batch.import_status = None
     batch.save()
 
