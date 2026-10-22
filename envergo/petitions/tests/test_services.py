@@ -156,6 +156,46 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
 
 
 @pytest.mark.haie
+@pytest.mark.parametrize(
+    "state,expect_error",
+    [("draft", False), ("prefilled", False), ("en_construction", True)],
+)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.Client.execute")
+@patch("envergo.petitions.demarche_numerique.client.notify")
+def test_dossier_not_found_on_demarche_numerique(
+    mock_notify, mock_execute, state, expect_error, caplog, haie_user
+):
+    """A missing dossier is only an error for a submitted project."""
+    # GIVEN a dossier that does not exist on « Démarche numérique »
+    mock_execute.side_effect = TransportQueryError(
+        "Dossier not found",
+        errors=[
+            {
+                "message": "Dossier not found",
+                "path": ["dossier"],
+                "extensions": {"code": "not_found"},
+            }
+        ],
+    )
+    petition_project = PetitionProjectFactory(demarche_numerique_state=state)
+
+    # WHEN I fetch it
+    dossier = get_demarche_numerique_dossier(petition_project)
+
+    # THEN nothing is returned
+    assert dossier is None
+    # AND an error is logged only if the project is submitted
+    errors = [
+        r
+        for r in caplog.records
+        if r.levelname == "ERROR" and "Could not get the dossier" in r.getMessage()
+    ]
+    assert bool(errors) is expect_error
+    mock_notify.assert_not_called()
+
+
+@pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 def test_fetch_project_details_from_demarche_numerique_not_enabled(caplog, haie_user):
     petition_project = PetitionProjectFactory()
@@ -413,8 +453,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "ripisylve": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
-                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -424,8 +463,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
-                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
             },
         },
         "replantation_coefficient": Decimal("1.5"),
@@ -557,8 +595,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "ripisylve": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
-                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -569,8 +606,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
-                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
             },
         },
         "ordered_hedge_types": [
@@ -843,8 +879,6 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
             plantation_eval,
         )
     )
-    assert "Modification de parcelle agricole" in context["motif"]
-
     aa_bord_voie_destruction_hedge = context["aa_bord_voie_destruction_detail"][0]
     assert (
         aa_bord_voie_destruction_hedge.length

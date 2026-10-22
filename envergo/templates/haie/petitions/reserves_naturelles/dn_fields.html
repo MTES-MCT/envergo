@@ -1,0 +1,20 @@
+{% load petitions %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Justification du projet</h3>
+{% include "haie/petitions/_dn_justification.html" %}
+{% display_dn_field "photos" "inline" %}
+{% display_dn_field "urgence_photo" "inline" %}
+
+{% include "haie/petitions/_dn_erc.html" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Description des linéaires à détruire</h3>
+{% display_dn_field "precisions_destruction" "inline" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Description du projet de plantation</h3>
+{% display_dn_field "plantation_bande_enherbee" "inline" %}
+{% display_dn_field "compensation_autres_mesures" "inline" %}
+{% display_dn_field "compensation_autres_mesures_plan" "inline" %}
+
+<h3 class="fr-h4 fr-mt-3w fr-mb-1w">Réserves naturelles</h3>
+{% display_dn_field "rn_qc_plan_gestion" "inline" %}
+{% display_dn_field "rn_elements_consequences" "inline" %}

@@ -35,6 +35,11 @@ from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
+
+class DossierNotSynchronized(Exception):
+    """The « Démarche numérique » dossier must be synchronized before being read."""
+
+
 DOSSIER_STATES = Choices(
     ("draft", _("Draft")),
     ("prefilled", _("Prefilled")),
@@ -425,6 +430,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 else "non renseigné"
             )
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            # Lien temporaire en attendant les notifs e-mail aux instructeurs
+            template_email_url = update_qs(
+                "https://stats.envergo.beta.gouv.fr/public/dashboard/9ab013dd-295e-4672-b40c-057013d53ba1",
+                {
+                    "departement": department,
+                    "dn_number": self.demarche_numerique_dossier_number,
+                    "reference": self.reference,
+                },
+            )
 
             message_body = render_to_string(
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
@@ -434,6 +448,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
+                    "template_email_url": template_email_url,
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),
                 },
@@ -675,6 +690,25 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.is_regime_unique()
             and self.moulinette_data.get("urgence", None) == "oui"
         )
+
+    @property
+    def needs_demarche_numerique_sync(self):
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+        return (
+            not self.demarche_numerique_raw_dossier
+            or self.demarche_numerique_last_sync is not None
+            and self.demarche_numerique_last_sync < one_hour_ago
+        )
+
+    @cached_property
+    def demarche_numerique_dossier(self):
+        if self.needs_demarche_numerique_sync:
+            raise DossierNotSynchronized(
+                "Project must be synchronized before accessing demarche numérique dossier"
+            )
+
+        dossier = Dossier.from_dict(self.demarche_numerique_raw_dossier)
+        return dossier
 
 
 USER_TYPE = Choices(

@@ -1,14 +1,6 @@
-{% load petitions %}
 {% load moulinette %}
 
 {% if config.single_procedure %}
-  <ul class="instructor-view-list">
-    <li>
-      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
-    </li>
-    <li>{% display_dn_field "pacage" "inline" %}</li>
-  </ul>
-
   <div class="fr-table">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
@@ -70,7 +62,7 @@
   <ul class="instructor-view-list">
 
     <li>
-      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
+      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
     </li>
     {% if ds_info.pacage %}
       {% include "haie/petitions/_item.html" with label="N° PACAGE" value=ds_info.pacage %}

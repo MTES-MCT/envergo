@@ -13,6 +13,8 @@
 {% block main %}
 
   {{ hedge_data|json_script:"hedge-data" }}
+  {{ hedge_to_plant_data_form.defaults|json_script:"plantation-hedge-defaults" }}
+  {{ hedge_to_remove_data_form.defaults|json_script:"removal-hedge-defaults" }}
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
@@ -366,17 +368,15 @@
 
   {% if mode != "read_only" %}
     <script>
-      window.addEventListener("load", function () {
-        if (window.matchMedia("(min-width: 48em)").matches) {
-          return;
+      // dsfr(element) only returns a component once DSFR has started
+      document.documentElement.addEventListener("dsfr.start", function () {
+        if (!window.matchMedia("(min-width: 48em)").matches) {
+          const warning = document.getElementById("hedge-input-small-screen-warning");
+          if (warning) {
+            dsfr(warning).modal.disclose();
+          }
         }
-
-        const warning = document.getElementById("hedge-input-small-screen-warning");
-        const modal = warning && window.dsfr ? dsfr(warning).modal : null;
-        if (modal) {
-          modal.disclose();
-        }
-      });
+      }, { once: true });
     </script>
   {% endif %}
 {% endblock %}
