@@ -232,7 +232,6 @@ class MapImportBatch(models.Model):
     import_date = models.DateTimeField(
         "Date du dernier traitement", null=True, blank=True
     )
-    task_id = models.CharField("Celery task id", max_length=256, null=True, blank=True)
     import_log = models.TextField("Log d'import", blank=True)
 
     class Meta:

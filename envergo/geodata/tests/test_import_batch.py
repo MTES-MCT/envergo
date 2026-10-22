@@ -214,7 +214,11 @@ def test_batch_creates_maps():
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.success
-    assert batch.import_log == "Résumé : 2/2 ligne(s) importée(s)."
+    assert batch.import_log.splitlines() == [
+        "Résumé : 2/2 ligne(s) importée(s).",
+        "L'import 1/2 a réussi : 'r1'",
+        "L'import 2/2 a réussi : 'r2'",
+    ]
 
     map_a = Map.objects.get(reference="r1")
     assert map_a.name == "Carte A"
@@ -350,11 +354,11 @@ def test_batch_with_invalid_csv_imports_nothing():
 
     assert batch.import_status == STATUSES.failure
     lines = batch.import_log.splitlines()
-    assert lines[0] == "Résumé : aucune ligne importée, csv non valide."
+    assert lines[0] == "Résumé : aucune ligne importée, csv non valide."
     assert len(lines) == 4
-    assert "Ligne 2 : map_type inconnu" in lines[1]
-    assert "Ligne 4 : fichier référencé non téléversé : missing.gpkg" in lines[2]
-    assert "Ligne 5 : référence en double" in lines[3]
+    assert "Ligne 2 : map_type inconnu" in lines[1]
+    assert "Ligne 4 : fichier référencé non téléversé : missing.gpkg" in lines[2]
+    assert "Ligne 5 : référence en double" in lines[3]
     assert Map.objects.count() == 0
     assert processed == []
 
@@ -368,8 +372,37 @@ def test_batch_blank_rows_are_skipped():
     assert Map.objects.count() == 1
 
 
-def test_import_batch_row_collects_errors_and_skips_the_row():
-    """A row failing validation is reported to the next task, not imported."""
+def test_batch_is_failed_when_a_map_processing_crashes():
+    """A crash in process_map stops the chain: the batch must not stay pending."""
+    csv_content = (
+        f"{CSV_HEADER}\n"
+        "r1,a.gpkg,Carte A,Description A,44\n"
+        "r2,b.gpkg,Carte B,Description B,29\n"
+    )
+    batch = make_batch(csv_content, filenames=["a.gpkg", "b.gpkg"])
+
+    with (
+        patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
+        patch.object(process_map, "run", side_effect=RuntimeError("boom")),
+        patch.object(process_map, "max_retries", 0),
+    ):
+        process_map_import_batch.apply(args=(batch.id,))
+    batch.refresh_from_db()
+
+    assert batch.import_status == STATUSES.failure
+    # The first map is imported; the crash happens while processing it.
+    assert batch.import_log.splitlines() == [
+        "Résumé : import interrompu à la ligne 1/2 par une erreur inattendue, "
+        "1 ligne(s) non traitée(s).",
+        "L'import 1/2 a échoué : erreur inattendue (boom)",
+    ]
+    assert batch.import_date is not None
+    # The chain stopped at the first map.
+    assert Map.objects.filter(reference="r2").count() == 0
+
+
+def test_import_batch_row_logs_errors_and_skips_the_row():
+    """A row failing validation is logged and reported to the next task."""
     batch = make_batch(f"{CSV_HEADER}\n")
     raw_row = {
         "reference": "r1",
@@ -379,34 +412,43 @@ def test_import_batch_row_collects_errors_and_skips_the_row():
         "departments": "44",
     }
 
-    result = import_batch_row.apply(args=(None, batch.id, 0, 2, raw_row)).get()
+    result = import_batch_row.apply(args=(None, batch.id, 0, 3, 2, raw_row)).get()
+    batch.refresh_from_db()
 
     assert list(result) == [0]
     assert "missing.gpkg" in result[0][0]
+    assert batch.import_log.startswith("L'import 1/3 a échoué : ")
+    assert "missing.gpkg" in batch.import_log
     assert Map.objects.count() == 0
 
-    # The dict built by the previous rows is completed, not replaced.
+    # The dict built by the previous rows is completed, not replaced, and the
+    # log keeps the previous lines.
     result = import_batch_row.apply(
-        args=({"3": ["avant"]}, batch.id, 1, 3, raw_row)
+        args=({"3": ["avant"]}, batch.id, 1, 3, 3, raw_row)
     ).get()
+    batch.refresh_from_db()
+
     assert set(result) == {"3", 1}
+    assert len(batch.import_log.splitlines()) == 2
+    assert batch.import_log.splitlines()[1].startswith("L'import 2/3 a échoué")
 
 
-def test_finalize_batch_reports_failed_rows():
+def test_finalize_batch_puts_the_summary_before_the_row_lines():
     batch = make_batch(f"{CSV_HEADER}\n")
+    batch.import_log = "L'import 1/4 a réussi : 'r1'\nL'import 2/4 a échoué : x"
+    batch.save()
     # Keys are strings once the dict went through the json serializer.
-    errors_by_line = {"2": ["ligne 5 : a", "ligne 5 : b"], "0": ["ligne 2 : c"]}
+    errors_by_line = {"1": ["x"], "2": ["y"]}
 
     finalize_batch.apply(args=(errors_by_line, batch.id, 4))
     batch.refresh_from_db()
 
     assert batch.import_status == STATUSES.partial_success
     assert batch.import_log.splitlines() == [
-        "Résumé : 2/4 ligne(s) importée(s).",
-        "L'import 1/4 a échoué : ligne 2 : c",
-        "L'import 3/4 a échoué : ligne 5 : a ; ligne 5 : b",
+        "Résumé : 2/4 ligne(s) importée(s).",
+        "L'import 1/4 a réussi : 'r1'",
+        "L'import 2/4 a échoué : x",
     ]
-    assert batch.task_id is None
     assert batch.import_date is not None
 
 

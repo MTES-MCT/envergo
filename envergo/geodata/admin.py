@@ -371,12 +371,10 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         "created_by",
         "import_status",
         "import_date",
-        "task_status",
         "import_log",
         "upload_link",
         "maps_link",
     ]
-    exclude = ["task_id"]
     change_form_template = "geodata/admin/mapimportbatch_change_form.html"
 
     def save_model(self, request, obj, form, change):
@@ -404,17 +402,6 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         icon = icons.get(obj.import_status)
         label = obj.get_import_status_display()
         return format_html('<img src="{}" title="{}" alt="{}"/>', icon, label, label)
-
-    def task_status(self, obj):
-        if not obj.task_id:
-            return "ND"
-
-        result = AsyncResult(obj.task_id)
-        try:
-            status = result.info["msg"]
-        except (TypeError, AttributeError, IndexError, KeyError):
-            status = "ND"
-        return status
 
     @admin.display(description="Fichiers de cartes")
     def upload_link(self, obj):

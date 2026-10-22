@@ -14,6 +14,7 @@ import requests
 from django.contrib.gis.gdal import DataSource, GDALException
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
 from django.contrib.gis.utils.layermapping import LayerMapping
+from django.core.files.uploadedfile import UploadedFile
 from django.core.serializers import serialize
 from django.db import connection
 from django.db.models import QuerySet
@@ -186,6 +187,13 @@ def read_csv_file(field_file):
 
     Decoding with utf-8-sig removes the eventual bom produced by spreadsheet software.
     """
+    # A freshly uploaded file must stay open
+    if isinstance(field_file, UploadedFile):
+        field_file.seek(0)
+        content = field_file.read()
+        field_file.seek(0)
+        return io.StringIO(content.decode("utf-8-sig"))
+
     with field_file.open("rb") as f:
         return io.StringIO(f.read().decode("utf-8-sig"))
 

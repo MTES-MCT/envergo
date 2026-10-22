@@ -155,7 +155,7 @@ def validate_headers(fieldnames):
     return []
 
 
-def parse_batch_row(line_no, raw_row):
+def parse_batch_row(line_number, raw_row):
     """Normalize and validate a single non-blank raw CSV row.
 
     Returns (ParsedBatchRow, []) on success or (None, [error_string]) on
@@ -163,10 +163,10 @@ def parse_batch_row(line_no, raw_row):
     """
     reference = (raw_row.get("reference") or "").strip()
     if not reference:
-        return None, [f"Ligne {line_no} : référence manquante."]
+        return None, [f"Ligne {line_number} : référence manquante."]
     if len(reference) > REFERENCE_MAX_LENGTH:
         return None, [
-            f"Ligne {line_no} : référence trop longue "
+            f"Ligne {line_number} : référence trop longue "
             f"(max {REFERENCE_MAX_LENGTH} caractères)."
         ]
 
@@ -176,22 +176,22 @@ def parse_batch_row(line_no, raw_row):
 
     name = (raw_row.get("name") or "").strip()
     if not name:
-        return None, [f"Ligne {line_no} : nom de carte manquant."]
+        return None, [f"Ligne {line_number} : nom de carte manquant."]
 
     # The model requires a description, and required columns overwrite on
     # update: accepting a blank cell here would silently erase the
     # description of an existing map.
     description = (raw_row.get("description") or "").strip()
     if not description:
-        return None, [f"Ligne {line_no} : description manquante."]
+        return None, [f"Ligne {line_number} : description manquante."]
 
     map_type = (raw_row.get("map_type") or "").strip()
     if map_type and map_type not in VALID_MAP_TYPES:
-        return None, [f"Ligne {line_no} : map_type inconnu {map_type!r}."]
+        return None, [f"Ligne {line_number} : map_type inconnu {map_type!r}."]
 
     data_type = (raw_row.get("data_type") or "").strip()
     if data_type and data_type not in VALID_DATA_TYPES:
-        return None, [f"Ligne {line_no} : data_type inconnu {data_type!r}."]
+        return None, [f"Ligne {line_number} : data_type inconnu {data_type!r}."]
 
     display_for_user = None
     raw_display = (raw_row.get("display_for_user") or "").strip().lower()
@@ -202,7 +202,7 @@ def parse_batch_row(line_no, raw_row):
             display_for_user = False
         else:
             return None, [
-                f"Ligne {line_no} : display_for_user invalide {raw_display!r}."
+                f"Ligne {line_number} : display_for_user invalide {raw_display!r}."
             ]
 
     return (
