@@ -39,9 +39,13 @@ class RegimeUniqueHaieForm(forms.Form):
 
     urgence = forms.ChoiceField(
         label=mark_safe(
-            "Les travaux sont-ils réalisés en urgence ?"
-            '<span class="fr-hint-text">Danger immédiat pour des personnes ou des biens, nécessité d\'intervenir sans '
-            "délai pour des raisons sanitaires ou d'accès…</span>"
+            "Les travaux répondent-ils à une situation d’urgence ?"
+            '<span class="fr-hint-text">Au sens du '
+            '<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051372219" '
+            'target="_blank" rel="noopener">'
+            "3° de l'art. L412-26 du code de l'environnement</a> : "
+            "assurer la sécurité du public, l'intégrité des réseaux et infrastructures "
+            "ou une obligation légale ou réglementaire.</span>"
         ),
         widget=forms.RadioSelect,
         choices=(
@@ -49,8 +53,8 @@ class RegimeUniqueHaieForm(forms.Form):
             (
                 "oui",
                 mark_safe(
-                    "Oui, les travaux sont réalisés en urgence"
-                    '<span class="fr-hint-text">Travaux déjà réalisés, ou prévus dans les prochains jours</span>'
+                    "Oui, ce sont des travaux d'urgence au sens de la réglementation"
+                    '<span class="fr-hint-text">Des pièces justificatives vous seront demandées.</span>'
                 ),
             ),
         ),
