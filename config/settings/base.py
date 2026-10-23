@@ -320,6 +320,13 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_TRACK_STARTED = True
+# If a task does not respond and we don't set a time limit, the worker could get
+# stuck forever and become unavailable.
+# The soft time limit raises a SoftTimeLimitExceeded exception.
+# The hard time limit kills the worker.
+# The limit is generous become some tasks (e.g map processing) really takes some long minutes.
+CELERY_TASK_SOFT_TIME_LIMIT = 600
+CELERY_TASK_TIME_LIMIT = 900
 
 
 SENTRY_DSN = env("SENTRY_DSN", default="")
@@ -365,6 +372,10 @@ VISITOR_COOKIE_NAME = "visitorid"
 # The max number of files that can be uploaded with a single evaluation request
 MAX_EVALREQ_FILES = 25
 MAX_EVALREQ_FILESIZE = 50
+
+# The max number of map files that can be uploaded with a single import batch
+MAX_MAP_BATCH_FILES = 200
+MAX_MAP_BATCH_FILESIZE = 200
 
 TEST_EMAIL = "test@test.fr"
 
