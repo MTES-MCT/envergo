@@ -23,7 +23,7 @@ from envergo.hedges.forms import (
 from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
-from envergo.moulinette.views import MoulinetteMixin
+from envergo.moulinette.views import MoulinetteMixin, PetitionProjectContextMixin
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 @method_decorator(csp_report_only_override(config={}), name="post")
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
-class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
+class HedgeInput(MoulinetteMixin, PetitionProjectContextMixin, FormMixin, DetailView):
     """Create, update or display a hedge input."""
 
     template_name = "hedges/input.html"
@@ -188,9 +188,12 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
             self.get_matomo_custom_url(mode), self.request
         )
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
-        context["is_alternative"] = bool(self.request.GET.get("alternative", False))
+        context["is_alternative"] = bool(
+            self.request.GET.get("project_reference", False)
+        )
         context["HedgeCategory"] = HedgeCategory
 
+        context.update(self.get_petition_project_context())
         return context
 
     def post(self, request, *args, **kwargs):

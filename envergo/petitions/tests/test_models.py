@@ -1,9 +1,12 @@
 from datetime import date
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+from django.contrib.auth.models import AnonymousUser
 
 from envergo.contrib.sites.tests.factories import SiteFactory
+from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -11,7 +14,12 @@ from envergo.petitions.models import (
     ResultSnapshot,
     StatusLog,
 )
-from envergo.petitions.tests.factories import PetitionProjectFactory, SimulationFactory
+from envergo.petitions.tests.factories import (
+    InvitationTokenFactory,
+    PetitionProjectFactory,
+    SimulationFactory,
+)
+from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -22,53 +30,110 @@ def test_set_department_on_save():
     assert petition_project.department.department == "44"
 
 
+def test_petition_project_view_and_change_permissions(haie_user, admin_user):
+    """Per-role matrix for has_view_permission / has_change_permission (referentiel)."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    dept = project.department
+    other_dept = Department34Factory()
+
+    # Coordinator on the project's department: can view AND change.
+    coordinator = UserFactory(is_haie_coordinator=True)
+    coordinator.departments.add(dept)
+
+    # Coordinator on another department: no access at all on this project.
+    other_coordinator = UserFactory(is_haie_coordinator=True)
+    other_coordinator.departments.add(other_dept)
+
+    # Consulted instructor (department access, not coordinator): view only.
+    instructor = UserFactory(is_haie_user=True)
+    instructor.departments.add(dept)
+
+    # Invited on the dossier through a token: view only.
+    invited = UserFactory(is_haie_user=True)
+    InvitationTokenFactory(user=invited, petition_project=project)
+
+    # Superuser: everything.
+    assert project.has_view_permission(admin_user)
+    assert project.has_change_permission(admin_user)
+
+    assert project.has_view_permission(coordinator)
+    assert project.has_change_permission(coordinator)
+
+    assert project.has_view_permission(instructor)
+    assert not project.has_change_permission(instructor)
+
+    assert project.has_view_permission(invited)
+    assert not project.has_change_permission(invited)
+
+    # Guest (authenticated, no dept/token) and wrong-department coordinator: nothing.
+    assert not project.has_view_permission(haie_user)
+    assert not project.has_change_permission(haie_user)
+    assert not project.has_view_permission(other_coordinator)
+    assert not project.has_change_permission(other_coordinator)
+
+
+def test_petition_project_permissions_for_anonymous_user():
+    """An anonymous user has neither view nor change permission.
+
+    AnonymousUser is not a User: it carries none of the guichet fields, so the
+    permission checks must rule it out before reading them.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    anonymous = AnonymousUser()
+
+    assert not project.has_view_permission(anonymous)
+    assert not project.has_change_permission(anonymous)
+
+
 def test_form_url_adds_alternative_param():
-    """form_url appends alternative=true to the query string."""
+    """form_url appends project_reference to the query string."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     simulation = SimulationFactory(project=project)
 
-    # Check that "alternative" is not already in the initial url
+    # Check that "project_reference" is not already in the initial url
     url = simulation.moulinette_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert "alternative" not in params
+    assert "project_reference" not in params
 
     url = simulation.form_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert params["alternative"] == ["true"]
+    assert params["project_reference"] == [project.reference]
 
 
 def test_form_url_does_not_duplicate_alternative_param():
-    """form_url replaces an existing alternative param instead of appending a second one."""
+    """form_url replaces an existing project_reference param instead of appending a second one."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
-    # Create a simulation whose moulinette_url already contains alternative=true
-    moulinette_url = project.moulinette_url + "&alternative=true"
+    # Create a simulation whose moulinette_url already contains project_reference
+    moulinette_url = project.moulinette_url + "&project_reference=" + project.reference
     simulation = SimulationFactory(project=project, moulinette_url=moulinette_url)
     url = simulation.form_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
     # Should have exactly one value, not two
-    assert params["alternative"] == ["true"]
+    assert params["project_reference"] == [project.reference]
 
 
 @pytest.mark.haie
 def test_result_url_adds_alternative_param():
-    """result_url appends alternative=true for new simulations."""
+    """result_url appends project_reference for new simulations."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     simulation = SimulationFactory(project=project, is_active=False)
     url = simulation.result_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert params["alternative"] == ["true"]
+    assert params["project_reference"] == [project.reference]
 
 
 @pytest.mark.haie
 def test_result_url_active_returns_project_url():
-    """result_url points to the project page (without alternative param) for active simulations."""
+    """result_url points to the project page (without project_reference param) for active simulations."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     # Deactivate the initial simulation created by the factory
@@ -78,12 +143,23 @@ def test_result_url_active_returns_project_url():
     assert f"/projet/{project.reference}/" in url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert "alternative" not in params
+    assert "project_reference" not in params
 
 
 @pytest.mark.django_db(transaction=True)
 class TestResultSnapshot:
     """Tests for ResultSnapshot model and automatic creation."""
+
+    @staticmethod
+    def fake_dossier(state):
+        """A « Démarche numérique » dossier, as the synchronization reads it."""
+        return {
+            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+            "state": state,
+            "dateDepot": "2025-01-29T16:25:03+01:00",
+            "usager": {"email": "test@example.com"},
+            "demarche": {"number": 103363},
+        }
 
     def test_create_for_project(self):
         """ResultSnapshot.create_for_project creates a snapshot with correct data."""
@@ -181,15 +257,9 @@ class TestResultSnapshot:
         initial_count = ResultSnapshot.objects.filter(project=project).count()
 
         # Simulate dossier submission from « Démarche numérique »
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_construction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (
@@ -211,15 +281,9 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         alternative = SimulationFactory(project=project, comment="Alternative")
 
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_construction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
 
         alternative.refresh_from_db()
         assert "date=2025-01-29" in alternative.moulinette_url
@@ -237,15 +301,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         assert project.stage == "to_be_processed"
 
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_instruction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
 
         status_log = StatusLog.objects.filter(
             petition_project=project,
@@ -275,15 +331,7 @@ class TestResultSnapshot:
         )
         assert project.stage == "to_be_processed"
 
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_instruction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
 
         status_log = StatusLog.objects.filter(
             petition_project=project,
@@ -296,3 +344,37 @@ class TestResultSnapshot:
         project.refresh_from_db()
         assert project.stage == "instruction_h"
         assert project.due_date is None
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    def test_ru_dossier_submission_sends_the_declaration_receipt(self, mock_task):
+        """A « ru » dossier opens the two month tacit agreement delay on deposit."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        # Default factory category is "ru"
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+
+        assert mock_task.delay.call_count == 1
+        # Due two months after the dépôt
+        assert mock_task.delay.call_args[0] == (
+            project.pk,
+            "2025-01-29",
+            "2025-03-29",
+        )
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    def test_non_ru_dossier_submission_sends_no_receipt(self, mock_task):
+        """Outside the régime unique, no tacit agreement delay, hence no receipt."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(
+            underscore_category="hru",
+            demarche_numerique_state=DOSSIER_STATES.draft,
+        )
+
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+
+        assert not mock_task.delay.called

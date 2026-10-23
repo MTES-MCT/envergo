@@ -69,7 +69,14 @@ class DisplayFieldMixin:
 
 
 class DisplayChoiceField(DisplayFieldMixin, forms.ChoiceField):
-    pass
+    @property
+    def display_choices(self):
+        """Value and display label of every choice."""
+        get_display_value = getattr(self, "get_display_value", None)
+        return [
+            (value, get_display_value(value) if get_display_value else label)
+            for value, label in self.choices
+        ]
 
 
 class DisplayIntegerField(DisplayFieldMixin, StripWhitespaceMixin, forms.IntegerField):

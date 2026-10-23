@@ -4,11 +4,13 @@ Determines whether a hedge project falls under the régime unique
 (single procedure) and whether it is soumis or non concerné.
 """
 
+from abc import ABC
+
 from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeCategory, HedgeTypeFactory
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     RUMinLengthCondition,
@@ -21,7 +23,6 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
 )
 from envergo.moulinette.regulations.utils import (
-    collect_zone_configs,
     ensure_ru_hedge_data,
     evaluator_replantation_coefficient,
 )
@@ -38,9 +39,13 @@ class RegimeUniqueHaieForm(forms.Form):
 
     urgence = forms.ChoiceField(
         label=mark_safe(
-            "Les travaux sont-ils réalisés en urgence ?"
-            '<span class="fr-hint-text">Danger immédiat pour des personnes ou des biens, nécessité d\'intervenir sans '
-            "délai pour des raisons sanitaires ou d'accès…</span>"
+            "Les travaux répondent-ils à une situation d’urgence ?"
+            '<span class="fr-hint-text">Au sens du '
+            '<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051372219" '
+            'target="_blank" rel="noopener">'
+            "3° de l'art. L412-26 du code de l'environnement</a> : "
+            "assurer la sécurité du public, l'intégrité des réseaux et infrastructures "
+            "ou une obligation légale ou réglementaire.</span>"
         ),
         widget=forms.RadioSelect,
         choices=(
@@ -48,8 +53,8 @@ class RegimeUniqueHaieForm(forms.Form):
             (
                 "oui",
                 mark_safe(
-                    "Oui, les travaux sont réalisés en urgence"
-                    '<span class="fr-hint-text">Travaux déjà réalisés, ou prévus dans les prochains jours</span>'
+                    "Oui, ce sont des travaux d'urgence au sens de la réglementation"
+                    '<span class="fr-hint-text">Des pièces justificatives vous seront demandées.</span>'
                 ),
             ),
         ),
@@ -131,17 +136,6 @@ class RegimeUniqueHaieRu(
             ensure_ru_hedge_data(self.moulinette, self.hedges)
         return catalog
 
-    def get_debug_context(self):
-        """Return density and zone config data for the debug template."""
-        context = super().get_debug_context()
-        context["ru_zone_configs"] = collect_zone_configs(
-            self.catalog.get("ru_hedge_data", {})
-        )
-        context["RuHedgeType"] = HedgeTypeFactory.build_from_context(
-            single_procedure=True
-        )
-        return context
-
     @property
     def effective_coefficients(self):
         """Raw per-hedge zone-based compensation coefficients."""
@@ -151,3 +145,28 @@ class RegimeUniqueHaieRu(
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
         return evaluator_replantation_coefficient(self)
+
+
+class RegimeUniqueHaieNonConcerneBase(HaieCriterionEvaluator, ABC):
+    """Base for the categories the régime unique procedure never applies to.
+
+    The result is always "non_concerne".
+    """
+
+    choice_label = "Régime unique haie > Régime unique haie"
+    base_slug = "regime_unique_haie"
+
+    def evaluate(self):
+        self._result_code, self._result = RESULTS.non_concerne, RESULTS.non_concerne
+
+
+class RegimeUniqueHaieHru(RegimeUniqueHaieNonConcerneBase):
+    """Criterion evaluator for hedges outside the régime unique (HRU category)."""
+
+    category = HedgeCategory.hru
+
+
+class RegimeUniqueHaieL3503(RegimeUniqueHaieNonConcerneBase):
+    """Criterion evaluator for L350-3 roadside tree alignments."""
+
+    category = HedgeCategory.l350_3

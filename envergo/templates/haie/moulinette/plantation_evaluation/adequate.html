@@ -1,16 +1,35 @@
 {% if replantation_coefficient > 0.0 %}
-  <div class="fr-alert fr-alert--success fr-mb-3w">
-    <h3 class="fr-alert__title">La plantation envisagée est adéquate</h3>
-    <p>
-      Le projet de plantation décrit dans le simulateur apparaît acceptable
-      au regard des haies détruites.
-    </p>
-
-    {% if moulinette.result != "interdit" %}
-      <p class="fr-hint-text">
-        Cette estimation n'est pas une position définitive de l'administration.
-        Seule la réponse du guichet unique, après dépôt et instruction de la demande, vaudra décision officielle.
+  {% if moulinette.ep.ru__ep_regime_unique.result_code == "derogation_inventaire" %}
+    <div class="fr-alert fr-alert--info fr-mb-3w">
+      <h3 class="fr-alert__title">La plantation envisagée semble adéquate</h3>
+      <p>
+        Lors de l’instruction de votre dossier au titre de la réglementation
+        <a href="#regulation_ep"
+           title="Voir le détail de la réglementation « Espèces protégées »">Espèces protégées</a>,
+        il est néanmoins possible qu’une plantation plus conséquente vous soit demandée.
       </p>
-    {% endif %}
-  </div>
+
+      {% if moulinette.result != "interdit" %}
+        <p class="fr-hint-text">
+          Cette estimation n'est pas une position définitive de l'administration.
+          Seule la réponse du guichet unique, après dépôt et instruction de la demande, vaudra décision officielle.
+        </p>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="fr-alert fr-alert--success fr-mb-3w">
+      <h3 class="fr-alert__title">La plantation envisagée est adéquate</h3>
+      <p>
+        Le projet de plantation décrit dans le simulateur apparaît acceptable
+        au regard des haies détruites.
+      </p>
+
+      {% if moulinette.result != "interdit" %}
+        <p class="fr-hint-text">
+          Cette estimation n'est pas une position définitive de l'administration.
+          Seule la réponse du guichet unique, après dépôt et instruction de la demande, vaudra décision officielle.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
 {% endif %}

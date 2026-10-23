@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
-from envergo.geodata.tests.factories import DepartmentFactory, MapFactory, ZoneFactory
+from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigAmenagement,
@@ -145,155 +145,145 @@ def test_moulinette_haie_has_specific_behavior():
     assert MoulinetteClass is MoulinetteHaie
 
 
-def test_config_haie_activated_has_missing_demarche_numerique_number(
+def test_config_haie_activated_has_missing_demarche_numerique(
     loire_atlantique_department,  # noqa
 ):
-    """Check `demarche_numerique_number_required_if_activated` constraint"""
+    """Check `demarche_numerique_required_if_activated` constraint"""
     config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
 
 
-def test_config_haie_with_demarche_numerique_number_has_missing_project_url_id(
-    loire_atlantique_department,  # noqa
-):
-    """Check `project_url_id_required_if_demarche_number` constraint"""
-    config_haie = ConfigHaie(
-        department=loire_atlantique_department, demarche_numerique_number="123456789"
+class TestConfigHaieProhibitionDates:
+    def test_two_dates_must_be_in_the_same_year(self, loire_atlantique_department):
+        with pytest.raises(ValidationError) as exc_info:
+            config_haie = ConfigHaie(
+                department=loire_atlantique_department,
+                is_activated=True,
+                prohibition_range=DateRange(date(2027, 4, 2), date(2028, 4, 2)),
+            )
+            config_haie.clean()
+        assert exc_info.value.messages == [
+            "Merci de renseigner deux dates de la même année."
+        ]
+
+    def test_range_must_be_at_least_21_weeks(self, loire_atlantique_department):
+        with pytest.raises(ValidationError) as exc_info:
+            start = date(2027, 3, 15)
+            end = start + timedelta(days=(21 * 7 - 1))
+            config_haie = ConfigHaie(
+                department=loire_atlantique_department,
+                is_activated=True,
+                prohibition_range=DateRange(start, end),
+            )
+            config_haie.clean()
+        assert exc_info.value.messages == [
+            "La période d’interdiction doit durer au moins 21 semaines consécutives."
+        ]
+
+    def test_range_can_be_exactly_21_weeks(self, loire_atlantique_department):
+        start = date(2027, 3, 15)
+        end = start + timedelta(days=21 * 7)
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            prohibition_range=DateRange(start, end),
+        )
+        config_haie.clean()
+
+    @pytest.mark.parametrize(
+        "stored_range,tested_date,expected_result",
+        (
+            pytest.param(
+                DateRange(date(2026, 3, 1), date(2026, 6, 1)),
+                date(2026, 4, 1),
+                True,
+                id="tested_date_in_same_year",
+            ),
+            pytest.param(
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
+                date(2026, 4, 1),
+                True,
+                id="tested_date_in_another_year",
+            ),
+            pytest.param(
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
+                date(2026, 3, 1),
+                True,
+                id="tested_date_equals_start_date",
+            ),
+            pytest.param(
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
+                date(2026, 6, 1),
+                False,
+                id="tested_date_equals_end_date",
+            ),
+            pytest.param(
+                DateRange(date(2026, 3, 1), date(2026, 6, 1)),
+                date(2026, 9, 1),
+                False,
+                id="tested_date_out_of_prohib_range",
+            ),
+            pytest.param(
+                None,
+                date(2026, 4, 1),
+                None,
+                id="null_stored_dates_yield_none",
+            ),
+        ),
     )
-    with pytest.raises(ValidationError):
-        config_haie.validate_constraints()
-
-
-def test_config_haie_has_invalid_demarche_numerique_config(
-    loire_atlantique_department,  # noqa
-):
-    with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
-            demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config={"foo": "bar"},
-        )
-        config_haie.clean()
-    assert exc_info.value.messages == [
-        "Cette configuration doit être une liste de champs (ou d'annotations privées) à pré-remplir"
-    ]
-
-    with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
-            demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[{"foo": "bar"}],
-        )
-        config_haie.clean()
-    assert exc_info.value.messages == [
-        "Chaque champ (ou annotation privée) doit contenir au moins l'id côté « Démarche numérique » et la "
-        "source de la valeur côté guichet unique de la haie."
-    ]
-
-    with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
-            demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[{"id": "123456789", "value": "bar"}],
-        )
-        config_haie.clean()
-    assert exc_info.value.messages == [
-        "La source de la valeur bar n'est pas valide pour le champ dont l'id est 123456789"
-    ]
-
-    with pytest.raises(
-        ValidationError,
-        match="Le mapping du champ dont l'id est 123456789 doit être un dictionnaire.",
+    def test_confighaie_check_if_date_is_prohibited(
+        self, stored_range, tested_date, expected_result
     ):
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
-            demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[
-                {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
-            ],
+        confhaie: ConfigHaie = DCConfigHaieFactory(
+            prohibition_range=stored_range,
         )
-        config_haie.clean()
+        assert confhaie.is_date_in_prohibition_range(tested_date) == expected_result
 
-    config_haie = ConfigHaie(
-        department=loire_atlantique_department,
-        is_activated=True,
-        demarche_numerique_number="123456789",
-        demarche_numerique_pre_fill_config=[
-            {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
-        ],
-    )
-    config_haie.clean()
+    def test_prohibition_range_display(self):
+        confighaie = ConfigHaie(
+            prohibition_range=DateRange(date(2027, 3, 18), date(2027, 9, 1))
+        )
+        assert confighaie.prohibition_range_display == "du 18 mars au 31 août"
 
-
-def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
-    """Test get_demarche_numerique_value_sources method"""
-    config_haie = DCConfigHaieFactory()
-    other_map = MapFactory()
-    sites_proteges_regulation = RegulationFactory(
-        regulation="sites_proteges_haie",
-        has_perimeters=True,
-        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesProtegesRegulation",
-    )
-    spr_perimeter_bizou = PerimeterFactory(
-        name="Bizous",
-        activation_map=bizous_town_center,
-        regulations=[sites_proteges_regulation],
-    )
-    spr_perimeter_bizou_MH = PerimeterFactory(
-        name="MH",
-        activation_map=bizous_town_center,
-        regulations=[sites_proteges_regulation],
-    )
-    spr_perimeter_other = PerimeterFactory(
-        name="Other",
-        activation_map=other_map,
-        regulations=[sites_proteges_regulation],
-    )
-    CriterionFactory(
-        title="Sites Patrimoniaux Remarquables",
-        backend_title="SPR Haies > bizou",
-        regulation=sites_proteges_regulation,
-        perimeter=spr_perimeter_bizou,
-        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaie",
-        activation_map=bizous_town_center,
-        activation_mode="hedges_intersection",
-    ),
-    CriterionFactory(
-        title="Monuments historiques",
-        backend_title="MH Haies > bizou2",
-        regulation=sites_proteges_regulation,
-        perimeter=spr_perimeter_bizou_MH,
-        evaluator="envergo.moulinette.regulations.sites_proteges_haie.MonumentsHistoriquesHaie",
-        activation_map=bizous_town_center,
-        activation_mode="hedges_intersection",
-    ),
-    CriterionFactory(
-        title="Monuments historiques",
-        backend_title="SPR Haies > bizou",
-        regulation=sites_proteges_regulation,
-        perimeter=spr_perimeter_other,
-        evaluator="envergo.moulinette.regulations.sites_proteges_haie.MonumentsHistoriquesHaie",
-        activation_map=bizous_town_center,
-        activation_mode="hedges_intersection",
-    )
-    expected_results_criteria = {
+    @pytest.mark.parametrize(
+        "stored_range,blocked_date,expected_result",
         (
-            "sites_proteges_haie.hru__mh_haie.result_code",
-            "Code de résultat du critère MH Haies > bizou2 de la réglementation sites_proteges_haie",
+            pytest.param(
+                DateRange(date(2027, 3, 18), date(2027, 9, 1)),
+                date(2026, 7, 1),
+                date(2026, 9, 1),
+                id="prohibited_date_yields_first_allowed_day_of_its_own_year",
+            ),
+            pytest.param(
+                DateRange(date(2027, 3, 18), date(2027, 9, 1)),
+                date(2026, 10, 1),
+                None,
+                id="allowed_date_yields_none",
+            ),
+            pytest.param(
+                None,
+                date(2026, 7, 1),
+                None,
+                id="null_stored_dates_yield_none",
+            ),
+            pytest.param(
+                DateRange(date(2028, 2, 1), date(2028, 2, 29)),
+                date(2027, 2, 10),
+                date(2027, 3, 1),
+                id="end_on_29_february_resumes_on_1_march_in_a_non_leap_year",
+            ),
+            pytest.param(
+                DateRange(date(2028, 2, 1), date(2028, 2, 29)),
+                date(2028, 2, 10),
+                date(2028, 2, 29),
+                id="end_on_29_february_stands_in_a_leap_year",
+            ),
         ),
-        (
-            "sites_proteges_haie.hru__spr_haie.result_code",
-            "Code de résultat du critère SPR Haies > bizou de la réglementation sites_proteges_haie",
-        ),
-    }
-
-    results = config_haie.get_demarche_numerique_value_sources()
-    assert results["Résultats des critères"] == expected_results_criteria
+    )
+    def test_first_allowed_work_date(self, stored_range, blocked_date, expected_result):
+        confighaie = ConfigHaie(prohibition_range=stored_range)
+        assert confighaie.first_allowed_work_date(blocked_date) == expected_result
 
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(

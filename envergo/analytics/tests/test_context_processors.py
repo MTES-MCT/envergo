@@ -1,5 +1,6 @@
 import pytest
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
 from envergo.analytics.context_processors import analytics
@@ -120,3 +121,41 @@ def test_single_simulation_old_event(req):
     )
     context = analytics(req)
     assert context == {"matomo_dimensions": [(1, "n0_d0"), (2, "n1_d3")]}
+
+
+@pytest.fixture
+def haie_req(rf, site):
+    site.domain = settings.ENVERGO_HAIE_DOMAIN
+    request = rf.get("/")
+    request.site = site
+    return request
+
+
+def test_haie_anonymous_user_type(haie_req):
+    haie_req.user = AnonymousUser()
+    context = analytics(haie_req)
+    assert context == {"matomo_dimensions": [(1, "anonymous")]}
+
+
+def test_haie_administrator_user_type(haie_req, admin_user):
+    haie_req.user = admin_user
+    context = analytics(haie_req)
+    assert context == {"matomo_dimensions": [(1, "administrator")]}
+
+
+def test_haie_coordinator_user_type(haie_req, haie_coordinator_44):
+    haie_req.user = haie_coordinator_44
+    context = analytics(haie_req)
+    assert context == {"matomo_dimensions": [(1, "coordinator")]}
+
+
+def test_haie_instructor_user_type(haie_req, haie_user_44):
+    haie_req.user = haie_user_44
+    context = analytics(haie_req)
+    assert context == {"matomo_dimensions": [(1, "instructor")]}
+
+
+def test_haie_guest_user_type(haie_req, amenagement_user):
+    haie_req.user = amenagement_user
+    context = analytics(haie_req)
+    assert context == {"matomo_dimensions": [(1, "guest")]}

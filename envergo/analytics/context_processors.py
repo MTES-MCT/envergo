@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from config.settings.base import VISITOR_COOKIE_NAME
 from envergo.analytics.models import Event
+from envergo.analytics.utils import get_user_type
 
 
 def build_evalreq_facet(evalreq_data):
@@ -68,9 +69,24 @@ def analytics(request):
     We use matomo custom dimensions, but instead of storing raw data, it
     was decided that we manually build the facets here."""
 
-    # Disable analytics facets for guichet unique de la haie
     if hasattr(request, "site") and request.site.domain == settings.ENVERGO_HAIE_DOMAIN:
-        return {}
+        return haie_analytics(request)
+    return amenagement_analytics(request)
+
+
+def haie_analytics(request):
+    """Guichet unique de la haie segments visitors by GUH role."""
+
+    user_type = get_user_type(getattr(request, "user", None))
+    return {
+        "matomo_dimensions": [
+            (settings.MATOMO_HAIE_USER_TYPE_DIMENSION_ID, str(user_type.value)),
+        ],
+    }
+
+
+def amenagement_analytics(request):
+    """Segment envergo amenagement visitors by evaluation requests and simulations."""
 
     visitor_id = request.COOKIES.get(VISITOR_COOKIE_NAME, None)
     if not visitor_id:

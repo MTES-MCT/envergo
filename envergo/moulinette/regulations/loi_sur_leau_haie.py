@@ -1,3 +1,5 @@
+from abc import ABC
+
 from django import forms
 from django.utils.safestring import mark_safe
 
@@ -95,13 +97,12 @@ class LoiSurLeauHaieRuForm(forms.Form):
         return cleaned_data
 
 
-class LoiSurLeauHaieHru(HaieCriterionEvaluator):
+class LoiSurLeauHaieBase(HaieCriterionEvaluator, ABC):
     """Evaluate the loi sur l'eau (haie) criterion."""
 
     choice_label = "Loi sur l'eau Haie > Loi sur l'eau Haie"
     base_slug = "loi_sur_leau_haie"
     plantation_conditions = []
-    category = HedgeCategory.hru
 
     RESULT_MATRIX = {
         "a_verifier": RESULTS.a_verifier,
@@ -120,11 +121,15 @@ class LoiSurLeauHaieHru(HaieCriterionEvaluator):
         return False
 
 
-class LoiSurLeauHaieL3503(LoiSurLeauHaieHru):
+class LoiSurLeauHaieHru(LoiSurLeauHaieBase):
+    category = HedgeCategory.hru
+
+
+class LoiSurLeauHaieL3503(LoiSurLeauHaieBase):
     category = HedgeCategory.l350_3
 
 
-class LoiSurLeauHaieRu(LoiSurLeauHaieHru):
+class LoiSurLeauHaieRu(LoiSurLeauHaieBase):
     category = HedgeCategory.ru
     form_class = LoiSurLeauHaieRuForm
 

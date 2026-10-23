@@ -1,14 +1,13 @@
 import logging
 
-from django.contrib.gis.gdal import DataSource
 from django.db import transaction
 from django.utils import timezone
 
 from config.celery_app import app
 from envergo.geodata.models import STATUSES, Map
 from envergo.geodata.utils import (
-    extract_map,
     make_polygons_valid,
+    open_map_file,
     process_lines_file,
     process_zones_file,
     simplify_lines,
@@ -38,16 +37,14 @@ def process_map(task, map_id):
             map.zones.all().delete()
             map.lines.all().delete()
 
-            logger.info("Creating temporary directory")
-            with extract_map(map.file) as map_file:
-                ds = DataSource(map_file)
-                layer = ds[0]
-                geom_type = layer.geom_type.name
+            # open_map_file leaves the stored file open. Close it once imported.
+            with map.file.open("rb"), open_map_file(map.file) as data_source:
+                geom_type = data_source[0].geom_type.name
                 if geom_type in ("LineString", "MultiLineString"):
-                    process_lines_file(map, map_file, task)
+                    process_lines_file(map, data_source, task)
                     map.geometry = simplify_lines(map)
                 else:
-                    process_zones_file(map, map_file, task)
+                    process_zones_file(map, data_source, task)
                     make_polygons_valid(map)
                     map.geometry = simplify_map(map)
 

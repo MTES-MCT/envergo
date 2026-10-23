@@ -11,7 +11,7 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueClient
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.models import PetitionProject
-from envergo.utils.mattermost import notify
+from envergo.utils.tchap import notify
 
 logger = logging.getLogger(__name__)
 
@@ -44,16 +44,18 @@ class Command(BaseCommand):
 
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
-        configs_with_ds = ConfigHaie.objects.filter(
-            demarche_numerique_number__isnull=False
-        ).valid_at(timezone.now().date())
+        configs_with_ds = (
+            ConfigHaie.objects.filter(demarche_numerique_config__isnull=False)
+            .select_related("demarche_numerique_config")
+            .valid_at(timezone.now().date())
+        )
         for config in configs_with_ds:
-            demarche_number = config.demarche_numerique_number
-            project_url_id = config.demarche_numerique_display_fields.get(
+            demarche_number = config.demarche_numerique_config.demarche_numerique_number
+            project_url_id = config.demarche_numerique_config.display_fields.get(
                 "project_url", None
             )
             if not project_url_id:
-                # A config should always have "project_url" in demarche_numerique_display_fields
+                # A DN config should always have "project_url" in display_fields
                 continue
 
             logging.info(f"Handling demarche {demarche_number} ({config})")

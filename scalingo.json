@@ -73,6 +73,9 @@
     },
     "NPM_NO_BUILD": {
       "value": "true"
+    },
+    "SYNC_STATS_ENABLED": {
+      "value": "false"
     }
   },
   "scripts": {

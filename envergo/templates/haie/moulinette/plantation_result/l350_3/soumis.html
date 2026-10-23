@@ -52,10 +52,14 @@
     📄 <strong>Un dossier doit être transmis aux services de l’État</strong>
   </h6>
 
-  {% if moulinette.config.aa_l3503_contact_info %}
-    <p>
-      Pour transmettre aux services de l’État compétents un dossier concernant la destruction d’alignements d’arbres en bord de voie :
-    </p>
-    <div>{{ moulinette.config.aa_l3503_contact_info|safe }}</div>
-  {% endif %}
+  <p>
+    Pour transmettre aux services de l’État compétents un dossier concernant la destruction d’alignements d’arbres en bord de voie :
+  </p>
+  <div class="fr-highlight">
+    {% if moulinette.config.aa_l3503_contact_info %}
+      {{ moulinette.config.aa_l3503_contact_info|safe }}
+    {% else %}
+      {{ moulinette.config.contact_info|safe }}
+    {% endif %}
+  </div>
 {% endif %}

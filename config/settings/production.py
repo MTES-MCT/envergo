@@ -69,20 +69,21 @@ AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY")
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME")
 
-# Bucket names — fallback to old env var names for safe rollback during migration.
-AWS_PRIVATE_BUCKET_NAME = env(
-    "DJANGO_AWS_PRIVATE_BUCKET_NAME",
-    default=env("DJANGO_AWS_STORAGE_BUCKET_NAME", default=""),
-)
-AWS_PUBLIC_BUCKET_NAME = env(
-    "DJANGO_AWS_PUBLIC_BUCKET_NAME",
-    default=env("DJANGO_AWS_STORAGE_BUCKET_NAME", default=""),
-)
+AWS_PRIVATE_BUCKET_NAME = env("DJANGO_AWS_PRIVATE_BUCKET_NAME")
+AWS_PUBLIC_BUCKET_NAME = env("DJANGO_AWS_PUBLIC_BUCKET_NAME")
 
 AWS_DEFAULT_ACL = "private"
 AWS_QUERYSTRING_AUTH = True
 AWS_QUERYSTRING_EXPIRE = 3600
 AWS_S3_FILE_OVERWRITE = False
+
+# Spill larger downloads to disk. The default, 0, keeps whole files in memory.
+AWS_S3_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# The download proxy and nginx locations assume path-style presigned URLs
+# with a SigV4 querystring; pin both so botocore upgrades cannot drift.
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_S3_SIGNATURE_VERSION = "s3v4"
 
 _AWS_EXPIRY = 60 * 60 * 24 * 7
 AWS_S3_OBJECT_PARAMETERS = {
@@ -99,6 +100,8 @@ STORAGES = {
     "upload": {"BACKEND": "envergo.utils.storages.PrivateUploadStorage"},
     "public": {"BACKEND": "envergo.utils.storages.PublicMediaStorage"},
 }
+
+SERVE_FILES_LOCALLY = False
 
 
 # TEMPLATES

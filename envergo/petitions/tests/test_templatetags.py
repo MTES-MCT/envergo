@@ -5,7 +5,11 @@ import pytest
 from django.template import Context, Template
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.moulinette.tests.factories import (
+    DCConfigHaieFactory,
+    DemarcheConfigFactory,
+)
+from envergo.petitions.services import get_demarche_numerique_dossier
 from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -55,21 +59,24 @@ def test_display_due_date():
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_display_ds_field(mock_post):
+def test_display_dn_field(mock_post):
     """Test display Démarche numérique field template tag"""
 
     # Given a config haie with a « Démarche numérique » display field
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_display_fields.update(
+    dn_config = DemarcheConfigFactory()
+    dn_config.display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
-    config.save()
+    dn_config.save()
+
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    get_demarche_numerique_dossier(petition_project)
 
     context_data = {
         "petition_project": petition_project,
@@ -84,7 +91,7 @@ def test_display_ds_field(mock_post):
     assert motivation_item.value == "La motivation"
 
     # WHEN I want to display this « Démarche numérique » field in a template
-    template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
+    template_html = '{% load petitions %}{% display_dn_field "motivation" %}'
     content = Template(template_html).render(Context(context_data))
     # Then this « Démarche numérique » field label and value are present in rendered page
     assert (
@@ -102,16 +109,19 @@ def test_display_empty_ds_fields(mock_post):
 
     # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
-        demarche_numerique_display_fields={
-            "project_url": "ABC123",
-        }
+        demarche_numerique_config=DemarcheConfigFactory(
+            display_fields={
+                "project_url": "ABC123",
+            }
+        )
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    get_demarche_numerique_dossier(petition_project)
     # When I want to display this « Démarche numérique » field in a template
-    template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
+    template_html = '{% load petitions %}{% display_dn_field "motivation" %}'
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
@@ -128,23 +138,23 @@ def test_display_empty_ds_fields(mock_post):
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_display_ds_field_invalid_field_id(mock_post):
+def test_display_dn_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
-    config = DCConfigHaieFactory(
-        demarche_numerique_display_fields={"project_url": "ABC123"}
+    DCConfigHaieFactory(
+        demarche_numerique_config=DemarcheConfigFactory(
+            display_fields={
+                "project_url": "ABC123",
+                "motivation": "Q3IMAGINARYBOYS",
+            }
+        )
     )
-    config.demarche_numerique_display_fields.update(
-        {
-            "motivation": "Q3IMAGINARYBOYS",
-        }
-    )
-    config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    get_demarche_numerique_dossier(petition_project)
     # When I want to display this « Démarche numérique » field in a template
-    template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
+    template_html = '{% load petitions %}{% display_dn_field "motivation" %}'
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
@@ -161,31 +171,28 @@ def test_display_ds_field_invalid_field_id(mock_post):
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_display_ds_field_unavailable_dossier(mock_post):
-    # Given config haie with display fields not existing id
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_display_fields.update(
+def test_display_dn_field_id_absent_from_dossier(mock_post):
+    # Given config haie with a display field whose id does not exist in the dossier
+    dn_config = DemarcheConfigFactory()
+    dn_config.display_fields.update(
         {
-            "motivation": "Q2hhbXAtNDUzNDE0Ng==",
+            "something_unknown": "an_unexisting_id==",
         }
     )
-    config.save()
+    dn_config.save()
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
-    # Given « Démarche numérique » dossier is not available
-    petition_project.demarche_numerique_raw_dossier = None
-    mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
+    # Given « Démarche numérique » dossier is available and synchronized
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    get_demarche_numerique_dossier(petition_project)
 
     # When I want to display this « Démarche numérique » field in a template
-    template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
+    template_html = '{% load petitions %}{% display_dn_field "something_unknown" %}'
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
     }
     content = Template(template_html).render(Context(context_data))
-    # Then template is rendered without any error but no « Démarche numérique » field is in rendered page
-    assert (
-        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
-        not in content
-    )
-    assert "La motivation" not in content
+    # Then template is rendered without any error but nothing is displayed
+    assert str.isspace(content)

@@ -33,7 +33,7 @@ from envergo.petitions.demarche_numerique.queries import (
     GET_DOSSIER_WITH_MESSAGES_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
 )
-from envergo.utils.mattermost import notify
+from envergo.utils.tchap import notify
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,16 @@ DEMARCHE_NUMERIQUE_FAKE_DATA_PATH = Path(
 )
 
 DS_DISABLED_BASE_MESSAGE = "« Démarche numérique » is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
+
+
+def is_dossier_not_found(error) -> bool:
+    """Whether a GraphQL transport error is a "dossier not found" response."""
+
+    return any(
+        graphql_error.get("extensions", {}).get("code") == "not_found"
+        and "dossier" in graphql_error.get("path", [])
+        for graphql_error in getattr(error, "errors", None) or []
+    )
 
 
 class DemarcheNumeriqueClient:
@@ -87,7 +97,9 @@ class DemarcheNumeriqueClient:
             )
 
         except (TransportError, GraphQLError, ConnectionError) as e:
-            logger.error(
+            # A missing dossier is handled by the caller, not by the client
+            log = logger.info if is_dossier_not_found(e) else logger.error
+            log(
                 "« Démarche numérique » API request failed",
                 extra={
                     "error": e,
@@ -125,15 +137,9 @@ class DemarcheNumeriqueClient:
             try:
                 data = self.execute(query, variables)
             except DemarcheNumeriqueError as e:
-                if any(
-                    error.get("extensions", {}).get("code") == "not_found"
-                    and any(path == "dossier" for path in error.get("path", []))
-                    for error in (
-                        e.__cause__.errors if hasattr(e.__cause__, "errors") else []
-                    )
-                ):
+                if is_dossier_not_found(e.__cause__):
                     logger.info(
-                        "A « Démarche numérique » dossier is not found, but the project is not marked as submitted yet",
+                        "A dossier is not found on « Démarche numérique »",
                         extra={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,

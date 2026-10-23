@@ -29,11 +29,16 @@ from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Re
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.users.models import User
-from envergo.utils.mattermost import notify
 from envergo.utils.models import ResultSnapshotBase
+from envergo.utils.tchap import notify
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
+
+
+class DossierNotSynchronized(Exception):
+    """The « Démarche numérique » dossier must be synchronized before being read."""
+
 
 DOSSIER_STATES = Choices(
     ("draft", _("Draft")),
@@ -202,10 +207,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         upload_to=dn_archive_file_format,
     )
 
-    onagre_number = models.CharField(
-        "Référence ONAGRE du dossier", max_length=64, blank=True
-    )
-
     instructor_free_mention = models.TextField(
         "Mention libre de l'instructeur", blank=True
     )
@@ -354,7 +355,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         def get_instructor_url():
             return reverse(
-                "petition_project_instructor_view", kwargs={"reference": self.reference}
+                "petition_project_summary", kwargs={"reference": self.reference}
             )
 
         def get_ds_url():
@@ -380,6 +381,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
+        declaration_filed_on = None
+        declaration_due_date = None
+
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
             department = extract_param_from_url(self.moulinette_url, "department")
@@ -400,13 +404,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
             Simulation.objects.bulk_update(simulations, ["moulinette_url"])
 
+            # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
+            if self.category == HedgeCategory.ru:
+                declaration_filed_on = date_depot
+                declaration_due_date = date_depot + relativedelta(months=2)
+
             # For some ConfigHaie, « Démarche numérique » is configured to set dossier "en_instruction" on creation.
             # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
             if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
-                due_date = None
                 stage = STAGES.instruction_h
                 if self.category == HedgeCategory.ru:
-                    due_date = date_depot + relativedelta(months=2)
                     stage = STAGES.instruction_d
 
                 StatusLog.objects.create(
@@ -414,7 +421,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     type=LOG_TYPES.status_change,
                     stage=stage,
                     update_comment="Dépôt du dossier : passage automatique en instruction.",
-                    due_date=due_date,
+                    due_date=declaration_due_date,
                 )
 
             usager_email = (
@@ -423,6 +430,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 else "non renseigné"
             )
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            # Lien temporaire en attendant les notifs e-mail aux instructeurs
+            template_email_url = update_qs(
+                "https://stats.envergo.beta.gouv.fr/public/dashboard/9ab013dd-295e-4672-b40c-057013d53ba1",
+                {
+                    "departement": department,
+                    "dn_number": self.demarche_numerique_dossier_number,
+                    "reference": self.reference,
+                },
+            )
 
             message_body = render_to_string(
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
@@ -432,6 +448,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
+                    "template_email_url": template_email_url,
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),
                 },
@@ -505,6 +522,26 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         self.demarche_numerique_last_sync = timezone.now()
         self.save()
 
+        # Scheduled after the save, so the task reads the project as the dépôt left it.
+        if declaration_filed_on:
+            self.schedule_declaration_receipt(
+                declaration_filed_on, declaration_due_date
+            )
+
+    def schedule_declaration_receipt(self, received_on, due_date):
+        """Queue the déclaration receipt for after commit, so a DN failure blocks nothing."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_declaration_receipt_async
+
+        received_on_iso = received_on.isoformat()
+        due_date_iso = due_date.isoformat()
+
+        transaction.on_commit(
+            lambda: send_declaration_receipt_async.delay(
+                self.pk, received_on_iso, due_date_iso
+            )
+        )
+
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
         if not hasattr(self, "_moulinette"):
@@ -540,31 +577,27 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - user with access haie and invitation token
         - user with access haie and right to project department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                (
-                    self.department_id in user.department_ids
-                    or user.invitation_tokens.filter(
-                        petition_project_id=self.pk
-                    ).exists()
-                ),
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.has_instruction_access
+            and (
+                self.department_id in user.department_ids
+                or user.invitation_tokens.filter(petition_project_id=self.pk).exists()
             )
         )
 
     def has_change_permission(self, user):
         """User has edit permission on project, according to
         - superuser
-        - user with access haie, is instructor for department
+        - user with access haie, is coordinator for department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                user.is_instructor,
-                self.department_id in user.department_ids,
-            )
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.has_coordination_access and self.department_id in user.department_ids
         )
 
     @property
@@ -577,6 +610,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 f"{settings.DEMARCHE_NUMERIQUE['DOSSIER_BASE_URL']}/dossiers/"
                 f"{self.demarche_numerique_dossier_number}/"
             )
+        return None
+
+    @property
+    def demarche_numerique_petitioner_messaging_url(self) -> str | None:
+        """
+        Returns the URL of the dossier messaging for the petitioner.
+        """
+        if self.demarche_numerique_petitioner_url:
+            return f"{self.demarche_numerique_petitioner_url}messagerie"
         return None
 
     def get_demarche_numerique_instructor_url(self, demarche_number) -> str | None:
@@ -649,6 +691,25 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             and self.moulinette_data.get("urgence", None) == "oui"
         )
 
+    @property
+    def needs_demarche_numerique_sync(self):
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+        return (
+            not self.demarche_numerique_raw_dossier
+            or self.demarche_numerique_last_sync is not None
+            and self.demarche_numerique_last_sync < one_hour_ago
+        )
+
+    @cached_property
+    def demarche_numerique_dossier(self):
+        if self.needs_demarche_numerique_sync:
+            raise DossierNotSynchronized(
+                "Project must be synchronized before accessing demarche numérique dossier"
+            )
+
+        dossier = Dossier.from_dict(self.demarche_numerique_raw_dossier)
+        return dossier
+
 
 USER_TYPE = Choices(
     ("petitioner", "Demandeur"),
@@ -672,6 +733,12 @@ class Simulation(models.Model):
     comment = models.TextField("Commentaire")
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        verbose_name=_("Created by"),
+        null=True,
+    )
 
     class Meta:
         verbose_name = "Simulation alternative"
@@ -711,7 +778,9 @@ class Simulation(models.Model):
     @property
     def form_url(self):
         """Return the moulinette form url with the simulation parameters."""
-        return self.custom_url("moulinette_form", alternative="true")
+        return self.custom_url(
+            "moulinette_form", project_reference=self.project.reference
+        )
 
     @property
     def result_url(self):
@@ -720,7 +789,9 @@ class Simulation(models.Model):
         if self.is_active:
             url = reverse("petition_project", args=[self.project.reference])
         else:
-            url = self.custom_url("moulinette_result_plantation", alternative="true")
+            url = self.custom_url(
+                "moulinette_result_plantation", project_reference=self.project.reference
+            )
         return url
 
 

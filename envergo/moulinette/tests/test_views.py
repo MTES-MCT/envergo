@@ -8,6 +8,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
+from envergo.petitions.tests.factories import PetitionProjectFactory
 
 
 @pytest.fixture(autouse=True)
@@ -54,6 +55,27 @@ def test_moulinette_form_with_params_displays_the_form(client):
     res = client.get(full_url)
     assert res.status_code == 200
     assert 'name="created_surface"' in res.content.decode()
+
+
+def test_moulinette_form_stays_free_of_petition_project_context(client):
+    """Petition projects are a Haie concern.
+
+    The project below matches the reference in the querystring, so a
+    project-aware form view would reverse a petitions url here — and those are
+    only routed on the Haie site, which would raise NoReverseMatch. Only
+    `MoulinetteHaieForm` is project-aware.
+    """
+    project = PetitionProjectFactory()
+
+    url = reverse("moulinette_form")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        f"&project_reference={project.reference}"
+    )
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    assert "petition_project" not in res.context
 
 
 def test_moulinette_result_without_config(client):

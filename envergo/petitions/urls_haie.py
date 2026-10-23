@@ -8,6 +8,7 @@ from envergo.petitions.views import (
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorAlternativeEdit,
+    PetitionProjectInstructorAlternativeResultsView,
     PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorConsultationsView,
     PetitionProjectInstructorDossierDNView,
@@ -16,18 +17,24 @@ from envergo.petitions.views import (
     PetitionProjectInstructorNotesView,
     PetitionProjectInstructorProcedureView,
     PetitionProjectInstructorRegulationView,
-    PetitionProjectInstructorView,
     PetitionProjectInvitationTokenCreate,
     PetitionProjectInvitationTokenDelete,
     PetitionProjectList,
+    PetitionProjectMoulinetteResultView,
+    PetitionProjectSummaryView,
     toggle_follow_project,
 )
 
 instruction_urlpatterns = [
     path(
         "",
-        PetitionProjectInstructorView.as_view(),
-        name="petition_project_instructor_view",
+        PetitionProjectSummaryView.as_view(),
+        name="petition_project_summary",
+    ),
+    path(
+        "resultat-simulateur/",
+        PetitionProjectMoulinetteResultView.as_view(),
+        name="petition_project_moulinette_result",
     ),
     path(
         "dossier-complet/",
@@ -60,6 +67,11 @@ instruction_urlpatterns = [
         "alternatives/",
         PetitionProjectInstructorAlternativeView.as_view(),
         name="petition_project_instructor_alternative_view",
+    ),
+    path(
+        "alternatives/<int:simulation_id>/",
+        PetitionProjectInstructorAlternativeResultsView.as_view(),
+        name="petition_project_instructor_alternative_display",
     ),
     path(
         "alternatives/<int:simulation_id>/<str:action>/",

@@ -1,4 +1,4 @@
-### Récupération des statuts des dossiers depuis Démarche numérique : :warning: anomalie
+### Récupération des statuts des dossiers depuis Démarche numérique : ⚠ anomalie
 
 Un dossier a été déposé sur « Démarche numérique », qui ne correspond à aucun projet dans la base du GUH.
 

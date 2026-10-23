@@ -2,8 +2,10 @@
   Au vu des caractéristiques et de la localisation des haies à détruire, le projet n'est pas soumis à la procédure de demande de dérogation au titre de la réglementation sur les espèces protégées.
 </p>
 
-{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+{% if show_species_cortege %}
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 
-<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
-  {% include 'moulinette/ep/_species_cortege_ru.html' %}
-</div>
+  <div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+    {% include 'moulinette/ep/_species_cortege_ru.html' %}
+  </div>
+{% endif %}

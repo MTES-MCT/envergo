@@ -33,7 +33,7 @@ class UserFactory(DjangoModelFactory):
             is_haie_user=True,
             is_active=False,
         )
-        is_haie_instructor = Trait(
+        is_haie_coordinator = Trait(
             is_haie_user=True,
-            is_instructor=True,
+            is_coordinator=True,
         )

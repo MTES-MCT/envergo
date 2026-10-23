@@ -1,18 +1,18 @@
+from datetime import date
+
 from django.conf import settings
 
 from config.celery_app import app
-from envergo.petitions.models import StatusLog
-from envergo.petitions.services import send_message_dossier_ds
+from envergo.petitions.models import PetitionProject, StatusLog
+from envergo.petitions.services import (
+    declaration_receipt_message,
+    send_message_dossier_ds,
+)
 
 
 @app.task
 def send_closing_message_async(status_log_id):
-    """Send the closing message to the applicant via the DS messagerie.
-
-    The message and its optional prefectural order attachment are read from
-    the closing status log. Raises on failure so the default retry policy
-    (see `config.celery_app.BaseTaskWithRetry`) replays the send.
-    """
+    """Send the closing message to the applicant via the DN messagerie."""
     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
         return
 
@@ -27,4 +27,27 @@ def send_closing_message_async(status_log_id):
         log.petition_project, log.applicant_message, attachment
     )
     if response is None or response.get("errors") is not None:
-        raise RuntimeError(f"DS closing message failed for StatusLog {status_log_id}")
+        raise RuntimeError(f"DN closing message failed for StatusLog {status_log_id}")
+
+
+@app.task
+def send_declaration_receipt_async(project_id, received_on_iso, due_date_iso):
+    """Send the déclaration receipt to the applicant via the DN messagerie."""
+    if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
+        return
+
+    project = (
+        PetitionProject.objects.select_related("department")
+        .defer("department__geometry")
+        .get(pk=project_id)
+    )
+    received_on = date.fromisoformat(received_on_iso)
+    due_date = date.fromisoformat(due_date_iso)
+
+    message = declaration_receipt_message(project, received_on, due_date)
+
+    response = send_message_dossier_ds(project, message)
+    if response is None or response.get("errors") is not None:
+        raise RuntimeError(
+            f"DN declaration receipt failed for project {project.reference}"
+        )

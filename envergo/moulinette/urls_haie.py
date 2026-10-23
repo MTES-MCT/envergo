@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from envergo.moulinette.views import (
+    MoulinetteHaieForm,
     MoulinetteHaieResult,
     MoulinetteResultPlantation,
     Triage,
@@ -31,6 +32,7 @@ urlpatterns = [
         _("form/"),
         include(
             [
+                path("", MoulinetteHaieForm.as_view(), name="moulinette_form"),
                 # This is another "fake" url, only for matomo tracking
                 path(
                     "saisie-destruction/",

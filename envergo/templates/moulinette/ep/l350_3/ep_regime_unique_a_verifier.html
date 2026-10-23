@@ -1,0 +1,13 @@
+<p>
+  Pour les alignements d'arbres en bord de voie ouverte à la circulation, dont la destruction est soumise à une procédure d'autorisation spécifique, ce simulateur ne se prononce pas automatiquement au titre de la réglementation sur les espèces protégées.
+</p>
+
+<p>
+  Le porteur de projet peut être amené à devoir déposer une demande de dérogation « espèces protégées », et devra dans ce cas réaliser un inventaire de terrain. Ce point sera évalué par le service instructeur lors de l'examen du dossier.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  {% include 'moulinette/ep/_species_cortege_non_evalue.html' %}
+</div>

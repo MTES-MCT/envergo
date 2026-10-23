@@ -56,29 +56,33 @@ class DepartmentSearchMixin:
             department=OuterRef("pk"),
         ).order_by("-validity_range")
 
-        return self.queryset.annotate(
-            is_config_valid=Exists(valid_config_qs),
-            contacts_info=Coalesce(
-                NullIf(
-                    Subquery(valid_config_qs.values("contacts_info")[:1]), Value("")
-                ),
-                NullIf(
-                    Subquery(other_config_qs.values("contacts_info")[:1]), Value("")
-                ),
-                output_field=TextField(),
-            ),
-            contacts_and_links=Coalesce(
-                NullIf(
-                    Subquery(valid_config_qs.values("contacts_and_links")[:1]),
-                    Value(""),
-                ),
-                NullIf(
-                    Subquery(other_config_qs.values("contacts_and_links")[:1]),
-                    Value(""),
-                ),
-                output_field=TextField(),
-            ),
+        contact_fields = (
+            "contacts_and_links",
+            "guh_structure",
+            "guh_service_name",
+            "guh_email",
+            "guh_phone",
+            "guh_address",
         )
+        annotated_qs = self.queryset.annotate(is_config_valid=Exists(valid_config_qs))
+        for contact_field in contact_fields:
+            annotated_qs = annotated_qs.annotate(
+                **{
+                    contact_field: Coalesce(
+                        NullIf(
+                            Subquery(valid_config_qs.values(contact_field)[:1]),
+                            Value(""),
+                        ),
+                        NullIf(
+                            Subquery(other_config_qs.values(contact_field)[:1]),
+                            Value(""),
+                        ),
+                        output_field=TextField(),
+                    )
+                }
+            )
+
+        return annotated_qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -87,7 +91,7 @@ class DepartmentSearchMixin:
                 "id": d.id,
                 "code": d.department,
                 "label": str(d),
-                "contacts_info": d.contacts_info,
+                "contacts_info": ConfigHaie.build_contact_info(d),
                 "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
                 "settings_form_url": get_department_settings_form_url(d),
@@ -113,9 +117,6 @@ class HomeHaieView(DepartmentSearchMixin, TemplateView):
         )
         context["activated_configs"] = configs
         context["max_department_tiles"] = settings.HOME_MAX_DEPARTMENT_TILES
-        context["is_single_procedure_activated"] = (
-            settings.HAIE_SINGLE_PROCEDURE_ACTIVATED
-        )
         return context
 
 

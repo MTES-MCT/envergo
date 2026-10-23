@@ -3,5 +3,46 @@
 {% block result %}
   {{ block.super }}
 
-  {{ hedge_maintenance_html | safe }}
+  {% if hedge_maintenance_html %}
+    {{ hedge_maintenance_html | safe }}
+  {% else %}
+    <h1>Entretien de haies ou d’alignements d’arbres</h1>
+
+    <div class="fr-alert fr-alert--warning fr-mb-3w">
+      {% if config.prohibition_range %}
+        <p>
+          L’arrachage, l’entretien, la taille et la coupe à blanc de haies sont interdits {{ config.prohibition_range_display }} inclus, car cette période correspond à la nidification des oiseaux.
+        </p>
+      {% else %}
+        <p>
+          Pour les bénéficiaires des aides de la Politique Agricole Commune, la taille des haies et des coupes d’arbres sont interdits du 16 mars au 15 août inclus.
+        </p>
+        <p>
+          Pour les autres cas, le respect de cette période d’interdiction est également recommandé pour l’ensemble des travaux sur haies, car elle correspond à la période de nidification des oiseaux.
+        </p>
+
+      {% endif %}
+    </div>
+
+    <h2>Ressources techniques</h2>
+
+    <p>
+      Le Réseau Haies France (ex Afac-Agroforesteries) a édité un <a href="https://reseauhaies.fr/wp-content/uploads/2023/05/Guide_preco_2024_pages.pdf"
+    target="_blank"
+    rel="noopener">guide sur la gestion durable des haies</a>, valable à l'échelle de l'arbre (cépée, haut jet, têtard…) ou de la haie (futaie, taillis, haie en devenir…).
+    </p>
+
+    <p>
+      L'Office français de la biodiversité met à disposition un <a href="https://ofb.gouv.fr/haies-et-bocages-des-reservoirs-de-biodiversite"
+    target="_blank"
+    rel="noopener">guide de recommandations pour la gestion durable et la valorisation des haies</a>.
+    </p>
+
+    <h2>Contacts</h2>
+
+    <p>Pour toute question concernant un projet d'entretien de haies ou d'alignements d'arbres, vous pouvez contacter :</p>
+
+    <div class="fr-highlight">{{ config.contact_info|safe }}</div>
+
+  {% endif %}
 {% endblock %}

@@ -25,6 +25,7 @@ const fitBoundsOptions = { padding: [10, 10] };
 const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
+const date = document.getElementById('app').dataset.date;
 const defaultLat = document.getElementById('app').dataset.departmentLat || 46.6033540;
 const defaultLng = document.getElementById('app').dataset.departmentLng || 1.8883335;
 
@@ -45,128 +46,43 @@ const latLngsLength = (latLngs) => {
   return length;
 };
 
-// Show the "description de la haie" form modal
+// Hedge displayed by the hedge data dialog.
+const selectedHedge = ref(null);
+// Hedge properties being edited in the dialog.
+const hedgeDraft = reactive({});
+
+const hedgeDefaults = {
+  [PLANTATION_MODE]: JSON.parse(document.getElementById(`${PLANTATION_MODE}-hedge-defaults`).textContent),
+  [REMOVAL_MODE]: JSON.parse(document.getElementById(`${REMOVAL_MODE}-hedge-defaults`).textContent),
+};
+
+const isDialogReadonly = (dialogMode) => mode === READ_ONLY_MODE || dialogMode !== mode;
+
+// Save the dialog form data into the hedge object
+const saveHedgeData = (dialogMode) => {
+  for (const property in hedgeDefaults[dialogMode]) {
+    selectedHedge.value.additionalData[property] = hedgeDraft[property];
+  }
+  dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
+};
+
+// Show the "description de la haie" modal
 const showHedgeModal = (hedge, hedgeType) => {
-
-  const isReadonly = (
-    mode === READ_ONLY_MODE ||
-    (hedgeType === TO_PLANT && mode === REMOVAL_MODE) ||
-    (hedgeType === TO_REMOVE && mode === PLANTATION_MODE)
-  );
   const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
+  const dialog = document.getElementById(`${dialogMode}-hedge-data-dialog`);
 
-  const dialogId = `${dialogMode}-hedge-data-dialog`
-  const dialog = document.getElementById(dialogId);
-  const form = dialog.querySelector("form");
-  const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
-  const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
-  const hedgeBadgeHru = dialog.querySelector(".hedge-badge-hru");
-  const hedgeBadgeL3503 = dialog.querySelector(".hedge-badge-l350-3");
-  const resetForm = () => {
-    form.reset();
-    const inputs = form.querySelectorAll("input");
-    const selects = form.querySelectorAll("select");
-
-    inputs.forEach(input => input.disabled = false);
-    selects.forEach(select => select.disabled = false);
-    const submitButton = form.querySelector("button[type='submit']");
-    submitButton.innerText = "Enregistrer";
-  }
-
-  resetForm();
-
-  // Pre-fill the form with hedge data if it's an edition
-  if (hedge.additionalData) {
-    for (const property in hedge.additionalData) {
-      const field = document.getElementById(`id_${dialogMode}-${property}`);
-      if (field) {
-        if (field.type === "checkbox") {
-          field.checked = hedge.additionalData[property];
-        } else if (field.type === "fieldset") {
-          // radio group
-          for (let i = 0; i < field.elements.length; i++) {
-            let value = field.elements[i].value;
-            if (value === hedge.additionalData[property]) {
-              field.elements[i].checked = true
-            }
-          }
-        } else {
-          field.value = hedge.additionalData[property];
-        }
-      }
+  // Fill the draft with the hedge data, or the default values for a new hedge
+  if (!isDialogReadonly(dialogMode)) {
+    const defaults = hedgeDefaults[dialogMode];
+    for (const property in defaults) {
+      hedgeDraft[property] = hedge.additionalData?.[property] ?? defaults[property];
     }
-  } else {
-    form.reset();
   }
-  hedgeName.textContent = hedge.id;
-  hedgeLength.textContent = hedge.length.toFixed(0);
-  if(hedgeBadgeHru){
-    hedgeBadgeHru.style.display = hedge.category() === 'hru' ? '' : 'none';
-  }
-  if(hedgeBadgeL3503){
-    hedgeBadgeL3503.style.display = hedge.category() === 'l350_3' ? '' : 'none';
-  }
+  selectedHedge.value = hedge;
 
-  // Save form data to the hedge object
-  // This is the form submit event handler
-  const saveModalData = (event) => {
-    event.preventDefault();
-
-    const form = event.target;
-
-    for (const element of form.elements) {
-      if (element instanceof HTMLInputElement ||
-        element instanceof HTMLSelectElement ||
-        element instanceof HTMLTextAreaElement) {
-        // Skip buttons or inputs without a name
-        if (!element.name || element.type === 'submit' || element.type === 'button') continue;
-
-        const propertyName = element.name.split("-")[1]; // remove prefix
-        if (element.type === "checkbox") {
-          hedge.additionalData[propertyName] = element.checked;
-        } else if (element.type === "radio") {
-          if (element.checked) {
-            hedge.additionalData[propertyName] = element.value;
-          }
-        }
-        else {
-          hedge.additionalData[propertyName] = element.value;
-        }
-      }
-    }
-    // Reset the form and hide the modal
-    form.reset();
-    dsfr(dialog).modal.conceal();
-  };
-
-  const closeModal = (event) => {
-    event.preventDefault();
-    // Hide the modal
-    dsfr(dialog).modal.conceal();
-  };
-
-  if (isReadonly) {
-    const inputs = form.querySelectorAll("input");
-    const selects = form.querySelectorAll("select");
-
-    inputs.forEach(input => input.disabled = true);
-    selects.forEach(select => select.disabled = true);
-    const submitButton = form.querySelector("button[type='submit']");
-    submitButton.innerText = "Retour";
-
-    form.addEventListener("submit", closeModal, { once: true });
-  }
-  else {
-    // Save data upon form submission
-    form.addEventListener("submit", saveModalData, { once: true });
-  }
-
-  // If the modal is closed without saving, let's make sure to remove the
-  // event listener.
   dialog.addEventListener("dsfr.conceal", () => {
-    form.removeEventListener("submit", saveModalData);
     hedge.isDrawingCompleted = true;
-  });
+  }, { once: true });
 
   dsfr(dialog).modal.disclose();
 };
@@ -313,6 +229,19 @@ class Hedge {
     const { type_haie } = this.additionalData;
 
     return type_haie !== undefined && type_haie && (!("position" in this.additionalData) || this.additionalData.position);
+  }
+
+  // A property is "set" when it has a truthy value, "unset" when it is present but empty
+  isPropertySet(name) {
+    return Boolean(this.additionalData[name]);
+  }
+
+  isPropertyUnset(name) {
+    return name in this.additionalData && !this.additionalData[name];
+  }
+
+  hasUnsetProperties() {
+    return Object.keys(this.additionalData).some((name) => name !== "type_haie" && this.isPropertyUnset(name));
   }
 
   category() {
@@ -462,6 +391,7 @@ createApp({
   setup() {
     let map = null;
     let tooltip = null;
+    let helpBubbleEl = null;
 
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
@@ -470,6 +400,7 @@ createApp({
 
     const helpBubble = mode !== READ_ONLY_MODE ? ref("initialHelp") : ref(null);
     const hedgeBeingDrawn = ref(null);
+    const isPointerOverMap = ref(false);
 
     // Reactive properties for acceptability conditions
     const conditions = reactive({ status: 'loading', conditions: [] });
@@ -560,7 +491,7 @@ createApp({
       }
     };
 
-    const saveUrl = document.getElementById('app').dataset.saveUrl;
+    const saveUrl = document.getElementById('app').dataset.saveUrl + (date ? `?date=${encodeURIComponent(date)}` : '');
 
     function serializeHedgesData() {
       const hedgesToPlant = hedges[TO_PLANT].toJSON();
@@ -761,6 +692,13 @@ createApp({
       }
     }
 
+    // Attach the help bubble to the cursor, right after the length tooltip
+    const updateHelpBubble = (e) => {
+      const tooltipLeft = e.originalEvent.clientX - 10;
+      helpBubbleEl.style.left = tooltipLeft + tooltip.offsetWidth + 8 + 'px';
+      helpBubbleEl.style.top = e.originalEvent.clientY + 20 + 'px';
+    }
+
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
       const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
@@ -826,12 +764,36 @@ createApp({
         layers: [satelliteLayer, pciLayer]
       });
       tooltip = L.DomUtil.get('tooltip');
+      helpBubbleEl = L.DomUtil.get('help-bubble');
 
       L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
+
+      const setPointerOverMap = (value) => {
+        isPointerOverMap.value = value;
+        // The length tooltip is a plain DOM element (not Vue-bound), so toggle
+        // it here too.
+        if (!value) {
+          tooltip.style.display = 'none';
+        } else if (tooltip.innerHTML !== '') {
+          tooltip.style.display = 'block';
+        }
+      };
+
+      const mapContainer = L.DomUtil.get('map');
+      mapContainer.addEventListener('mouseenter', () => setPointerOverMap(true));
+      mapContainer.addEventListener('mouseleave', () => setPointerOverMap(false));
+
+      // The Leaflet controls sit inside #map, so hovering them does not leave
+      // #map. Treat their container as "not the map" as well.
+      const leafletControls = mapContainer.querySelector('.leaflet-control-container');
+      if (leafletControls) {
+        leafletControls.addEventListener('mouseenter', () => setPointerOverMap(false));
+        leafletControls.addEventListener('mouseleave', () => setPointerOverMap(true));
+      }
 
       // Remove helpBubbleMessage on zoom
       let isSetupDone = false;
@@ -880,6 +842,7 @@ createApp({
       map.on('editable:vertex:dragstart', addTooltip);
       map.on('editable:vertex:dragend', removeTooltip);
       map.on("editable:drawing:move", updateTooltip);
+      map.on("editable:drawing:move", updateHelpBubble);
 
       isSetupDone = true;
     });
@@ -891,9 +854,13 @@ createApp({
       startDrawingToRemove,
       zoomOut,
       helpBubble,
+      isPointerOverMap,
       saveData,
       cancel,
       showHedgeModal,
+      selectedHedge,
+      hedgeDraft,
+      saveHedgeData,
       invalidHedges,
       conditions,
       hedgeBeingDrawn,

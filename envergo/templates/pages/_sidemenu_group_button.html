@@ -1,0 +1,5 @@
+<button class="fr-sidemenu__btn"
+        type="button"
+        aria-controls="{{ controls }}"
+        aria-expanded="{{ is_open|yesno:'true,false' }}"
+        {% if is_open %}aria-current="true"{% endif %}>{{ label }}</button>

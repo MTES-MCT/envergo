@@ -40,9 +40,13 @@
     <p>
       Vous pouvez tout de même choisir de déposer un dossier. Il sera examiné, mais il est probable qu’un refus soit prononcé.
     </p>
-    {% if moulinette.config.aa_l3503_contact_info %}
-      <p>Pour cela :</p>
-      <div>{{ moulinette.config.aa_l3503_contact_info|safe }}</div>
-    {% endif %}
+    <p>Pour cela :</p>
+    <div class="fr-highlight">
+      {% if moulinette.config.aa_l3503_contact_info %}
+        {{ moulinette.config.aa_l3503_contact_info|safe }}
+      {% else %}
+        {{ moulinette.config.contact_info|safe }}
+      {% endif %}
+    </div>
   {% endif %}
 {% endif %}

@@ -1,6 +1,6 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
-{% load static %}
+{% load static utils %}
 
 {% block title %}Instruction du dossier – Services consultés{% endblock %}
 
@@ -16,8 +16,16 @@
 
       <div id="copy-success-message-container"></div>
 
-      <button id="generate-invitation-btn"
-              class="fr-btn fr-btn--icon-left fr-icon-user-add-line fr-mb-4w">Inviter une nouvelle personne</button>
+      <form method="post"
+            action="{% url 'petition_project_invitation_token_create' petition_project.reference %}"
+            id="invitation-form"
+            class="{{ object.category }} fr-mb-3w">
+        {% csrf_token %}
+        {% render_field invitation_form.invitee %}
+        <button type="submit"
+                id="generate-invitation-btn"
+                class="fr-btn fr-btn--icon-left fr-icon-user-add-line">Inviter une nouvelle personne</button>
+      </form>
 
       <p>
         <strong>Liste des personnes ayant accédé au dossier :</strong>
@@ -78,6 +86,5 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>const INVITATION_TOKEN_CREATE_URL = '{{ invitation_token_create_url }}';</script>
   <script defer src="{% static 'js/libs/invitation_token_consultations.js' %}"></script>
 {% endblock %}

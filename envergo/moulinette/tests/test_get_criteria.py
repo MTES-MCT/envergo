@@ -218,7 +218,7 @@ def test_intersection_ru_criterion_excluded_when_only_hru_hedge_intersects_zone(
 # Cross-regulation scope filtering (EP régime unique)
 # ---------------------------------------------------------------------------
 
-EVALUATOR_EP_RU = "envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique"
+EVALUATOR_EP_RU = "envergo.moulinette.regulations.ep.EspecesProtegeesRu"
 
 
 def test_ep_regime_unique_excluded_without_ru_hedges(france_map, ep_regulation):

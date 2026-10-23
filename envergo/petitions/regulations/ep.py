@@ -5,16 +5,38 @@ from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList, HedgeTypeFacto
 from envergo.hedges.regulations import NormandieQualityCondition, RUQualityCondition
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
+    EPMixin,
+    EPRegulation,
     EspecesProtegeesAisne,
     EspecesProtegeesNormandie,
-    EspecesProtegeesRegimeUnique,
+    EspecesProtegeesRu,
     EspecesProtegeesSimple,
 )
-from envergo.moulinette.regulations.utils import (
-    build_ru_hedge_detail_rows,
-    collect_zone_configs,
-)
+from envergo.moulinette.regulations.utils import collect_zone_configs
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
+
+
+@evaluator_instructor_view_context_getter(EPRegulation)
+def ep_regulation_get_instructor_view_context(
+    evaluator, petition_project, moulinette, plantation_evaluation=None
+) -> dict:
+    """Aggregate the species cortege over every EP criterion."""
+    species_by_cd_ref = {}
+    for regulation in moulinette.regulations:
+        for criterion in regulation.criteria.all():
+            if not isinstance(criterion.get_evaluator(), EPMixin):
+                continue
+            for species in criterion.catalog.get("protected_species", []):
+                species_by_cd_ref.setdefault(species.cd_ref, species)
+
+    all_species = list(species_by_cd_ref.values())
+    return {
+        "protected_species": all_species,
+        # Only the régime unique pipeline annotates a level of concern.
+        "has_sensitive_species": any(
+            getattr(s, "local_level_of_concern", None) == "majeur" for s in all_species
+        ),
+    }
 
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesNormandie)
@@ -82,7 +104,7 @@ def ep_base_get_instructor_view_context(
     }
 
 
-@evaluator_instructor_view_context_getter(EspecesProtegeesRegimeUnique)
+@evaluator_instructor_view_context_getter(EspecesProtegeesRu)
 def ep_regime_unique_get_instructor_view_context(
     evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:
@@ -91,15 +113,10 @@ def ep_regime_unique_get_instructor_view_context(
         evaluator, petition_project, moulinette
     )
 
-    is_regime_unique = moulinette.config.single_procedure
-    ep_ru_aa_only = moulinette.catalog.get("ep_ru_aa_only", True)
-    context["show_ep_ru_params"] = is_regime_unique and not ep_ru_aa_only
+    context["show_ep_ru_params"] = True
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
 
-    # Per-hedge rows with zone info and coefficients
-    context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
-        moulinette.catalog, evaluator
-    )
+    context["hedge_detail_rows"] = evaluator.get_hedge_detail_rows()
 
     # Zone configs for the coefficient matrix accordion
     context["ru_zone_configs"] = collect_zone_configs(

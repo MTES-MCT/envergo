@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 // "J'ai compris" checkbox and swaps its message when the motif changes.
 test('The éviter / réduire block gates the simulation submission', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Simuler un projet' }).click();
+    await page.getByRole('link', { name: 'Déposer un dossier' }).click();
     await page.getByRole('link', { name: 'Loire-Atlantique (44)' }).click();
     await page.getByText('Haies ou alignements d’arbres').click();
     await page.getByText('Toute intervention supprimant définitivement la végétation').click();
@@ -27,7 +27,7 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     await frame.locator('#map').click({ position: { x: 300, y: 215 } });
     await frame.locator('#map').dblclick({ position: { x: 310, y: 215 } });
     await frame.getByRole('dialog', { name: 'Description de la haie D1' }).getByText('Haie mixte').check();
-    await frame.getByLabel('Description de la haie D1').getByRole('button', { name: 'Enregistrer' }).click();
+    await frame.getByRole('dialog', { name: 'Description de la haie D1' }).getByRole('button', { name: 'Enregistrer' }).click();
     await frame.locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
     // First submission: the block appears, unchecked, without error

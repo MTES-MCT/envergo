@@ -20,6 +20,8 @@ from envergo.petitions.models import (
     Simulation,
     StatusLog,
 )
+from envergo.petitions.templatetags.petitions import format_ds_number
+from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
 from envergo.utils.validators import validate_mime
@@ -50,21 +52,6 @@ class PetitionProjectForm(forms.ModelForm):
             "moulinette_url",
             "_category",
         ]
-
-
-class PetitionProjectInstructorEspecesProtegeesForm(forms.ModelForm):
-    """Form for adding instructor fields to a petition project."""
-
-    class Meta:
-        model = PetitionProject
-        fields = [
-            "onagre_number",
-        ]
-        widgets = {
-            "onagre_number": forms.TextInput(
-                attrs={"placeholder": "AAAA-MM-XXX-NNNNN"}
-            ),
-        }
 
 
 class PetitionProjectInstructorNotesForm(forms.ModelForm):
@@ -566,13 +553,15 @@ class SimulationForm(forms.ModelForm):
         model = Simulation
         fields = ["moulinette_url", "source", "comment"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, project_reference=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.project_reference = project_reference
         # Store the underlying moulinette form errors
         self.moulinette_errors = []
 
     def clean_moulinette_url(self):
         url = self.cleaned_data["moulinette_url"]
+        url = resolve_consultation_url(url)
 
         # Reject a url that is not a valid simulation. The underlying errors are
         # exposed so the template can list them below the field.
@@ -593,4 +582,75 @@ class SimulationForm(forms.ModelForm):
                 code="invalid_moulinette",
             )
 
+        url_project_reference = moulinette_url.querydict.get("project_reference")
+        if (
+            url_project_reference
+            and self.project_reference
+            and url_project_reference != self.project_reference
+        ):
+            other_project = (
+                PetitionProject.objects.filter(reference=url_project_reference)
+                .only("demarche_numerique_dossier_number")
+                .first()
+            )
+            dossier_number = (
+                format_ds_number(other_project.demarche_numerique_dossier_number)
+                if other_project and other_project.demarche_numerique_dossier_number
+                else url_project_reference
+            )
+            raise ValidationError(
+                "Cette url de simulation correspond à un autre dossier "
+                f"(Dossier n° {dossier_number}) que celui sur lequel vous ajoutez "
+                "une simulation alternative.",
+                code="mismatched_project_reference",
+            )
+
         return moulinette_url.url
+
+
+INVITEE_CHOICES = (
+    (
+        "service",
+        {
+            "label": "Un service en charge de l'urbanisme (mairie, collectivité…)",
+            "help_text": mark_safe(
+                '<span class="fr-message fr-message--warning fr-mt-0">'
+                "Pour ces services, <strong>le silence vaut refus</strong>. "
+                "La mention sera ajoutée au message."
+                "</span>"
+            ),
+        },
+    ),
+    (
+        "other",
+        {
+            "label": "Une autre personne ou un autre service",
+            "help_text": "Pour les autres destinataires, le silence vaut accord.",
+        },
+    ),
+)
+
+
+class BaseInvitationForm(forms.Form):
+    """Pick the invitee profile, which shapes the invitation message."""
+
+    invitee = forms.ChoiceField(
+        label="Qui invitez-vous ?",
+        choices=INVITEE_CHOICES,
+        widget=forms.RadioSelect,
+    )
+
+
+class RuInvitationForm(BaseInvitationForm):
+    pass
+
+
+class HruInvitationForm(BaseInvitationForm):
+    """For HRU dossiers, there is no invitee choice."""
+
+    invitee = forms.ChoiceField(
+        label="Qui invitez-vous ?",
+        choices=(("other", "other"),),
+        widget=forms.HiddenInput,
+        initial="other",
+    )
