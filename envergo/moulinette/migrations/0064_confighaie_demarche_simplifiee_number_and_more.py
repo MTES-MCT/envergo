@@ -574,7 +574,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("is_activated", False),
                     ("demarche_simplifiee_number__isnull", False),
                     _connector="OR",

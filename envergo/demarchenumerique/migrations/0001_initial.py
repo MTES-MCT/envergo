@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="demarcheconfig",
             constraint=models.CheckConstraint(
-                check=models.Q(("display_fields__project_url__isnull", False)),
+                condition=models.Q(("display_fields__project_url__isnull", False)),
                 name="project_url_id_required",
             ),
         ),
