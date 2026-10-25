@@ -55,13 +55,13 @@ def get_moulinette_class_from_site(site):
     """Return the correct Moulinette class depending on the current site."""
     from envergo.moulinette.models import MoulinetteAmenagement, MoulinetteHaie
 
-    domain_class = {
+    class_by_domain = {
         settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
         settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
     }
-    cls = domain_class.get(site.domain, None)
+    cls = class_by_domain.get(site.domain, None)
     if cls is None:
-        raise RuntimeError(f"Unknown site for domain {site.domain}")
+        raise RuntimeError(f"Unknown moulinette for domain {site.domain}")
     return cls
 
 

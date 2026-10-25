@@ -2,7 +2,10 @@
   <div class="fr-header__tools-links">
     <ul class="fr-btns-group">
       <li>
-        <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+        <form action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button class="fr-btn fr-fi-lock-line" type="submit">Se déconnecter</button>
+        </form>
       </li>
     </ul>
   </div>

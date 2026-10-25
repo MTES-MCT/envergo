@@ -28,7 +28,6 @@ class Command(BaseCommand):
     help = "Post a message when a an evalreq, that has already been converted into an evaluation, has a new file."
 
     def handle(self, *args, **options):
-
         # We want to notify admins every time a Request has a new file.
         # But we don't want to spam a message for each and every file.
         # Hence, we wait for an hour, then we send a single message for each Request that has new files.
