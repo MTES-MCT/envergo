@@ -460,7 +460,7 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
         request = form.save()
         self.reset_data()
-        return HttpResponseRedirect(request.upload_files_url)
+        return HttpResponseRedirect(request.secret_upload_files_url)
 
     def request_form_invalid(self, form):
         return HttpResponseRedirect(reverse("request_eval_wizard_reset"))

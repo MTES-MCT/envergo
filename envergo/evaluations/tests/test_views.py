@@ -284,7 +284,7 @@ def test_eval_wizard_all_steps(
     assert res.status_code == 404
     assert "Le lien de cette page a expiré." in res.content.decode()
 
-    url = evalreq.upload_files_url
+    url = evalreq.secret_upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert res.status_code == 302
@@ -330,7 +330,7 @@ def test_eval_wizard_request_confirmation_recipient(
     assert res.status_code == 302
 
     evalreq = qs[0]
-    url = evalreq.upload_files_url
+    url = evalreq.secret_upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert res.status_code == 302
@@ -375,7 +375,7 @@ def test_eval_is_only_submitted_once(
     assert res.status_code == 302
 
     evalreq = qs[0]
-    url = evalreq.upload_files_url
+    url = evalreq.secret_upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert len(callbacks) == 2  # first time both on_commit are called
@@ -429,7 +429,7 @@ def test_eval_wizard_all_steps_with_test_email(
     evalreq = qs[0]
     assert evalreq.submitted is False
 
-    url = evalreq.upload_files_url
+    url = evalreq.secret_upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert res.status_code == 302
@@ -477,7 +477,7 @@ def test_confirmation_email_override(
     qs = Request.objects.all()
     evalreq = qs[0]
 
-    url = evalreq.upload_files_url
+    url = evalreq.secret_upload_files_url
     with django_capture_on_commit_callbacks(execute=True):
         res = client.post(url, data=data)
 
@@ -514,14 +514,14 @@ def upload_api_url(evalreq):
 
 def open_emailed_link(client, evalreq):
     """Open the emailed step 3 link, which leaves its key in the session."""
-    client.get(evalreq.upload_files_url, follow=True)
+    client.get(evalreq.secret_upload_files_url, follow=True)
 
 
 def test_step_3_moves_key_from_url_to_session(client):
     """The emailed link redirects to a url free of the secret key."""
     evalreq = RequestFactory()
 
-    res = client.get(f"{evalreq.upload_files_url}&mtm_campaign=email")
+    res = client.get(f"{evalreq.secret_upload_files_url}&mtm_campaign=email")
 
     assert res.status_code == 302
     assert res.url == f"{step_3_url(evalreq)}?mtm_campaign=email"
@@ -566,7 +566,7 @@ def test_step_3_with_extra_empty_key(client):
     """An extra empty key neither keeps the url key nor blocks the exchange."""
     evalreq = RequestFactory()
 
-    res = client.get(f"{evalreq.upload_files_url}&clef=", follow=True)
+    res = client.get(f"{evalreq.secret_upload_files_url}&clef=", follow=True)
 
     assert res.redirect_chain == [(step_3_url(evalreq), 302)]
     assert res.status_code == 200

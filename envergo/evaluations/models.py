@@ -815,8 +815,11 @@ class Request(models.Model):
         return evaluation
 
     @property
-    def upload_files_url(self):
-        """return the obfuscated url to the upload files UI"""
+    def secret_upload_files_url(self):
+        """Return the step 3 url, which grants write access to the request's files.
+
+        Send it to the requester only.
+        """
         url = reverse("request_eval_wizard_step_3", args=[self.reference])
         return f"{url}?{urlencode({OBFUSCATION_KEY_PARAM: self.obfuscation_key})}"
 

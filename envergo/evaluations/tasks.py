@@ -53,7 +53,7 @@ def confirm_request_to_requester(request_id, host):
     user_emails = request.get_requester_emails()
     faq_url = reverse("faq")
     contact_url = reverse("contact_us")
-    file_upload_url = request.upload_files_url
+    file_upload_url = request.secret_upload_files_url
     context = {
         "application_number": request.application_number,
         "delay_mention": delay_mention,
