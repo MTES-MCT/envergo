@@ -671,9 +671,6 @@ def additional_data_file_format(instance, filename):
 # Links already sent by email carry this query parameter. Renaming it breaks them.
 OBFUSCATION_KEY_PARAM = "clef"
 
-# The secret keys this browser presented, as strings.
-OBFUSCATION_KEYS_SESSION_KEY = "REQUEST_OBFUSCATION_KEYS"
-
 
 class Request(models.Model):
     """An evaluation request by a project owner."""

@@ -1,4 +1,5 @@
 import logging
+import uuid
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -37,7 +38,7 @@ from envergo.evaluations.forms import (
     WizardFilesForm,
 )
 from envergo.evaluations.models import (
-    OBFUSCATION_KEYS_SESSION_KEY,
+    OBFUSCATION_KEY_PARAM,
     Evaluation,
     EvaluationVersion,
     Request,
@@ -287,6 +288,9 @@ class Dashboard(LoginRequiredMixin, TemplateView):
 DATA_KEY = "REQUEST_WIZARD_DATA"
 FILES_FIELD = "additional_files"
 
+# The secret keys this browser presented, as strings.
+OBFUSCATION_KEYS_SESSION_KEY = "REQUEST_OBFUSCATION_KEYS"
+
 
 class WizardStepMixin:
     """Common code for a form split into several steps.
@@ -363,8 +367,44 @@ class WizardStepMixin:
 class WizardStep3Mixin:
     """Restrict step 3 to the browsers holding the request's secret key.
 
-    `MoveObfuscationKeyToSession` stores the keys a browser presented.
+    The emailed link carries the key in its url. The key moves into the session,
+    so rendered pages never expose it to scripts or referrers.
     """
+
+    def dispatch(self, request, *args, **kwargs):
+        has_key = OBFUSCATION_KEY_PARAM in request.GET
+        for raw_key in request.GET.getlist(OBFUSCATION_KEY_PARAM):
+            self.remember_key(raw_key)
+
+        # A redirect would lose a POST body, so only GET requests are cleaned.
+        if has_key and request.method == "GET":
+            response = HttpResponseRedirect(self.url_without_key())
+        else:
+            response = super().dispatch(request, *args, **kwargs)
+        return response
+
+    def remember_key(self, raw_key):
+        """Store a well-formed key in the session. Ignore anything else."""
+        try:
+            key = str(uuid.UUID(raw_key))
+        except ValueError:
+            return
+
+        # Assign a new list: mutating it in place does not mark the session modified.
+        keys = self.request.session.get(OBFUSCATION_KEYS_SESSION_KEY, [])
+        if key not in keys:
+            self.request.session[OBFUSCATION_KEYS_SESSION_KEY] = keys + [key]
+
+    def url_without_key(self):
+        query = self.request.GET.copy()
+        del query[OBFUSCATION_KEY_PARAM]
+
+        # Rebuilt from the route, never from the requested path.
+        view_name = self.request.resolver_match.view_name
+        url = reverse(view_name, kwargs=self.kwargs)
+        if query:
+            url = f"{url}?{query.urlencode()}"
+        return url
 
     def get_queryset(self):
         keys = self.request.session.get(OBFUSCATION_KEYS_SESSION_KEY, [])

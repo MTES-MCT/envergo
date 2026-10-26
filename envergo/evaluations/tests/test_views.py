@@ -563,7 +563,7 @@ def test_step_3_with_malformed_key(client):
 
 
 def test_step_3_with_extra_empty_key(client):
-    """An extra empty key neither keeps the url key nor blocks the exchange."""
+    """An extra empty key is removed too, and the valid key still grants access."""
     evalreq = RequestFactory()
 
     res = client.get(f"{evalreq.secret_upload_files_url}&clef=", follow=True)
@@ -572,13 +572,16 @@ def test_step_3_with_extra_empty_key(client):
     assert res.status_code == 200
 
 
-@pytest.mark.parametrize("path", ["//evil.com/", "///evil.com/"])
-def test_key_exchange_redirect_stays_on_site(client, path):
-    """A crafted path cannot turn the exchange into an open redirect."""
-    res = client.get("/", {"clef": uuid.uuid4()}, PATH_INFO=path)
+def test_upload_api_upload_with_key_in_url(client):
+    """A POST keeps its key in the url and is not redirected."""
+    evalreq = RequestFactory()
 
-    assert res.status_code == 302
-    assert not res.url.startswith("//")
+    url = f"{upload_api_url(evalreq)}?clef={evalreq.obfuscation_key}"
+    pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
+    res = client.post(url, {"additional_files": pdf})
+
+    assert res.status_code == 200
+    assert evalreq.additional_files.count() == 1
 
 
 def test_step_3_keys_of_several_requests(client):

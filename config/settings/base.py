@@ -152,7 +152,6 @@ MIDDLEWARE = [
     "envergo.analytics.middleware.SetVisitorIdCookie",
     "envergo.analytics.middleware.HandleMtmValues",
     "envergo.petitions.middleware.HandleInvitationTokenMiddleware",
-    "envergo.evaluations.middleware.MoveObfuscationKeyToSession",
 ]
 
 # STATIC
