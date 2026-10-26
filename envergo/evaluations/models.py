@@ -671,6 +671,10 @@ def additional_data_file_format(instance, filename):
     return f"requests/{instance.reference}{extension}"
 
 
+# Links already sent by email carry this query parameter. Renaming it breaks them.
+OBFUSCATION_KEY_PARAM = "clef"
+
+
 class Request(models.Model):
     """An evaluation request by a project owner."""
 
@@ -811,16 +815,13 @@ class Request(models.Model):
         return evaluation
 
     @property
-    def upload_files_url(self):
-        """return the obfuscated url to the upload files UI"""
-        url = reverse("request_eval_wizard_step_3", args=[self.reference])
-        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+    def secret_upload_files_url(self):
+        """Return the step 3 url, which grants write access to the request's files.
 
-    @property
-    def upload_files_api_url(self):
-        """return the obfuscated url to the upload files API"""
-        url = reverse("request_eval_wizard_step_3_upload", args=[self.reference])
-        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+        Send it to the requester only.
+        """
+        url = reverse("request_eval_wizard_step_3", args=[self.reference])
+        return f"{url}?{urlencode({OBFUSCATION_KEY_PARAM: self.obfuscation_key})}"
 
 
 def request_file_format(instance, filename):
