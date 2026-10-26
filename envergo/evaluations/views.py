@@ -15,7 +15,6 @@ from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils.datastructures import MultiValueDict
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     DetailView,
     FormView,
@@ -569,7 +568,6 @@ class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
         return context
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class RequestEvalWizardStep3Upload(WizardStep3Mixin, WizardStepMixin, UpdateView):
     """Handle ajax file uploads and deletions."""
 

@@ -4,7 +4,9 @@ from unittest.mock import PropertyMock, patch
 
 import pytest
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.utils import IntegrityError
+from django.test import Client
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 
@@ -14,6 +16,7 @@ from envergo.evaluations.models import Request
 from envergo.evaluations.tests.factories import (
     EvaluationFactory,
     RequestFactory,
+    RequestFileFactory,
     VersionFactory,
 )
 from envergo.moulinette.tests.factories import (
@@ -498,6 +501,48 @@ def test_request_success_does_not_reveal_key(client):
 
     assert res.status_code == 200
     assert str(evalreq.obfuscation_key) not in res.content.decode()
+
+
+@pytest.fixture
+def csrf_client():
+    return Client(enforce_csrf_checks=True)
+
+
+def test_upload_api_rejects_upload_without_csrf_token(csrf_client):
+    """Another website cannot upload files through the requester's browser."""
+    evalreq = RequestFactory()
+
+    pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
+    res = csrf_client.post(evalreq.upload_files_api_url, {"additional_files": pdf})
+
+    assert res.status_code == 403
+    assert evalreq.additional_files.count() == 0
+
+
+def test_upload_api_accepts_upload_with_csrf_token(csrf_client):
+    """Uploads from the step 3 page carry the form's CSRF token."""
+    evalreq = RequestFactory()
+    csrf_client.get(evalreq.upload_files_url)
+    token = csrf_client.cookies["csrftoken"].value
+
+    pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
+    data = {"additional_files": pdf, "csrfmiddlewaretoken": token}
+    res = csrf_client.post(evalreq.upload_files_api_url, data)
+
+    assert res.status_code == 200
+    assert evalreq.additional_files.count() == 1
+
+
+def test_upload_api_rejects_deletion_without_csrf_token(csrf_client):
+    """Another website cannot delete files through the requester's browser."""
+    file = RequestFileFactory()
+    evalreq = file.request
+
+    url = f"{evalreq.upload_files_api_url}&file_id={file.id}"
+    res = csrf_client.delete(url)
+
+    assert res.status_code == 403
+    assert evalreq.additional_files.count() == 1
 
 
 def test_dashboard_displays_empty_messages(user, client):
