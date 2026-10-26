@@ -126,7 +126,9 @@ def post_evalreq_to_automation(request_id, host):
     files = request.additional_files.all()
     extra_data["files"] = [f.file.storage.s3_url(f.file.name) for f in files]
 
-    post_a_model_to_automation(request, webhook_url, **extra_data)
+    post_a_model_to_automation(
+        request, webhook_url, excluded_fields=["obfuscation_key"], **extra_data
+    )
 
 
 @app.task
@@ -179,8 +181,10 @@ def post_evaluation_to_automation(evaluation_uid):
     post_a_model_to_automation(evaluation, webhook_url, **extra_data)
 
 
-def post_a_model_to_automation(model, webhook_url, **extra_data):
+def post_a_model_to_automation(model, webhook_url, excluded_fields=(), **extra_data):
     """Serialize a model and POST it to a make.com webhook.
+
+    `excluded_fields` never leave the server, not even in the logs.
 
     Errors (timeout, connection error, non-2xx status) are raised, not
     swallowed, so the calling task retries instead of silently dropping the
@@ -189,6 +193,8 @@ def post_a_model_to_automation(model, webhook_url, **extra_data):
     serialized = BetterJsonSerializer().serialize([model])
     json_data = json.loads(serialized)[0]
     payload = json_data["fields"]
+    for field in excluded_fields:
+        del payload[field]
     payload["pk"] = json_data["pk"]
     payload.update(extra_data)
 
