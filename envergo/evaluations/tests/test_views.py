@@ -489,6 +489,17 @@ def test_confirmation_email_override(
     )
 
 
+def test_request_success_does_not_reveal_key(client):
+    """The public reference alone does not reveal the key."""
+    evalreq = RequestFactory()
+
+    url = reverse("request_success", args=[evalreq.reference])
+    res = client.get(url)
+
+    assert res.status_code == 200
+    assert str(evalreq.obfuscation_key) not in res.content.decode()
+
+
 def test_dashboard_displays_empty_messages(user, client):
     dashboard_url = reverse("dashboard")
     client.force_login(user)
