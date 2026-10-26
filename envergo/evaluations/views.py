@@ -1,5 +1,4 @@
 import logging
-import uuid
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -38,6 +37,7 @@ from envergo.evaluations.forms import (
     WizardFilesForm,
 )
 from envergo.evaluations.models import (
+    OBFUSCATION_KEYS_SESSION_KEY,
     Evaluation,
     EvaluationVersion,
     Request,
@@ -361,22 +361,14 @@ class WizardStepMixin:
 
 
 class WizardStep3Mixin:
-    """Mixin for step 3 of the request evaluation wizard.
+    """Restrict step 3 to the browsers holding the request's secret key.
 
-    This step handles file uploads and deletions via ajax.
+    `MoveObfuscationKeyToSession` stores the keys a browser presented.
     """
 
     def get_queryset(self):
-        raw_key = self.request.GET.get("clef")
-        if not raw_key:
-            return Request.objects.none()
-
-        try:
-            key = uuid.UUID(raw_key)
-        except ValueError:
-            return Request.objects.none()
-
-        return super().get_queryset().filter(obfuscation_key=key)
+        keys = self.request.session.get(OBFUSCATION_KEYS_SESSION_KEY, [])
+        return super().get_queryset().filter(obfuscation_key__in=keys)
 
 
 class RequestEvalWizardHome(TemplateView):

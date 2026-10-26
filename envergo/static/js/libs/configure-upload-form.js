@@ -100,7 +100,7 @@ window.addEventListener('load', function () {
 
         if (file.id) {
           // Remove the file from the server
-          fetch(`${DROPZONE_UPLOAD_URL}&file_id=${file.id}`, {
+          fetch(`${DROPZONE_UPLOAD_URL}?file_id=${file.id}`, {
             method: 'DELETE',
             headers: { 'X-CSRFToken': CSRF_TOKEN },
           })

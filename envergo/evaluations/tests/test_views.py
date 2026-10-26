@@ -1,3 +1,4 @@
+import uuid
 from collections import defaultdict
 from datetime import datetime
 from unittest.mock import PropertyMock, patch
@@ -503,6 +504,141 @@ def test_request_success_does_not_reveal_key(client):
     assert str(evalreq.obfuscation_key) not in res.content.decode()
 
 
+def step_3_url(evalreq):
+    return reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+
+
+def upload_api_url(evalreq):
+    return reverse("request_eval_wizard_step_3_upload", args=[evalreq.reference])
+
+
+def open_emailed_link(client, evalreq):
+    """Open the emailed step 3 link, which leaves its key in the session."""
+    client.get(evalreq.upload_files_url, follow=True)
+
+
+def test_step_3_moves_key_from_url_to_session(client):
+    """The emailed link redirects to a url free of the secret key."""
+    evalreq = RequestFactory()
+
+    res = client.get(f"{evalreq.upload_files_url}&mtm_campaign=email")
+
+    assert res.status_code == 302
+    assert res.url == f"{step_3_url(evalreq)}?mtm_campaign=email"
+
+    res = client.get(step_3_url(evalreq))
+
+    assert res.status_code == 200
+    assert str(evalreq.obfuscation_key) not in res.content.decode()
+
+
+def test_step_3_without_key_in_session(client):
+    """The clean url alone does not grant access."""
+    evalreq = RequestFactory()
+
+    res = client.get(step_3_url(evalreq))
+
+    assert res.status_code == 404
+    assert "Le lien de cette page a expiré." in res.content.decode()
+
+
+def test_step_3_with_wrong_key(client):
+    """A wrong key leads to the expired link page after the redirect."""
+    evalreq = RequestFactory()
+
+    res = client.get(f"{step_3_url(evalreq)}?clef={uuid.uuid4()}", follow=True)
+
+    assert res.status_code == 404
+    assert "Le lien de cette page a expiré." in res.content.decode()
+
+
+def test_step_3_with_malformed_key(client):
+    """A malformed key is dropped from the url and grants nothing."""
+    evalreq = RequestFactory()
+
+    res = client.get(f"{step_3_url(evalreq)}?clef=notauuid", follow=True)
+
+    assert res.redirect_chain == [(step_3_url(evalreq), 302)]
+    assert res.status_code == 404
+
+
+def test_step_3_with_extra_empty_key(client):
+    """An extra empty key neither keeps the url key nor blocks the exchange."""
+    evalreq = RequestFactory()
+
+    res = client.get(f"{evalreq.upload_files_url}&clef=", follow=True)
+
+    assert res.redirect_chain == [(step_3_url(evalreq), 302)]
+    assert res.status_code == 200
+
+
+@pytest.mark.parametrize("path", ["//evil.com/", "///evil.com/"])
+def test_key_exchange_redirect_stays_on_site(client, path):
+    """A crafted path cannot turn the exchange into an open redirect."""
+    res = client.get("/", {"clef": uuid.uuid4()}, PATH_INFO=path)
+
+    assert res.status_code == 302
+    assert not res.url.startswith("//")
+
+
+def test_step_3_keys_of_several_requests(client):
+    """One browser can manage several requests."""
+    evalreq_1 = RequestFactory()
+    evalreq_2 = RequestFactory()
+
+    open_emailed_link(client, evalreq_1)
+    open_emailed_link(client, evalreq_2)
+
+    assert client.get(step_3_url(evalreq_1)).status_code == 200
+    assert client.get(step_3_url(evalreq_2)).status_code == 200
+
+
+def test_upload_api_upload_with_key_in_session(client):
+    """Uploads work once the emailed link was opened."""
+    evalreq = RequestFactory()
+    open_emailed_link(client, evalreq)
+
+    pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
+    res = client.post(upload_api_url(evalreq), {"additional_files": pdf})
+
+    assert res.status_code == 200
+    assert evalreq.additional_files.count() == 1
+
+
+def test_upload_api_deletion_with_key_in_session(client):
+    """Deletions work once the emailed link was opened."""
+    file = RequestFileFactory()
+    evalreq = file.request
+    open_emailed_link(client, evalreq)
+
+    res = client.delete(f"{upload_api_url(evalreq)}?file_id={file.id}")
+
+    assert res.status_code == 200
+    assert evalreq.additional_files.count() == 0
+
+
+def test_upload_api_upload_without_key_in_session(client):
+    """The upload api refuses uploads from a browser without the key."""
+    evalreq = RequestFactory()
+
+    pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
+    res = client.post(upload_api_url(evalreq), {"additional_files": pdf})
+
+    assert res.status_code == 404
+    assert evalreq.additional_files.count() == 0
+
+
+def test_upload_api_deletion_without_key_in_session(client):
+    """The upload api refuses deletions from a browser without the key."""
+    file = RequestFileFactory()
+    evalreq = file.request
+
+    res = client.delete(f"{upload_api_url(evalreq)}?file_id={file.id}")
+
+    assert res.status_code == 404
+    assert evalreq.additional_files.count() == 1
+
+
 @pytest.fixture
 def csrf_client():
     return Client(enforce_csrf_checks=True)
@@ -511,9 +647,10 @@ def csrf_client():
 def test_upload_api_rejects_upload_without_csrf_token(csrf_client):
     """Another website cannot upload files through the requester's browser."""
     evalreq = RequestFactory()
+    open_emailed_link(csrf_client, evalreq)
 
     pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
-    res = csrf_client.post(evalreq.upload_files_api_url, {"additional_files": pdf})
+    res = csrf_client.post(upload_api_url(evalreq), {"additional_files": pdf})
 
     assert res.status_code == 403
     assert evalreq.additional_files.count() == 0
@@ -522,12 +659,12 @@ def test_upload_api_rejects_upload_without_csrf_token(csrf_client):
 def test_upload_api_accepts_upload_with_csrf_token(csrf_client):
     """Uploads from the step 3 page carry the form's CSRF token."""
     evalreq = RequestFactory()
-    csrf_client.get(evalreq.upload_files_url)
+    open_emailed_link(csrf_client, evalreq)
     token = csrf_client.cookies["csrftoken"].value
 
     pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
     data = {"additional_files": pdf, "csrfmiddlewaretoken": token}
-    res = csrf_client.post(evalreq.upload_files_api_url, data)
+    res = csrf_client.post(upload_api_url(evalreq), data)
 
     assert res.status_code == 200
     assert evalreq.additional_files.count() == 1
@@ -537,9 +674,9 @@ def test_upload_api_rejects_deletion_without_csrf_token(csrf_client):
     """Another website cannot delete files through the requester's browser."""
     file = RequestFileFactory()
     evalreq = file.request
+    open_emailed_link(csrf_client, evalreq)
 
-    url = f"{evalreq.upload_files_api_url}&file_id={file.id}"
-    res = csrf_client.delete(url)
+    res = csrf_client.delete(f"{upload_api_url(evalreq)}?file_id={file.id}")
 
     assert res.status_code == 403
     assert evalreq.additional_files.count() == 1
