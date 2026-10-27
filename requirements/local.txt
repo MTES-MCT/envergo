@@ -473,7 +473,7 @@ tzdata==2025.2
     #   -r base.txt
     #   faker
     #   kombu
-urllib3==2.6.3
+urllib3==2.8.0
     # via
     #   -r base.txt
     #   botocore
