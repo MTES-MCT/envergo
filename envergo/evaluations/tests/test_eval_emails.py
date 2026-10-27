@@ -2,8 +2,9 @@ from unittest.mock import MagicMock, Mock
 from urllib.parse import urlencode
 
 import pytest
+from django.template.loader import render_to_string
 
-from envergo.evaluations.models import USER_TYPES
+from envergo.evaluations.models import USER_TYPES, build_regulatory_notice_context
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.moulinette.regulations import RequiredAction, Stake
 from envergo.moulinette.tests.factories import (
@@ -61,7 +62,14 @@ def moulinette_url(footprint):
 
 
 def fake_moulinette(
-    url, lse, n2000, evalenv, sage, sage_results_by_perimeter=None, **eval_kwargs
+    url,
+    lse,
+    n2000,
+    evalenv,
+    sage,
+    sage_results_by_perimeter=None,
+    lse_has_icpe=False,
+    **eval_kwargs,
 ):
     """Create a moulinette with custom regulation results."""
 
@@ -86,6 +94,7 @@ def fake_moulinette(
             slug="loi_sur_leau",
             is_cas_par_cas=False,
             do_not_call_in_templates=True,
+            get_evaluator=Mock(return_value=Mock(has_icpe=lse_has_icpe)),
         ),
         Mock(
             wraps=regulation,
@@ -411,6 +420,45 @@ def test_lse_soumis_ou_pac_content(rf, moulinette_url):
     assert "Le projet est soumis à examen au cas par cas" not in body
     assert "Le projet est soumis à évaluation environnementale" not in body
     assert "ddtm_email_test@example.org" in email.bcc
+
+
+LSE_DEPOT_DOSSIER = "doit déposer un dossier de déclaration Loi sur l'eau"
+LSE_INTEGREE_ICPE = (
+    "L'instruction au titre de la Loi sur l'eau est intégrée à celle du dossier ICPE."
+)
+
+
+@pytest.mark.parametrize("footprint", [1200])
+@pytest.mark.parametrize("lse_result", ["soumis", "soumis_ou_pac"])
+@pytest.mark.parametrize(
+    "lse_has_icpe, expected, unexpected",
+    [
+        (False, LSE_DEPOT_DOSSIER, LSE_INTEGREE_ICPE),
+        (True, LSE_INTEGREE_ICPE, LSE_DEPOT_DOSSIER),
+    ],
+)
+def test_lse_soumis_icpe_wording(
+    rf, moulinette_url, lse_result, lse_has_icpe, expected, unexpected
+):
+    """An ICPE project files no separate Loi sur l'eau dossier."""
+    eval, moulinette = fake_moulinette(
+        moulinette_url,
+        lse_result,
+        "non_soumis",
+        "non_soumis",
+        "non_soumis",
+        lse_has_icpe=lse_has_icpe,
+    )
+    req = rf.get("/")
+
+    email = eval.get_evaluation_email().get_email(req)
+    html_body = email.alternatives[0][0]
+    pdf_context = build_regulatory_notice_context(eval, moulinette, req)
+    pdf_body = render_to_string("evaluations/admin/generate_pdf.html", pdf_context)
+
+    for body in (email.body, html_body, pdf_body):
+        assert expected in body
+        assert unexpected not in body
 
 
 @pytest.mark.parametrize("footprint", [1200])
