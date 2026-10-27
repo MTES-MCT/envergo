@@ -330,13 +330,12 @@ class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         return data
 
     def get_result_data(self):
-        if (
-            self.catalog["final_surface"] >= 10000
-            and self.catalog["existing_surface"] >= 10000
-        ):
-            final_surface = "gte_1ha_new"
-        if self.catalog["final_surface"] >= 10000:
+        # An existing surface above the threshold should already have its own
+        # Loi sur l'eau file, so the project may only need a porter à connaissance.
+        if self.catalog["existing_surface"] >= 10000:
             final_surface = "gte_1ha"
+        elif self.catalog["final_surface"] >= 10000:
+            final_surface = "gte_1ha_new"
         elif self.catalog["final_surface"] >= 9000:
             final_surface = "gte_9000"
         elif self.catalog["final_surface"] >= 8000:
