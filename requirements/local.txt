@@ -288,7 +288,6 @@ packaging==25.0
     #   build
     #   kombu
     #   pytest
-    #   pytest-sugar
 parso==0.8.4
     # via jedi
 pathspec==0.12.1
@@ -369,7 +368,7 @@ pytest==8.4.1
     #   pytest-sugar
 pytest-django==4.11.1
     # via -r local.in
-pytest-sugar==1.0.0
+pytest-sugar==1.1.1
     # via -r local.in
 python-dateutil==2.9.0.post0
     # via
