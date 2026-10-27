@@ -528,12 +528,8 @@ class TestICPEFormValidation:
         assertTemplateUsed(res, "amenagement/moulinette/result.html")
 
 
-# ---------------------------------------------------------------------------
-# Photovoltaïque criterion
-# ---------------------------------------------------------------------------
-
-
-def _get_photovoltaique_result(client, puissance, localisation):
+def get_photovoltaique_result(client, puissance, localisation):
+    """Request the simulation result page for a photovoltaic project."""
     params = (
         "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
         "&evalenv_rubrique_30-activate=on"
@@ -546,6 +542,7 @@ def _get_photovoltaique_result(client, puissance, localisation):
 
 @pytest.fixture
 def photovoltaique_criterion(france_map):
+    """Activate the optional photovoltaic criterion everywhere in France."""
     ConfigAmenagementFactory(is_activated=True)
     regulation = RegulationFactory(regulation="eval_env")
     return CriterionFactory(
@@ -585,19 +582,21 @@ class TestPhotovoltaiqueResults:
     def test_result_follows_power_threshold(
         self, client, puissance, localisation, result_template
     ):
-        res = _get_photovoltaique_result(client, puissance, localisation)
+        """Each power bracket and location leads to its own result."""
+        res = get_photovoltaique_result(client, puissance, localisation)
 
         assert res.status_code == 200
         assertTemplateUsed(res, f"moulinette/eval_env/{result_template}")
 
     def test_ombriere_above_threshold_mentions_systematique_threshold(self, client):
-        res = _get_photovoltaique_result(client, "gte_3000kWc", "aire_non_arti")
+        """Above 3 000 kWc, an ombrière explains why it still only needs cas par cas."""
+        res = get_photovoltaique_result(client, "gte_3000kWc", "aire_non_arti")
 
         assert "La puissance est supérieure à 3 000 kWc" in res.content.decode()
 
-    def test_former_1000kWc_answer_is_invalid(self, client):
+    def test_former_1000_kwc_answer_is_invalid(self, client):
         """Answers from before the 3 000 kWc threshold send the user back to the form."""
-        res = _get_photovoltaique_result(client, "gte_1000kWc", "sol")
+        res = get_photovoltaique_result(client, "gte_1000kWc", "sol")
 
         assert res.status_code == 302
         assert "/formulaire/" in res["Location"]
