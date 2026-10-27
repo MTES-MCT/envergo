@@ -20,7 +20,7 @@
     "@playwright/test": "^1.61.0",
     "@types/node": "^24.6.2",
     "autoprefixer": "^10.4.20",
-    "cssnano": "^7.0.6",
+    "cssnano": "^9.0.0",
     "postcss-cli": "^11.0.1",
     "prettier": "3.5.0",
     "sass": "^1.84.0",
