@@ -24,7 +24,7 @@
     "postcss-cli": "^11.0.1",
     "prettier": "3.5.0",
     "sass": "^1.84.0",
-    "stylelint": "^16.14.1",
+    "stylelint": "^17.14.1",
     "stylelint-config-standard-scss": "^16.0.0"
   },
   "browserslist": [
