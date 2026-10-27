@@ -254,7 +254,7 @@ kombu==5.5.4
     #   celery
 librt==0.7.7
     # via mypy
-markdown==3.8.2
+markdown==3.11
     # via -r base.txt
 markupsafe==3.0.2
     # via werkzeug

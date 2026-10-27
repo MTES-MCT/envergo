@@ -170,7 +170,7 @@ kombu==5.5.4
     # via
     #   -r base.txt
     #   celery
-markdown==3.8.2
+markdown==3.11
     # via -r base.txt
 multidict==6.6.3
     # via
