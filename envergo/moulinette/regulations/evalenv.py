@@ -447,14 +447,11 @@ class Photovoltaique(SelfDeclarationMixin, CriterionEvaluator):
         "systematique_toiture": "systematique",
     }
 
-    def get_catalog_data(self, **kwargs):
-        catalog = super().get_catalog_data(**kwargs)
-        # We have to add a custom key to the template, because
-        # django cannot access template values with a dash in the key
-        if "evalenv_rubrique_30-puissance" in catalog:
-            catalog["photovoltaic_power_over_3000kw"] = (
-                catalog["evalenv_rubrique_30-puissance"] == "gte_3000kWc"
-            )
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        # Django templates cannot read keys containing a dash
+        puissance = self.catalog.get("evalenv_rubrique_30-puissance")
+        catalog["photovoltaic_power_over_3000kw"] = puissance == "gte_3000kWc"
         return catalog
 
     def get_result_data(self):
