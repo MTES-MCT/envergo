@@ -153,7 +153,7 @@ django-compressor==4.6.0
     # via -r base.txt
 django-coverage-plugin==3.1.1
     # via -r local.in
-django-crispy-forms==2.4
+django-crispy-forms==2.5
     # via -r base.txt
 django-debug-toolbar==6.0.0
     # via -r local.in
