@@ -28,7 +28,11 @@
       <li>
         <strong style="background-color: #ffb7a5;">Le projet est soumis à la Loi sur l'eau</strong>.
         <br />
-        Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau.
+        {% if moulinette.loi_sur_leau.get_evaluator.has_icpe %}
+          L'instruction au titre de la Loi sur l'eau est intégrée à celle du dossier ICPE.
+        {% else %}
+          Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau.
+        {% endif %}
       </li>
     {% elif moulinette.loi_sur_leau.required_actions_soumis %}
       <li>
