@@ -1901,6 +1901,7 @@ class PetitionProjectInstructorProcedureView(
                     self.object.config and self.object.config.single_procedure
                 ),
                 is_paused=self.object.is_additional_information_requested,
+                can_switch_to_authorization=self.object.can_switch_to_authorization,
             )
         if action == "request_info":
             return RequestAdditionalInfoForm(self.request.POST)
@@ -1951,6 +1952,7 @@ class PetitionProjectInstructorProcedureView(
                 single_procedure=bool(
                     self.object.config and self.object.config.single_procedure
                 ),
+                can_switch_to_authorization=self.object.can_switch_to_authorization,
             ),
         )
 

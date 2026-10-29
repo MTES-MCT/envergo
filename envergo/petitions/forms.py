@@ -258,9 +258,17 @@ class StateChangeForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, single_procedure=False, is_paused=False, **kwargs):
+    def __init__(
+        self,
+        *args,
+        single_procedure=False,
+        is_paused=False,
+        can_switch_to_authorization=False,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.is_paused = is_paused
+        self.can_switch_to_authorization = can_switch_to_authorization
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
 
@@ -318,6 +326,19 @@ class StateChangeForm(forms.ModelForm):
                 "stage",
                 ValidationError(
                     FORBIDDEN_STAGE_TRANSITIONS[transition],
+                    code="forbidden_transition",
+                ),
+            )
+
+        enters_authorization = (
+            stage == "instruction_a" and previous_stage != "instruction_a"
+        )
+        if enters_authorization and not self.can_switch_to_authorization:
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "L'étape « Instruction autorisation » n'est accessible que pour un dossier relevant du "
+                    "régime unique, depuis les étapes « À instruire » ou « Instruction déclaration ».",
                     code="forbidden_transition",
                 ),
             )

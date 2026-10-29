@@ -113,12 +113,20 @@ class TestPetitionProjectFormCleanCategory:
 
 
 def make_state_change_form(
-    data=None, files=None, previous_stage="preparing_decision", single_procedure=False
+    data=None,
+    files=None,
+    previous_stage="preparing_decision",
+    single_procedure=False,
+    can_switch_to_authorization=False,
 ):
     """Build a StateChangeForm the way the procedure view does."""
     initial = {"stage": previous_stage, "decision": "unset"}
     return StateChangeForm(
-        data=data, files=files, initial=initial, single_procedure=single_procedure
+        data=data,
+        files=files,
+        initial=initial,
+        single_procedure=single_procedure,
+        can_switch_to_authorization=can_switch_to_authorization,
     )
 
 
@@ -208,6 +216,37 @@ def test_closed_to_closed_is_forbidden():
         "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le "
         "repasser à une étape d'instruction."
     )
+
+
+def test_switch_to_authorization_is_allowed():
+    form = make_state_change_form(
+        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
+        previous_stage="instruction_d",
+        can_switch_to_authorization=True,
+    )
+
+    assert form.is_valid(), form.errors
+
+
+def test_entering_authorization_without_switch_is_forbidden():
+    form = make_state_change_form(
+        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
+        previous_stage="preparing_decision",
+    )
+
+    assert not form.is_valid()
+    assert form.errors["stage"][0].startswith(
+        "L'étape « Instruction autorisation » n'est accessible que"
+    )
+
+
+def test_staying_in_authorization_is_allowed():
+    form = make_state_change_form(
+        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
+        previous_stage="instruction_a",
+    )
+
+    assert form.is_valid(), form.errors
 
 
 def test_to_be_processed_choice_is_removed_for_single_procedure_projects():
