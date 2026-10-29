@@ -493,10 +493,14 @@ def today_formatted():
     return timezone.now().date().isoformat()
 
 
-def two_months_from_now():
+def two_months_from_today():
+    return timezone.now().date() + relativedelta(months=2)
+
+
+def two_months_from_today_formatted():
     """[type=date] input require values formatted in iso 8601."""
 
-    return (timezone.now().date() + relativedelta(months=2)).isoformat()
+    return two_months_from_today().isoformat()
 
 
 class ResumeProcessingForm(forms.Form):
@@ -512,7 +516,7 @@ class ResumeProcessingForm(forms.Form):
     due_date = forms.DateField(
         label="Nouvelle échéance d'instruction",
         required=True,
-        initial=two_months_from_now,
+        initial=two_months_from_today_formatted,
         widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
     )
 
