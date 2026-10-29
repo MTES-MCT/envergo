@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -10,6 +10,7 @@ from envergo.petitions.forms import (
     PetitionProjectForm,
     ResumeProcessingForm,
     StateChangeForm,
+    two_months_from_today,
 )
 from envergo.petitions.tests.factories import FILE_TEST_NOK_PATH, FILE_TEST_PATH
 
@@ -218,16 +219,6 @@ def test_closed_to_closed_is_forbidden():
     )
 
 
-def test_switch_to_authorization_is_allowed():
-    form = make_state_change_form(
-        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
-        previous_stage="instruction_d",
-        can_switch_to_authorization=True,
-    )
-
-    assert form.is_valid(), form.errors
-
-
 def test_entering_authorization_without_switch_is_forbidden():
     form = make_state_change_form(
         {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
@@ -247,6 +238,99 @@ def test_staying_in_authorization_is_allowed():
     )
 
     assert form.is_valid(), form.errors
+
+
+def make_switch_form(**overrides):
+    """A switch from declaration to authorisation, valid unless overridden."""
+    data = {
+        "stage": "instruction_a",
+        "decision": "unset",
+        "status_date": date.today().isoformat(),
+        "due_date": two_months_from_today().isoformat(),
+        "applicant_message": "Votre projet relève de l'autorisation.",
+        **overrides,
+    }
+    return make_state_change_form(
+        data, previous_stage="instruction_d", can_switch_to_authorization=True
+    )
+
+
+def test_valid_switch_keeps_the_due_date_and_the_message():
+    """Both values are what the applicant is notified of."""
+    form = make_switch_form()
+
+    assert form.is_valid(), form.errors
+    assert form.is_authorization_switch
+    assert form.cleaned_data["due_date"] == two_months_from_today()
+    assert (
+        form.cleaned_data["applicant_message"]
+        == "Votre projet relève de l'autorisation."
+    )
+
+
+def test_switch_requires_a_due_date():
+    """The due date is the deadline after which silence means refusal."""
+    form = make_switch_form(due_date="")
+
+    assert not form.is_valid()
+    assert form.has_error("due_date", code="missing_due_date")
+
+
+def test_switch_due_date_is_at_least_two_months_away():
+    """One day before today + 2 months is already too soon."""
+    day_too_soon = two_months_from_today() - timedelta(days=1)
+    form = make_switch_form(due_date=day_too_soon.isoformat())
+
+    assert not form.is_valid()
+    assert form.errors["due_date"] == [
+        "Le délai indicatif d'instruction ne peut pas être inférieur à 2 mois."
+    ]
+
+
+def test_switch_with_an_unparsable_due_date_reports_only_the_format_error():
+    """A date that fails to parse is not also reported as missing."""
+    form = make_switch_form(due_date="pas une date")
+
+    assert not form.is_valid()
+    assert not form.has_error("due_date", code="missing_due_date")
+    assert form.has_error("due_date", code="invalid")
+
+
+def test_switch_requires_a_message():
+    """Every switch notifies the applicant."""
+    form = make_switch_form(applicant_message="")
+
+    assert not form.is_valid()
+    assert form.has_error("applicant_message", code="missing_applicant_message")
+
+
+def test_switch_message_must_not_keep_a_placeholder():
+    """The instructor must write the reason for the switch."""
+    form = make_switch_form(
+        applicant_message="[À COMPLÉTER : motif de la bascule en autorisation]"
+    )
+
+    assert not form.is_valid()
+    assert form.errors["applicant_message"] == [
+        "Complétez le motif de la bascule en autorisation"
+    ]
+
+
+def test_staying_in_authorization_ignores_the_message():
+    """Only entering authorisation notifies the applicant."""
+    form = make_state_change_form(
+        {
+            "stage": "instruction_a",
+            "decision": "unset",
+            "status_date": date.today().isoformat(),
+            "applicant_message": "message fantôme",
+        },
+        previous_stage="instruction_a",
+    )
+
+    assert form.is_valid(), form.errors
+    assert not form.is_authorization_switch
+    assert form.cleaned_data["applicant_message"] == ""
 
 
 def test_to_be_processed_choice_is_removed_for_single_procedure_projects():

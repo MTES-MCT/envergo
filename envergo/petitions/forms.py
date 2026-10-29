@@ -180,6 +180,9 @@ CLOSING_FIELD_ERRORS = {
     ),
 }
 
+# Prefix of every placeholder the instructor must replace in a message template.
+TO_COMPLETE_MARKER = "[À COMPLÉTER"
+
 
 class SimulationCheckWidget(forms.CheckboxInput):
     """Checkbox rendered inside a richer "verify the simulation" block."""
@@ -197,6 +200,10 @@ class StateChangeForm(forms.ModelForm):
     - prefectural_order: mandatory for "express_agreement" and "opposition";
     - applicant_message: mandatory for every decision, sent to the applicant
       through the Démarches Simplifiées messagerie.
+
+    When an RU dossier switches to authorisation, the due date is the deadline
+    after which silence means refusal. It is mandatory and at least two months
+    away. The applicant message is mandatory and must be fully completed.
     """
 
     simulation_check = forms.BooleanField(
@@ -345,6 +352,8 @@ class StateChangeForm(forms.ModelForm):
 
         if stage == "closed":
             self.clean_closing_fields(cleaned_data)
+        elif self.is_authorization_switch:
+            self.clean_authorization_switch_fields(cleaned_data)
         else:
             # The closing fields are not displayed for other stages, ignore
             # any stray submitted value.
@@ -353,6 +362,57 @@ class StateChangeForm(forms.ModelForm):
             cleaned_data["applicant_message"] = ""
 
         return cleaned_data
+
+    @property
+    def is_authorization_switch(self):
+        """Whether the submitted stage switches the dossier to authorisation.
+
+        Only meaningful once the form is cleaned.
+        """
+        stage = self.cleaned_data.get("stage")
+        return self.can_switch_to_authorization and stage == "instruction_a"
+
+    def clean_authorization_switch_fields(self, cleaned_data):
+        """Enforce the deadline and the message the applicant is notified of."""
+        # The switch hides the other closing fields. Drop any stray value.
+        cleaned_data["simulation_check"] = False
+        cleaned_data["prefectural_order"] = None
+
+        due_date = cleaned_data.get("due_date")
+        if due_date is None and not self.has_error("due_date"):
+            self.add_error(
+                "due_date",
+                ValidationError(
+                    "Pour basculer le dossier en autorisation, l'échéance de l'étape doit être renseignée.",
+                    code="missing_due_date",
+                ),
+            )
+        elif due_date is not None and due_date < two_months_from_today():
+            self.add_error(
+                "due_date",
+                ValidationError(
+                    "Le délai indicatif d'instruction ne peut pas être inférieur à 2 mois.",
+                    code="due_date_too_soon",
+                ),
+            )
+
+        message = cleaned_data.get("applicant_message", "")
+        if not message:
+            self.add_error(
+                "applicant_message",
+                ValidationError(
+                    "Pour basculer le dossier en autorisation, un message doit être envoyé au demandeur.",
+                    code="missing_applicant_message",
+                ),
+            )
+        elif TO_COMPLETE_MARKER in message:
+            self.add_error(
+                "applicant_message",
+                ValidationError(
+                    "Complétez le motif de la bascule en autorisation",
+                    code="incomplete_applicant_message",
+                ),
+            )
 
     def reset_hidden_closing_fields(self, cleaned_data):
         """Force the fields hidden by the closing UI to their closing value.
