@@ -80,6 +80,7 @@ from envergo.petitions.forms import (
     SimulationForm,
     StateChangeForm,
     list_moulinette_errors,
+    two_months_from_today,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1955,6 +1956,8 @@ class PetitionProjectInstructorProcedureView(
                 can_switch_to_authorization=self.object.can_switch_to_authorization,
             ),
         )
+        if self.object.can_switch_to_authorization:
+            context["authorization_switch_due_date"] = two_months_from_today()
 
         # Request info / resume forms are only relevant during instruction phases.
         if self.object.has_change_permission(

@@ -13,6 +13,7 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
@@ -38,7 +39,7 @@ from envergo.moulinette.tests.utils import (
     setup_species_near_hedges,
 )
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
-from envergo.petitions.forms import SimulationForm
+from envergo.petitions.forms import SimulationForm, two_months_from_today
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
@@ -5077,6 +5078,77 @@ def test_state_change_modal_hides_to_be_processed_for_single_procedure(
     assert response.status_code == 200
     stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
     assert "to_be_processed" not in stage_choices
+
+
+def get_authorization_switch_message(client, project):
+    """The switch message template embedded in the state change modal, or None."""
+    content = client.get(procedure_url(project)).content.decode()
+    match = re.search(
+        r'<script type="text/template" id="authorization-switch-message">(.*?)</script>',
+        content,
+        re.DOTALL,
+    )
+    return match.group(1).strip() if match else None
+
+
+def test_state_change_modal_embeds_the_authorization_switch_message(
+    client, haie_coordinator_44, site
+):
+    RUConfigHaieFactory(
+        guh_structure="Direction départementale des territoires",
+        guh_service_name="Service Eau et Environnement",
+        guh_address="50, Bd de Lyon\n02011 LAON",
+    )
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    client.force_login(haie_coordinator_44)
+
+    message = get_authorization_switch_message(client, project)
+
+    due_date = date_format(two_months_from_today(), "DATE_FORMAT")
+    assert "porte le n° 2105-9675," in message
+    assert f"au plus tard le {due_date}." in message
+    assert "[À COMPLÉTER : motif de la bascule en autorisation]" in message
+    # Inside a <script> block, the browser does not decode &#x27;
+    assert "l'obtention d'une autorisation" in message
+    assert (
+        f"Le guichet unique de la haie – {project.department}\n"
+        "Direction départementale des territoires\n"
+        "Service Eau et Environnement\n"
+        "50, Bd de Lyon\n02011 LAON\n"
+        "\n"
+        "Toute décision relative"
+    ) in message
+
+
+def test_authorization_switch_message_omits_blank_guh_contact_lines(
+    client, haie_coordinator_44, site
+):
+    RUConfigHaieFactory(
+        guh_structure="Direction départementale des territoires",
+        guh_service_name="",
+        guh_address="",
+    )
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    client.force_login(haie_coordinator_44)
+
+    message = get_authorization_switch_message(client, project)
+
+    assert (
+        f"Le guichet unique de la haie – {project.department}\n"
+        "Direction départementale des territoires\n"
+        "\n"
+        "Toute décision relative"
+    ) in message
+
+
+def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch(
+    client, haie_coordinator_44, site
+):
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+    client.force_login(haie_coordinator_44)
+
+    assert get_authorization_switch_message(client, project) is None
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)

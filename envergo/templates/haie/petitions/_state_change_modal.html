@@ -39,6 +39,11 @@
                 </script>
               {% endif %}
             {% endfor %}
+            {% if petition_project.can_switch_to_authorization %}
+              <script type="text/template" id="authorization-switch-message">
+                {% include "haie/petitions/authorization_switch_message.txt" with dossier_number=petition_project.demarche_numerique_dossier_number department=petition_project.department config=petition_project.config due_date=authorization_switch_due_date %}
+              </script>
+            {% endif %}
           </div>
         </div>
       </div>
