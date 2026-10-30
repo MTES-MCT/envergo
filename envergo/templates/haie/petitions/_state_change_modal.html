@@ -17,7 +17,8 @@
                   action=""
                   novalidate
                   enctype="multipart/form-data"
-                  class="fr-mb-3w">
+                  class="fr-mb-3w"
+                  {% if petition_project.can_switch_to_authorization %}data-authorization-switch-due-date="{{ authorization_switch_due_date|date:'d/m/Y' }}"{% endif %}>
               {% csrf_token %}
               <input type="hidden" name="action" value="state_change">
               {% include '_form_snippet.html' with form=state_change_form %}
@@ -31,14 +32,28 @@
               {% endif %}
               <button type="submit" class="fr-btn">Enregistrer</button>
             </form>
+            {# Message templates are trimmed by js before filling the textarea #}
             {% for decision in DECISIONS %}
               {% if decision.0 != "unset" %}
-                {# The template content is trimmed by js before filling the textarea #}
                 <script type="text/template" id="closing-message--{{ decision.0 }}">
                   {% include "haie/petitions/closing_messages/"|add:decision.0|add:".txt" %}
                 </script>
               {% endif %}
             {% endfor %}
+            {% if petition_project.can_switch_to_authorization %}
+              <script type="text/template" id="authorization-switch-message">
+                {% include "haie/petitions/authorization_switch_message.txt" with dossier_number=petition_project.demarche_numerique_dossier_number department=petition_project.department config=petition_project.config %}
+              </script>
+              {# Label contents shown during a switch, matching django/forms/fields/label.html #}
+              <script type="text/template" id="authorization-switch-label--due_date">
+                <span class="label-content fr-text--bold">Date limite au-delà de laquelle Silence Vaut Refus</span>
+                <span class="fr-hint-text">Passé cette date, le silence gardé par l’administration vaudra refus.<br />La présence de cette date est obligatoire dans la notification de bascule en autorisation.</span>
+              </script>
+              <script type="text/template" id="authorization-switch-label--applicant_message">
+                <span class="label-content fr-text--bold">Message au demandeur</span>
+                <span class="fr-hint-text">Ce message sera envoyé au demandeur. À l’envoi, la ligne<br />{{ refusal_deadline_placeholder }}<br />sera remplacée par :<br />{{ refusal_deadline_sentence_preview }}</span>
+              </script>
+            {% endif %}
           </div>
         </div>
       </div>

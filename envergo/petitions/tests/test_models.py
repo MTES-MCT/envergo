@@ -90,6 +90,24 @@ def test_petition_project_permissions_for_anonymous_user():
     assert not project.has_change_permission(anonymous)
 
 
+@pytest.mark.parametrize(
+    "category, stage, expected",
+    [
+        ("ru", STAGES.to_be_processed, True),
+        ("ru", STAGES.instruction_d, True),
+        ("ru", STAGES.instruction_a, False),
+        ("ru", STAGES.instruction_h, False),
+        ("ru", STAGES.preparing_decision, False),
+        ("hru", STAGES.instruction_d, False),
+        ("l350_3", STAGES.instruction_d, False),
+    ],
+)
+def test_can_switch_to_authorization(category, stage, expected):
+    project = PetitionProjectFactory.build(underscore_category=category, stage=stage)
+
+    assert project.can_switch_to_authorization is expected
+
+
 def test_form_url_adds_alternative_param():
     """form_url appends project_reference to the query string."""
     DCConfigHaieFactory()

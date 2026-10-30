@@ -646,8 +646,8 @@ class RequestAdmin(admin.ModelAdmin):
             except Evaluation.DoesNotExist:
                 context["show_make_eval_button"] = True
 
-            context["upload_files_url"] = request.build_absolute_uri(
-                obj.upload_files_url
+            context["secret_upload_files_url"] = request.build_absolute_uri(
+                obj.secret_upload_files_url
             )
 
         return super().render_change_form(request, context, add, change, form_url, obj)

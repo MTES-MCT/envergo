@@ -302,6 +302,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return self.stage == STAGES.closed
 
     @property
+    def can_switch_to_authorization(self):
+        """An RU dossier still in its declaration phase can switch to authorisation."""
+        return self.is_regime_unique() and self.stage in (
+            STAGES.to_be_processed,
+            STAGES.instruction_d,
+        )
+
+    @property
     def prefectural_order_log(self):
         """Get the latest status log carrying a prefectural order, if any.
 

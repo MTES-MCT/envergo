@@ -1,4 +1,6 @@
-from datetime import date
+from datetime import date, datetime, timedelta
+from datetime import timezone as dt_timezone
+from unittest.mock import patch
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -7,9 +9,11 @@ from django.utils import timezone
 
 from envergo.moulinette.regulations import HedgeCategory
 from envergo.petitions.forms import (
+    REFUSAL_DEADLINE_PLACEHOLDER,
     PetitionProjectForm,
     ResumeProcessingForm,
     StateChangeForm,
+    two_months_from_today,
 )
 from envergo.petitions.tests.factories import FILE_TEST_NOK_PATH, FILE_TEST_PATH
 
@@ -113,12 +117,20 @@ class TestPetitionProjectFormCleanCategory:
 
 
 def make_state_change_form(
-    data=None, files=None, previous_stage="preparing_decision", single_procedure=False
+    data=None,
+    files=None,
+    previous_stage="preparing_decision",
+    single_procedure=False,
+    can_switch_to_authorization=False,
 ):
     """Build a StateChangeForm the way the procedure view does."""
     initial = {"stage": previous_stage, "decision": "unset"}
     return StateChangeForm(
-        data=data, files=files, initial=initial, single_procedure=single_procedure
+        data=data,
+        files=files,
+        initial=initial,
+        single_procedure=single_procedure,
+        can_switch_to_authorization=can_switch_to_authorization,
     )
 
 
@@ -208,6 +220,160 @@ def test_closed_to_closed_is_forbidden():
         "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le "
         "repasser à une étape d'instruction."
     )
+
+
+def test_entering_authorization_without_switch_is_forbidden():
+    form = make_state_change_form(
+        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
+        previous_stage="preparing_decision",
+    )
+
+    assert not form.is_valid()
+    assert form.errors["stage"][0].startswith(
+        "L'étape « Instruction autorisation » n'est accessible que"
+    )
+
+
+def test_staying_in_authorization_is_allowed():
+    form = make_state_change_form(
+        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
+        previous_stage="instruction_a",
+    )
+
+    assert form.is_valid(), form.errors
+
+
+def make_switch_form(**overrides):
+    """A switch from declaration to authorisation, valid unless overridden."""
+    data = {
+        "stage": "instruction_a",
+        "decision": "unset",
+        "status_date": date.today().isoformat(),
+        "due_date": two_months_from_today().isoformat(),
+        "applicant_message": f"Votre projet relève de l'autorisation.\n{REFUSAL_DEADLINE_PLACEHOLDER}",
+        **overrides,
+    }
+    return make_state_change_form(
+        data, previous_stage="instruction_d", can_switch_to_authorization=True
+    )
+
+
+def test_valid_switch_writes_the_due_date_into_the_message():
+    """The applicant reads the very deadline saved in the due date field."""
+    form = make_switch_form(due_date="2099-09-21")
+
+    assert form.is_valid(), form.errors
+    assert form.is_authorization_switch
+    assert form.cleaned_data["due_date"] == date(2099, 9, 21)
+    assert form.cleaned_data["applicant_message"] == (
+        "Votre projet relève de l'autorisation.\n"
+        "Compte-tenu des avis qui doivent être recueillis, "
+        "cette décision interviendra au plus tard le 21 septembre 2099."
+    )
+
+
+def test_switch_accepts_a_placeholder_line_with_stray_spaces():
+    """Browsers submit textarea lines with CRLF endings."""
+    message = f"Motif.\r\n  {REFUSAL_DEADLINE_PLACEHOLDER} \r\nFin."
+    form = make_switch_form(applicant_message=message)
+
+    assert form.is_valid(), form.errors
+    assert "au plus tard le" in form.cleaned_data["applicant_message"]
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Votre projet relève de l'autorisation.",
+        f"Motif. {REFUSAL_DEADLINE_PLACEHOLDER}",
+        REFUSAL_DEADLINE_PLACEHOLDER.replace("DATE LIMITE", "Date limite"),
+        f"{REFUSAL_DEADLINE_PLACEHOLDER}\n{REFUSAL_DEADLINE_PLACEHOLDER}",
+    ],
+    ids=["deleted", "not alone on its line", "edited", "duplicated"],
+)
+def test_switch_message_needs_the_placeholder_line_once_and_intact(message):
+    """Only an intact line guarantees the message states the saved deadline."""
+    form = make_switch_form(applicant_message=message)
+
+    assert not form.is_valid()
+    assert form.has_error(
+        "applicant_message", code="altered_refusal_deadline_placeholder"
+    )
+    assert REFUSAL_DEADLINE_PLACEHOLDER in form.errors["applicant_message"][0]
+
+
+def test_switch_requires_a_due_date():
+    """The due date is the deadline after which silence means refusal."""
+    form = make_switch_form(due_date="")
+
+    assert not form.is_valid()
+    assert form.has_error("due_date", code="missing_due_date")
+
+
+@patch(
+    "django.utils.timezone.now",
+    return_value=datetime(2026, 10, 30, 23, 30, tzinfo=dt_timezone.utc),
+)
+def test_two_months_from_today_counts_from_the_paris_date(mock_now):
+    """At 23:30 UTC on 30 October, it is already 31 October in Paris."""
+    assert two_months_from_today() == date(2026, 12, 31)
+
+
+def test_switch_due_date_is_at_least_two_months_away():
+    """One day before today + 2 months is already too soon."""
+    day_too_soon = two_months_from_today() - timedelta(days=1)
+    form = make_switch_form(due_date=day_too_soon.isoformat())
+
+    assert not form.is_valid()
+    assert form.errors["due_date"] == [
+        "Le délai indicatif d'instruction ne peut pas être inférieur à 2 mois."
+    ]
+
+
+def test_switch_with_an_unparsable_due_date_reports_only_the_format_error():
+    """A date that fails to parse is not also reported as missing."""
+    form = make_switch_form(due_date="pas une date")
+
+    assert not form.is_valid()
+    assert not form.has_error("due_date", code="missing_due_date")
+    assert form.has_error("due_date", code="invalid")
+
+
+def test_switch_requires_a_message():
+    """Every switch notifies the applicant."""
+    form = make_switch_form(applicant_message="")
+
+    assert not form.is_valid()
+    assert form.has_error("applicant_message", code="missing_applicant_message")
+
+
+def test_switch_message_must_not_keep_a_placeholder():
+    """The instructor must write the reason for the switch."""
+    form = make_switch_form(
+        applicant_message="[À COMPLÉTER : motif de la bascule en autorisation]"
+    )
+
+    assert not form.is_valid()
+    assert form.errors["applicant_message"] == [
+        "Complétez le motif de la bascule en autorisation"
+    ]
+
+
+def test_staying_in_authorization_ignores_the_message():
+    """Only entering authorisation notifies the applicant."""
+    form = make_state_change_form(
+        {
+            "stage": "instruction_a",
+            "decision": "unset",
+            "status_date": date.today().isoformat(),
+            "applicant_message": "message fantôme",
+        },
+        previous_stage="instruction_a",
+    )
+
+    assert form.is_valid(), form.errors
+    assert not form.is_authorization_switch
+    assert form.cleaned_data["applicant_message"] == ""
 
 
 def test_to_be_processed_choice_is_removed_for_single_procedure_projects():
