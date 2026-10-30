@@ -106,7 +106,7 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarche_numerique_status,
 )
-from envergo.petitions.tasks import send_closing_message_async
+from envergo.petitions.tasks import send_applicant_message_async
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
@@ -1991,6 +1991,9 @@ class PetitionProjectInstructorProcedureView(
         previous_decision = self.object.decision
         is_closing = log.stage == STAGES.closed
 
+        if form.is_authorization_switch:
+            self.append_applicant_message_notice(log)
+
         try:
             with transaction.atomic():
                 log.save()
@@ -2016,8 +2019,11 @@ class PetitionProjectInstructorProcedureView(
             )
 
         if is_closing:
-            self.schedule_closing_message(log)
+            self.schedule_applicant_message(log)
             self.notify_closing_succeeded(form)
+        elif form.is_authorization_switch:
+            self.schedule_applicant_message(log)
+            self.notify_authorization_switch_succeeded()
 
         self.schedule_state_change_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
@@ -2034,29 +2040,51 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             update_demarche_numerique_status(self.object, new_ds_status)
 
-    def schedule_closing_message(self, log):
-        """Queue the closing message to the applicant for after commit.
+    def append_applicant_message_notice(self, log):
+        """Append to the log's internal comment that the applicant gets a message."""
+        notice = "Message envoyé au demandeur."
+        if log.update_comment:
+            log.update_comment = f"{log.update_comment}\n{notice}"
+        else:
+            log.update_comment = notice
 
-        Sent asynchronously so a DN messagerie failure never blocks the
-        closing; the task retry policy handles transient errors.
+    def schedule_applicant_message(self, log):
+        """Queue the log's applicant message for after commit.
+
+        Sent asynchronously, so a DN messagerie failure never blocks the state
+        change. The task retry policy handles transient errors.
         """
-        transaction.on_commit(lambda: send_closing_message_async.delay(log.pk))
+        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def notify_closing_succeeded(self, form):
-        """Flash a success message pointing the instructor to the messagerie."""
-        messagerie_url = reverse(
-            "petition_project_instructor_messagerie_view",
-            args=[self.object.reference],
-        )
         attachment_phrase = (
             ", accompagné du document de décision,"
             if form.cleaned_data["prefectural_order"]
             else ""
         )
+        self.notify_applicant_message_scheduled(
+            "Le dossier a été clos.", attachment_phrase
+        )
+
+    def notify_authorization_switch_succeeded(self):
+        self.notify_applicant_message_scheduled(
+            "Le dossier est passé en instruction autorisation."
+        )
+
+    def notify_applicant_message_scheduled(self, outcome, attachment_phrase=""):
+        """Flash the state change outcome and a link to the messagerie.
+
+        `outcome` is a full sentence. `attachment_phrase` is an inserted clause
+        carrying its own commas, or empty.
+        """
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[self.object.reference],
+        )
         messages.success(
             self.request,
             f"""
-            Le dossier a été clos. Le message au demandeur{attachment_phrase} sera envoyé
+            {outcome} Le message au demandeur{attachment_phrase} sera envoyé
             dans quelques instants.
             <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
             """,

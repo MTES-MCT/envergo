@@ -2072,7 +2072,7 @@ def procedure_url(project):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
@@ -2120,7 +2120,7 @@ def test_petition_project_close_with_express_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
@@ -2150,7 +2150,7 @@ def test_petition_project_close_with_tacit_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
@@ -2175,7 +2175,7 @@ def test_petition_project_close_with_dropped(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
@@ -2206,7 +2206,7 @@ def test_petition_project_close_with_missing_fields(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
@@ -5163,6 +5163,75 @@ def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch
     client.force_login(haie_coordinator_44)
 
     assert get_authorization_switch_message(client, project) is None
+
+
+def state_change_form_data(**overrides):
+    """Build the procedure form data for a state change, a switch to authorisation by default."""
+    data = {
+        "action": "state_change",
+        "stage": "instruction_a",
+        "decision": "unset",
+        "due_date": two_months_from_today().strftime("%d/%m/%Y"),
+        "status_date": date.today().strftime("%d/%m/%Y"),
+        "applicant_message": "Votre projet relève d'une autorisation.",
+    }
+    data.update(overrides)
+    return data
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_applicant_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_authorization_switch_sends_the_applicant_message(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
+):
+    """A switch records the deadline and the message, then queues the message."""
+    client.force_login(haie_coordinator_44)
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    data = state_change_form_data(update_comment="Haie en site Natura 2000.")
+
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "Le dossier est passé en instruction autorisation." in content
+    assert "Le message au demandeur sera envoyé" in content
+
+    project.refresh_from_db()
+    assert project.stage == "instruction_a"
+
+    log = project.status_history.order_by("-created_at").first()
+    assert log.due_date == two_months_from_today()
+    assert log.applicant_message == data["applicant_message"]
+    assert (
+        log.update_comment == "Haie en site Natura 2000.\nMessage envoyé au demandeur."
+    )
+    mock_message_task.delay.assert_called_once_with(log.pk)
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_applicant_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_stage_change_without_switch_sends_no_applicant_message(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
+):
+    """Only a closing or a switch writes to the applicant."""
+    client.force_login(haie_coordinator_44)
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    data = state_change_form_data(stage="preparing_decision")
+
+    client.post(procedure_url(project), data, follow=True)
+
+    project.refresh_from_db()
+    assert project.stage == "preparing_decision"
+
+    log = project.status_history.order_by("-created_at").first()
+    assert log.update_comment == ""
+    mock_message_task.delay.assert_not_called()
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
