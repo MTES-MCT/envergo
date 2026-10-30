@@ -1,4 +1,6 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from datetime import timezone as dt_timezone
+from unittest.mock import patch
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -306,6 +308,15 @@ def test_switch_requires_a_due_date():
 
     assert not form.is_valid()
     assert form.has_error("due_date", code="missing_due_date")
+
+
+@patch(
+    "django.utils.timezone.now",
+    return_value=datetime(2026, 10, 30, 23, 30, tzinfo=dt_timezone.utc),
+)
+def test_two_months_from_today_counts_from_the_paris_date(mock_now):
+    """At 23:30 UTC on 30 October, it is already 31 October in Paris."""
+    assert two_months_from_today() == date(2026, 12, 31)
 
 
 def test_switch_due_date_is_at_least_two_months_away():

@@ -604,7 +604,8 @@ def today_formatted():
 
 
 def two_months_from_today():
-    return timezone.now().date() + relativedelta(months=2)
+    """Two months after today, in the project's timezone."""
+    return timezone.localdate() + relativedelta(months=2)
 
 
 def two_months_from_today_formatted():
