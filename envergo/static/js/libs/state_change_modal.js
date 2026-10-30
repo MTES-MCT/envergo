@@ -58,6 +58,8 @@
   const show = (elt, visible) => {
     if (elt) elt.style.display = visible ? "block" : "none";
   };
+  const isBlank = (text) => text.trim() === "";
+  const templateText = (templateId) => document.getElementById(templateId).textContent.trim();
 
   class StateChangeModal {
     constructor(form) {
@@ -84,8 +86,8 @@
         };
       });
 
-      // Template that last filled the applicant message (see fillApplicantMessage).
-      this.filledTemplateId = null;
+      // Template whose draft the message box holds.
+      this.draftTemplateId = null;
       // Instructor's text for each template id, restored when its template comes back.
       this.drafts = new Map();
     }
@@ -101,7 +103,7 @@
       this.decisionInput.addEventListener("change", () => this.refresh());
 
       // Keep a message the server rendered, e.g. after a validation error.
-      this.filledTemplateId = this.messageTemplateId;
+      this.draftTemplateId = this.messageTemplateId;
       this.refresh();
     }
 
@@ -199,30 +201,36 @@
     }
 
     /**
-     * Fill the applicant message for the given template.
+     * Show the instructor's draft for the given template in the message box.
      *
-     * Each template keeps the instructor's draft. Moving to another template
-     * saves the current text and restores that template's draft. A blank
-     * draft gives way to the template text.
+     * Moving to another template saves the box as the draft of the template
+     * it belongs to. A blank draft gives way to the template text.
      */
     fillApplicantMessage(templateId) {
       if (templateId === null) return;
 
-      const template = document.getElementById(templateId);
-      if (!template) return;
+      const isDraftShown = templateId === this.draftTemplateId;
+      if (isDraftShown && !isBlank(this.applicantMessageInput.value)) return;
 
-      const isSameTemplate = templateId === this.filledTemplateId;
-      const hasMessage = this.applicantMessageInput.value.trim() !== "";
-      if (isSameTemplate && hasMessage) return;
+      this.saveDraft();
+      this.applicantMessageInput.value = this.draftFor(templateId);
+      this.draftTemplateId = templateId;
+    }
 
-      if (this.filledTemplateId !== null) {
-        this.drafts.set(this.filledTemplateId, this.applicantMessageInput.value);
-      }
+    /** Store the message box as the draft of the template it belongs to, if any. */
+    saveDraft() {
+      if (this.draftTemplateId === null) return;
 
+      this.drafts.set(this.draftTemplateId, this.applicantMessageInput.value);
+    }
+
+    /** The instructor's draft for the template, or the template text when the draft is blank. */
+    draftFor(templateId) {
       const draft = this.drafts.get(templateId) ?? "";
-      const hasDraft = draft.trim() !== "";
-      this.applicantMessageInput.value = hasDraft ? draft : template.textContent.trim();
-      this.filledTemplateId = templateId;
+
+      let text = draft;
+      if (isBlank(draft)) text = templateText(templateId);
+      return text;
     }
 
     /** On a switch, pre-fill an empty due date with the default deadline. */
