@@ -91,18 +91,8 @@ if env("USE_DOCKER") == "yes":
 INSTALLED_APPS += ["django_extensions"]  # noqa F405
 
 # CELERY
-# Tasks are run by the `celery` service, through a Redis broker.
-# Outside docker, Redis is expected on localhost.
-CELERY_BROKER_URL = env(
-    "DJANGO_CELERY_BROKER_URL",
-    default=(
-        "redis://redis:6379/0"
-        if env("USE_DOCKER", default="no") == "yes"
-        else "redis://localhost:6379/0"
-    ),
-)
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
-CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
 
 RUNSERVER_PLUS_EXCLUDE_PATTERNS = [
     "node_modules",

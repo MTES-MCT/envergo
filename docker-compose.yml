@@ -11,12 +11,10 @@ services:
     environment:
       - LANG=fr_FR.UTF-8
       - LC_ALL=fr_FR.UTF-8
-      - DJANGO_CELERY_BROKER_URL=redis://redis:6379/0
     image: envergo_django
     container_name: envergo_django
     depends_on:
       - postgres
-      - redis
     volumes:
       - .:/app:z
       - envergo_node_modules:/app/node_modules
@@ -27,33 +25,6 @@ services:
     ports:
       - "8000:8000"
     command: /start
-
-  celery:
-    build:
-      context: .
-      dockerfile: ./compose/django/Dockerfile
-    image: envergo_django
-    container_name: envergo_celery
-    environment:
-      - LANG=fr_FR.UTF-8
-      - LC_ALL=fr_FR.UTF-8
-      # celery_app.py falls back to production settings when unset
-      - DJANGO_SETTINGS_MODULE=config.settings.local
-      - DJANGO_CELERY_BROKER_URL=redis://redis:6379/0
-    depends_on:
-      - postgres
-      - redis
-    volumes:
-      - .:/app:z
-    env_file:
-      - .env
-      - ./envs/django
-      - ./envs/postgres
-    command: celery -A config.celery_app worker --loglevel info
-
-  redis:
-    image: redis:7-alpine
-    container_name: envergo_redis
 
   postgres:
     build:
