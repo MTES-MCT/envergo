@@ -4,9 +4,18 @@
 
 {% block object-tools-items %}
   {% if original.pk %}
-    <li>
-      <button type="submit" form="process-batch-form">Traiter le lot</button>
-    </li>
+    {% if original.can_retry_failed_lines %}
+      <li>
+        <button type="submit" form="process-batch-form" name="mode" value="failed">Relancer les lignes en échec</button>
+      </li>
+      <li>
+        <button type="submit" form="process-batch-form" name="mode" value="all">Relancer tout le lot</button>
+      </li>
+    {% else %}
+      <li>
+        <button type="submit" form="process-batch-form">Traiter le lot</button>
+      </li>
+    {% endif %}
   {% endif %}
   {{ block.super }}
 {% endblock %}
