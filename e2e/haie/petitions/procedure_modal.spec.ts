@@ -121,4 +121,69 @@ test.describe('Procedure modal — dynamic form', () => {
     await stage.selectOption('closed');
     await expect(message).toHaveValue(typed);
   });
+
+  test('switching to authorisation prefills the due date and the message', async ({ page }) => {
+    const dueDate = page.locator('#id_due_date');
+    const message = page.locator('#id_applicant_message');
+    const hint = page.locator('#form-group-applicant_message .fr-hint-text');
+    const notice = page.locator('#authorization-switch-due-date-notice');
+
+    await page.locator('#id_stage').selectOption('instruction_a');
+
+    await expect(dueDate).toHaveValue(/^\d{2}\/\d{2}\/\d{4}$/);
+    await expect(page.locator('#form-group-due_date > label')).toContainText(
+      'Date limite au-delà de laquelle Silence Vaut Refus'
+    );
+    await expect(message).toBeVisible();
+    await expect(message).toHaveValue(/Requalification de votre projet/);
+    await expect(hint).toContainText('Vérifiez que la date indiquée');
+    await expect(notice).toBeHidden();
+
+    // Under the decision come the deadline, the message stating it, then the warning.
+    await expect(page.locator('#form-group-decision + *')).toHaveId('form-group-due_date');
+    await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-applicant_message');
+    await expect(page.locator('#form-group-applicant_message + *')).toHaveId(
+      'authorization-switch-due-date-notice'
+    );
+
+    // Editing the deadline asks the instructor to check the message.
+    await dueDate.fill('01/01/2099');
+    await expect(notice).toBeVisible();
+  });
+
+  test('closing and switching each bring their own message and hint', async ({ page }) => {
+    const stage = page.locator('#id_stage');
+    const message = page.locator('#id_applicant_message');
+    const hint = page.locator('#form-group-applicant_message .fr-hint-text');
+
+    await stage.selectOption('closed');
+    await page.locator('#id_decision').selectOption('dropped');
+    await expect(message).toHaveValue(/classé sans suite/i);
+
+    await stage.selectOption('instruction_a');
+    await expect(message).toHaveValue(/Requalification de votre projet/);
+    await expect(hint).toContainText('Vérifiez que la date indiquée');
+
+    await stage.selectOption('closed');
+    await expect(message).toHaveValue(/classé sans suite/i);
+    await expect(hint).toContainText('Précisez les motifs de la décision');
+  });
+
+  test('a switch message edited by the instructor survives a stage change', async ({ page }) => {
+    const stage = page.locator('#id_stage');
+    const message = page.locator('#id_applicant_message');
+    const typed = 'Motif de la bascule rédigé par l’instructeur.';
+
+    await stage.selectOption('instruction_a');
+    await message.fill(typed);
+
+    // Leaving the switch restores the due date's label and the server order.
+    await stage.selectOption('preparing_decision');
+    await expect(page.locator('#form-group-due_date > label')).toContainText("Échéance de l'étape");
+    await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-decision');
+    await expect(page.locator('#form-group-applicant_message + * + button[type="submit"]')).toHaveCount(1);
+
+    await stage.selectOption('instruction_a');
+    await expect(message).toHaveValue(typed);
+  });
 });
