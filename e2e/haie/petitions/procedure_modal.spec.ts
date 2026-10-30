@@ -178,4 +178,21 @@ test.describe('Procedure modal — dynamic form', () => {
     await stage.selectOption('instruction_a');
     await expect(message).toHaveValue(typed);
   });
+
+  test('a switch message survives a detour through closing', async ({ page }) => {
+    const stage = page.locator('#id_stage');
+    const message = page.locator('#id_applicant_message');
+    const typed = 'Motif de la bascule rédigé par l’instructeur.';
+
+    await stage.selectOption('instruction_a');
+    await message.fill(typed);
+
+    // The closing template takes over, then the switch draft comes back.
+    await stage.selectOption('closed');
+    await page.locator('#id_decision').selectOption('dropped');
+    await expect(message).toHaveValue(/classé sans suite/i);
+
+    await stage.selectOption('instruction_a');
+    await expect(message).toHaveValue(typed);
+  });
 });

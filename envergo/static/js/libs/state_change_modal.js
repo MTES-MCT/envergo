@@ -86,6 +86,8 @@
 
       // Template that last filled the applicant message (see fillApplicantMessage).
       this.filledTemplateId = null;
+      // Instructor's text for each template id, restored when its template comes back.
+      this.drafts = new Map();
     }
 
     /** Wire the inputs and render the initial state. */
@@ -197,23 +199,29 @@
     }
 
     /**
-     * Pre-fill the applicant message from the given template.
+     * Fill the applicant message for the given template.
      *
-     * Text from the same template is kept. The instructor's edits survive a
-     * round trip through another stage. A new template, such as another
-     * decision, replaces the text.
+     * Each template keeps the instructor's draft. Moving to another template
+     * saves the current text and restores that template's draft. A blank
+     * draft gives way to the template text.
      */
     fillApplicantMessage(templateId) {
       if (templateId === null) return;
+
+      const template = document.getElementById(templateId);
+      if (!template) return;
 
       const isSameTemplate = templateId === this.filledTemplateId;
       const hasMessage = this.applicantMessageInput.value.trim() !== "";
       if (isSameTemplate && hasMessage) return;
 
-      const template = document.getElementById(templateId);
-      if (!template) return;
+      if (this.filledTemplateId !== null) {
+        this.drafts.set(this.filledTemplateId, this.applicantMessageInput.value);
+      }
 
-      this.applicantMessageInput.value = template.textContent.trim();
+      const draft = this.drafts.get(templateId) ?? "";
+      const hasDraft = draft.trim() !== "";
+      this.applicantMessageInput.value = hasDraft ? draft : template.textContent.trim();
       this.filledTemplateId = templateId;
     }
 
