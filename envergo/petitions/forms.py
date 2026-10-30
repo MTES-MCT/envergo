@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from textwrap import dedent
 
@@ -180,6 +181,24 @@ CLOSING_FIELD_ERRORS = {
     ),
 }
 
+# The switch message line that the instructor must replace with the reason.
+AUTHORIZATION_REASON_PLACEHOLDER = "[À COMPLÉTER : motif de la bascule en autorisation]"
+
+# The switch message line that the form swaps for the deadline sentence.
+REFUSAL_DEADLINE_PLACEHOLDER = (
+    "[DATE LIMITE – NE PAS MODIFIER NI SUPPRIMER CETTE LIGNE : "
+    "elle sera remplacée par la date saisie ci-dessus]"
+)
+REFUSAL_DEADLINE_SENTENCE = (
+    "Compte-tenu des avis qui doivent être recueillis, "
+    "cette décision interviendra au plus tard le {deadline}."
+)
+# The placeholder alone on its line
+REFUSAL_DEADLINE_PLACEHOLDER_LINE = re.compile(
+    r"^[ \t\r]*" + re.escape(REFUSAL_DEADLINE_PLACEHOLDER) + r"[ \t\r]*$",
+    re.MULTILINE,
+)
+
 
 class SimulationCheckWidget(forms.CheckboxInput):
     """Checkbox rendered inside a richer "verify the simulation" block."""
@@ -197,6 +216,12 @@ class StateChangeForm(forms.ModelForm):
     - prefectural_order: mandatory for "express_agreement" and "opposition";
     - applicant_message: mandatory for every decision, sent to the applicant
       through the Démarches Simplifiées messagerie.
+
+    When an RU dossier switches to authorisation, the due date is the deadline
+    after which silence means refusal. It is mandatory and at least two months
+    away. The applicant message is mandatory and must be fully completed. Its
+    deadline placeholder line must be intact, and the form swaps it for the
+    deadline sentence.
     """
 
     simulation_check = forms.BooleanField(
@@ -258,9 +283,17 @@ class StateChangeForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, single_procedure=False, is_paused=False, **kwargs):
+    def __init__(
+        self,
+        *args,
+        single_procedure=False,
+        is_paused=False,
+        can_switch_to_authorization=False,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.is_paused = is_paused
+        self.can_switch_to_authorization = can_switch_to_authorization
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
 
@@ -322,8 +355,20 @@ class StateChangeForm(forms.ModelForm):
                 ),
             )
 
+        if self.enters_authorization and not self.can_switch_to_authorization:
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "L'étape « Instruction autorisation » n'est accessible que pour un dossier relevant du "
+                    "régime unique, depuis les étapes « À instruire » ou « Instruction déclaration ».",
+                    code="forbidden_transition",
+                ),
+            )
+
         if stage == "closed":
             self.clean_closing_fields(cleaned_data)
+        elif self.is_authorization_switch:
+            self.clean_authorization_switch_fields(cleaned_data)
         else:
             # The closing fields are not displayed for other stages, ignore
             # any stray submitted value.
@@ -332,6 +377,81 @@ class StateChangeForm(forms.ModelForm):
             cleaned_data["applicant_message"] = ""
 
         return cleaned_data
+
+    @property
+    def enters_authorization(self):
+        """Whether the submitted stage moves the dossier into authorisation instruction.
+
+        Only meaningful once the form is cleaned.
+        """
+        stage = self.cleaned_data.get("stage")
+        previous_stage = self.initial["stage"]
+        return stage == "instruction_a" and previous_stage != "instruction_a"
+
+    @property
+    def is_authorization_switch(self):
+        """Whether the dossier enters authorisation instruction from its declaration phase.
+
+        Only meaningful once the form is cleaned.
+        """
+        return self.enters_authorization and self.can_switch_to_authorization
+
+    def clean_authorization_switch_fields(self, cleaned_data):
+        """Enforce the deadline and the message the applicant is notified of."""
+        # The switch hides the other closing fields. Drop any stray value.
+        cleaned_data["simulation_check"] = False
+        cleaned_data["prefectural_order"] = None
+
+        due_date = cleaned_data.get("due_date")
+        if due_date is None and not self.has_error("due_date"):
+            self.add_error(
+                "due_date",
+                ValidationError(
+                    "Pour basculer le dossier en autorisation, l'échéance de l'étape doit être renseignée.",
+                    code="missing_due_date",
+                ),
+            )
+        elif due_date is not None and due_date < two_months_from_today():
+            self.add_error(
+                "due_date",
+                ValidationError(
+                    "Le délai indicatif d'instruction ne peut pas être inférieur à 2 mois.",
+                    code="due_date_too_soon",
+                ),
+            )
+
+        message = cleaned_data.get("applicant_message", "")
+        if not message:
+            self.add_error(
+                "applicant_message",
+                ValidationError(
+                    "Pour basculer le dossier en autorisation, un message doit être envoyé au demandeur.",
+                    code="missing_applicant_message",
+                ),
+            )
+        elif AUTHORIZATION_REASON_PLACEHOLDER in message:
+            self.add_error(
+                "applicant_message",
+                ValidationError(
+                    "Complétez le motif de la bascule en autorisation",
+                    code="incomplete_applicant_message",
+                ),
+            )
+        elif len(REFUSAL_DEADLINE_PLACEHOLDER_LINE.findall(message)) != 1:
+            self.add_error(
+                "applicant_message",
+                ValidationError(
+                    "Le message doit contenir une seule fois la ligne suivante, recopiée telle quelle "
+                    f"sur une ligne seule : {REFUSAL_DEADLINE_PLACEHOLDER}",
+                    code="altered_refusal_deadline_placeholder",
+                ),
+            )
+        elif not self.has_error("due_date"):
+            deadline = date_format(due_date, "DATE_FORMAT")
+            sentence = REFUSAL_DEADLINE_SENTENCE.format(deadline=deadline)
+            cleaned_data["applicant_message"] = REFUSAL_DEADLINE_PLACEHOLDER_LINE.sub(
+                sentence, message
+            )
 
     def reset_hidden_closing_fields(self, cleaned_data):
         """Force the fields hidden by the closing UI to their closing value.
@@ -472,10 +592,15 @@ def today_formatted():
     return timezone.now().date().isoformat()
 
 
-def two_months_from_now():
+def two_months_from_today():
+    """Two months after today, in the project's timezone."""
+    return timezone.localdate() + relativedelta(months=2)
+
+
+def two_months_from_today_formatted():
     """[type=date] input require values formatted in iso 8601."""
 
-    return (timezone.now().date() + relativedelta(months=2)).isoformat()
+    return two_months_from_today().isoformat()
 
 
 class ResumeProcessingForm(forms.Form):
@@ -491,7 +616,7 @@ class ResumeProcessingForm(forms.Form):
     due_date = forms.DateField(
         label="Nouvelle échéance d'instruction",
         required=True,
-        initial=two_months_from_now,
+        initial=two_months_from_today_formatted,
         widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
     )
 

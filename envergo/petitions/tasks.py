@@ -11,8 +11,8 @@ from envergo.petitions.services import (
 
 
 @app.task
-def send_closing_message_async(status_log_id):
-    """Send the closing message to the applicant via the DN messagerie."""
+def send_applicant_message_async(status_log_id):
+    """Send the status log's applicant message via the DN messagerie."""
     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
         return
 
@@ -27,7 +27,7 @@ def send_closing_message_async(status_log_id):
         log.petition_project, log.applicant_message, attachment
     )
     if response is None or response.get("errors") is not None:
-        raise RuntimeError(f"DN closing message failed for StatusLog {status_log_id}")
+        raise RuntimeError(f"DN applicant message failed for StatusLog {status_log_id}")
 
 
 @app.task
