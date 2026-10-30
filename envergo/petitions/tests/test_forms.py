@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from envergo.moulinette.regulations import HedgeCategory
 from envergo.petitions.forms import (
+    AUTHORIZATION_REASON_PLACEHOLDER,
     REFUSAL_DEADLINE_PLACEHOLDER,
     PetitionProjectForm,
     ResumeProcessingForm,
@@ -349,9 +350,7 @@ def test_switch_requires_a_message():
 
 def test_switch_message_must_not_keep_a_placeholder():
     """The instructor must write the reason for the switch."""
-    form = make_switch_form(
-        applicant_message="[À COMPLÉTER : motif de la bascule en autorisation]"
-    )
+    form = make_switch_form(applicant_message=AUTHORIZATION_REASON_PLACEHOLDER)
 
     assert not form.is_valid()
     assert form.errors["applicant_message"] == [
