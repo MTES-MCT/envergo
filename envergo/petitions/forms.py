@@ -183,6 +183,37 @@ CLOSING_FIELD_ERRORS = {
 # Prefix of every placeholder the instructor must replace in a message template.
 TO_COMPLETE_MARKER = "[À COMPLÉTER"
 
+# The switch message line that the form swaps for the deadline sentence. The
+# applicant's deadline then always matches the due date field.
+REFUSAL_DEADLINE_PLACEHOLDER = (
+    "[DATE LIMITE – NE PAS MODIFIER NI SUPPRIMER CETTE LIGNE : "
+    "elle sera remplacée par la date saisie ci-dessus]"
+)
+REFUSAL_DEADLINE_SENTENCE = (
+    "Compte-tenu des avis qui doivent être recueillis, "
+    "cette décision interviendra au plus tard le {deadline}."
+)
+
+
+def is_refusal_deadline_placeholder(line):
+    return line.strip() == REFUSAL_DEADLINE_PLACEHOLDER
+
+
+def count_refusal_deadline_placeholders(message):
+    return sum(is_refusal_deadline_placeholder(line) for line in message.splitlines())
+
+
+def fill_refusal_deadline(message, deadline):
+    """Swap the placeholder line of the switch message for the deadline sentence."""
+    sentence = REFUSAL_DEADLINE_SENTENCE.format(
+        deadline=date_format(deadline, "DATE_FORMAT")
+    )
+    lines = [
+        sentence if is_refusal_deadline_placeholder(line) else line
+        for line in message.splitlines()
+    ]
+    return "\n".join(lines)
+
 
 class SimulationCheckWidget(forms.CheckboxInput):
     """Checkbox rendered inside a richer "verify the simulation" block."""
@@ -203,7 +234,9 @@ class StateChangeForm(forms.ModelForm):
 
     When an RU dossier switches to authorisation, the due date is the deadline
     after which silence means refusal. It is mandatory and at least two months
-    away. The applicant message is mandatory and must be fully completed.
+    away. The applicant message is mandatory and must be fully completed. Its
+    deadline placeholder line must be intact, and the form swaps it for the
+    deadline sentence.
     """
 
     simulation_check = forms.BooleanField(
@@ -413,6 +446,17 @@ class StateChangeForm(forms.ModelForm):
                     code="incomplete_applicant_message",
                 ),
             )
+        elif count_refusal_deadline_placeholders(message) != 1:
+            self.add_error(
+                "applicant_message",
+                ValidationError(
+                    "Le message doit contenir une seule fois la ligne suivante, recopiée telle quelle "
+                    f"sur une ligne seule : {REFUSAL_DEADLINE_PLACEHOLDER}",
+                    code="altered_refusal_deadline_placeholder",
+                ),
+            )
+        elif not self.has_error("due_date"):
+            cleaned_data["applicant_message"] = fill_refusal_deadline(message, due_date)
 
     def reset_hidden_closing_fields(self, cleaned_data):
         """Force the fields hidden by the closing UI to their closing value.

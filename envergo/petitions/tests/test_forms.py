@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from envergo.moulinette.regulations import HedgeCategory
 from envergo.petitions.forms import (
+    REFUSAL_DEADLINE_PLACEHOLDER,
     PetitionProjectForm,
     ResumeProcessingForm,
     StateChangeForm,
@@ -247,7 +248,7 @@ def make_switch_form(**overrides):
         "decision": "unset",
         "status_date": date.today().isoformat(),
         "due_date": two_months_from_today().isoformat(),
-        "applicant_message": "Votre projet relève de l'autorisation.",
+        "applicant_message": f"Votre projet relève de l'autorisation.\n{REFUSAL_DEADLINE_PLACEHOLDER}",
         **overrides,
     }
     return make_state_change_form(
@@ -255,17 +256,48 @@ def make_switch_form(**overrides):
     )
 
 
-def test_valid_switch_keeps_the_due_date_and_the_message():
-    """Both values are what the applicant is notified of."""
-    form = make_switch_form()
+def test_valid_switch_writes_the_due_date_into_the_message():
+    """The applicant reads the very deadline saved in the due date field."""
+    form = make_switch_form(due_date="2099-09-21")
 
     assert form.is_valid(), form.errors
     assert form.is_authorization_switch
-    assert form.cleaned_data["due_date"] == two_months_from_today()
-    assert (
-        form.cleaned_data["applicant_message"]
-        == "Votre projet relève de l'autorisation."
+    assert form.cleaned_data["due_date"] == date(2099, 9, 21)
+    assert form.cleaned_data["applicant_message"] == (
+        "Votre projet relève de l'autorisation.\n"
+        "Compte-tenu des avis qui doivent être recueillis, "
+        "cette décision interviendra au plus tard le 21 septembre 2099."
     )
+
+
+def test_switch_accepts_a_placeholder_line_with_stray_spaces():
+    """Browsers submit textarea lines with CRLF endings."""
+    message = f"Motif.\r\n  {REFUSAL_DEADLINE_PLACEHOLDER} \r\nFin."
+    form = make_switch_form(applicant_message=message)
+
+    assert form.is_valid(), form.errors
+    assert "au plus tard le" in form.cleaned_data["applicant_message"]
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Votre projet relève de l'autorisation.",
+        f"Motif. {REFUSAL_DEADLINE_PLACEHOLDER}",
+        REFUSAL_DEADLINE_PLACEHOLDER.replace("DATE LIMITE", "Date limite"),
+        f"{REFUSAL_DEADLINE_PLACEHOLDER}\n{REFUSAL_DEADLINE_PLACEHOLDER}",
+    ],
+    ids=["deleted", "not alone on its line", "edited", "duplicated"],
+)
+def test_switch_message_needs_the_placeholder_line_once_and_intact(message):
+    """Only an intact line guarantees the message states the saved deadline."""
+    form = make_switch_form(applicant_message=message)
+
+    assert not form.is_valid()
+    assert form.has_error(
+        "applicant_message", code="altered_refusal_deadline_placeholder"
+    )
+    assert REFUSAL_DEADLINE_PLACEHOLDER in form.errors["applicant_message"][0]
 
 
 def test_switch_requires_a_due_date():

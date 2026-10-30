@@ -13,7 +13,6 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.formats import date_format
 from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
@@ -39,7 +38,11 @@ from envergo.moulinette.tests.utils import (
     setup_species_near_hedges,
 )
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
-from envergo.petitions.forms import SimulationForm, two_months_from_today
+from envergo.petitions.forms import (
+    REFUSAL_DEADLINE_PLACEHOLDER,
+    SimulationForm,
+    two_months_from_today,
+)
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
@@ -5104,9 +5107,9 @@ def test_state_change_modal_embeds_the_authorization_switch_message(
 
     message = get_authorization_switch_message(client, project)
 
-    due_date = date_format(two_months_from_today(), "DATE_FORMAT")
     assert "porte le n° 2105-9675," in message
-    assert f"au plus tard le {due_date}." in message
+    assert f"L. 412-24 et suivants.\n\n{REFUSAL_DEADLINE_PLACEHOLDER}\n\n" in message
+    assert "au plus tard le" not in message
     assert "[À COMPLÉTER : motif de la bascule en autorisation]" in message
     # Inside a <script> block, the browser does not decode &#x27;
     assert "l'obtention d'une autorisation" in message
@@ -5173,7 +5176,7 @@ def state_change_form_data(**overrides):
         "decision": "unset",
         "due_date": two_months_from_today().strftime("%d/%m/%Y"),
         "status_date": date.today().strftime("%d/%m/%Y"),
-        "applicant_message": "Votre projet relève d'une autorisation.",
+        "applicant_message": f"Votre projet relève d'une autorisation.\n{REFUSAL_DEADLINE_PLACEHOLDER}",
     }
     data.update(overrides)
     return data
@@ -5186,11 +5189,13 @@ def state_change_form_data(**overrides):
 def test_authorization_switch_sends_the_applicant_message(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
-    """A switch records the deadline and the message, then queues the message."""
+    """A switch saves the message with its deadline sentence, then queues it."""
     client.force_login(haie_coordinator_44)
     RUConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
-    data = state_change_form_data(update_comment="Haie en site Natura 2000.")
+    data = state_change_form_data(
+        due_date="21/09/2099", update_comment="Haie en site Natura 2000."
+    )
 
     res = client.post(procedure_url(project), data, follow=True)
 
@@ -5203,8 +5208,12 @@ def test_authorization_switch_sends_the_applicant_message(
     assert project.stage == "instruction_a"
 
     log = project.status_history.order_by("-created_at").first()
-    assert log.due_date == two_months_from_today()
-    assert log.applicant_message == data["applicant_message"]
+    assert log.due_date == date(2099, 9, 21)
+    assert log.applicant_message == (
+        "Votre projet relève d'une autorisation.\n"
+        "Compte-tenu des avis qui doivent être recueillis, "
+        "cette décision interviendra au plus tard le 21 septembre 2099."
+    )
     assert (
         log.update_comment == "Haie en site Natura 2000.\nMessage envoyé au demandeur."
     )

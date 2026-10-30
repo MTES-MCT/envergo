@@ -22,14 +22,6 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="state_change">
               {% include '_form_snippet.html' with form=state_change_form %}
-              {% if petition_project.can_switch_to_authorization %}
-                {# state_change_modal.js places it under the message and shows it once the due date is edited #}
-                <div id="authorization-switch-due-date-notice"
-                     class="fr-alert fr-alert--warning fr-mb-2w"
-                     style="display: none">
-                  <p>Vérifier que la date limite indiquée dans le message est bien celle saisie plus haut.</p>
-                </div>
-              {% endif %}
               {% if petition_project.prefectural_order_log %}
                 {# Relocated under the file input by state_change_modal.js #}
                 <div id="prefectural-order-supersede-notice"
@@ -50,7 +42,7 @@
             {% endfor %}
             {% if petition_project.can_switch_to_authorization %}
               <script type="text/template" id="authorization-switch-message">
-                {% include "haie/petitions/authorization_switch_message.txt" with dossier_number=petition_project.demarche_numerique_dossier_number department=petition_project.department config=petition_project.config due_date=authorization_switch_due_date %}
+                {% include "haie/petitions/authorization_switch_message.txt" with dossier_number=petition_project.demarche_numerique_dossier_number department=petition_project.department config=petition_project.config %}
               </script>
               {# Label contents shown during a switch, matching django/forms/fields/label.html #}
               <script type="text/template" id="authorization-switch-label--due_date">
@@ -59,7 +51,7 @@
               </script>
               <script type="text/template" id="authorization-switch-label--applicant_message">
                 <span class="label-content fr-text--bold">Message au demandeur</span>
-                <span class="fr-hint-text">Ce message sera envoyé au demandeur. Vérifiez que la date indiquée est bien celle renseignée ci-dessus.</span>
+                <span class="fr-hint-text">Ce message sera envoyé au demandeur. À l’envoi, la ligne<br />{{ refusal_deadline_placeholder }}<br />sera remplacée par :<br />{{ refusal_deadline_sentence_preview }}</span>
               </script>
             {% endif %}
           </div>

@@ -6,8 +6,7 @@
  *  - the closing fields (simulation check, prefectural order, applicant
  *    message) plus the message template pre-filled from the decision,
  *  - the switch of an RU dossier to authorisation. It pre-fills, relabels and
- *    groups the due date and the applicant message. It warns when the due
- *    date changes.
+ *    groups the due date and the applicant message.
  *
  * This is purely an instructor convenience: StateChangeForm re-enforces every
  * rule server-side, so nothing here is load-bearing for data integrity.
@@ -72,9 +71,8 @@
       this.applicantMessageGroup = document.getElementById("form-group-applicant_message");
       this.submitButton = form.querySelector("button[type='submit']");
 
-      // All undefined or null when the dossier cannot switch to authorisation.
+      // Undefined when the dossier cannot switch to authorisation.
       this.switchDueDate = form.dataset.authorizationSwitchDueDate;
-      this.switchDueDateNotice = document.getElementById("authorization-switch-due-date-notice");
 
       // Each label keeps its server-rendered content, restored after a switch.
       this.switchLabels = SWITCH_LABELED_FIELDS.map((name) => {
@@ -88,7 +86,6 @@
 
       // Template that last filled the applicant message (see fillApplicantMessage).
       this.filledTemplateId = null;
-      this.isDueDateEdited = false;
     }
 
     /** Wire the inputs and render the initial state. */
@@ -100,10 +97,6 @@
         this.refresh();
       });
       this.decisionInput.addEventListener("change", () => this.refresh());
-      this.dueDateInput.addEventListener("input", () => {
-        this.isDueDateEdited = true;
-        this.syncSwitchDueDateNotice();
-      });
 
       // Keep a message the server rendered, e.g. after a validation error.
       this.filledTemplateId = this.messageTemplateId;
@@ -144,7 +137,6 @@
       this.syncApplicantMessage();
       this.syncSwitchLabels();
       this.syncFieldOrder();
-      this.syncSwitchDueDateNotice();
     }
 
     /**
@@ -192,18 +184,15 @@
     }
 
     /**
-     * During a switch, put the due date, the message stating it and the
-     * warning right under the decision. Otherwise, restore the server order.
+     * During a switch, put the due date and the message stating it right
+     * under the decision. Otherwise, restore the server order.
      */
     syncFieldOrder() {
-      // Without a possible switch, the warning is null and before(null) inserts the text "null".
-      if (!this.canSwitchToAuthorization) return;
-
       if (this.isAuthorizationSwitch) {
-        this.decisionGroup.after(this.dueDateGroup, this.applicantMessageGroup, this.switchDueDateNotice);
+        this.decisionGroup.after(this.dueDateGroup, this.applicantMessageGroup);
       } else {
         this.decisionGroup.before(this.dueDateGroup);
-        this.submitButton.before(this.applicantMessageGroup, this.switchDueDateNotice);
+        this.submitButton.before(this.applicantMessageGroup);
       }
     }
 
@@ -228,18 +217,12 @@
       this.filledTemplateId = templateId;
     }
 
-    /** Warn the instructor to check the message once the due date was edited. */
-    syncSwitchDueDateNotice() {
-      show(this.switchDueDateNotice, this.isAuthorizationSwitch && this.isDueDateEdited);
-    }
-
     /** On a switch, pre-fill an empty due date with the default deadline. */
     prefillSwitchDueDate() {
       if (!this.isAuthorizationSwitch) return;
       if (this.dueDateInput.value !== "") return;
 
       this.dueDateInput.value = this.switchDueDate;
-      this.isDueDateEdited = false;
     }
 
     /**

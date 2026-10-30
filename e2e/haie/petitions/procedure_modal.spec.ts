@@ -126,7 +126,6 @@ test.describe('Procedure modal — dynamic form', () => {
     const dueDate = page.locator('#id_due_date');
     const message = page.locator('#id_applicant_message');
     const hint = page.locator('#form-group-applicant_message .fr-hint-text');
-    const notice = page.locator('#authorization-switch-due-date-notice');
 
     await page.locator('#id_stage').selectOption('instruction_a');
 
@@ -136,19 +135,12 @@ test.describe('Procedure modal — dynamic form', () => {
     );
     await expect(message).toBeVisible();
     await expect(message).toHaveValue(/Requalification de votre projet/);
-    await expect(hint).toContainText('Vérifiez que la date indiquée');
-    await expect(notice).toBeHidden();
+    await expect(message).toHaveValue(/\[DATE LIMITE – NE PAS MODIFIER/);
+    await expect(hint).toContainText('sera remplacée par');
 
-    // Under the decision come the deadline, the message stating it, then the warning.
+    // Under the decision come the deadline, then the message stating it.
     await expect(page.locator('#form-group-decision + *')).toHaveId('form-group-due_date');
     await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-applicant_message');
-    await expect(page.locator('#form-group-applicant_message + *')).toHaveId(
-      'authorization-switch-due-date-notice'
-    );
-
-    // Editing the deadline asks the instructor to check the message.
-    await dueDate.fill('01/01/2099');
-    await expect(notice).toBeVisible();
   });
 
   test('closing and switching each bring their own message and hint', async ({ page }) => {
@@ -162,7 +154,7 @@ test.describe('Procedure modal — dynamic form', () => {
 
     await stage.selectOption('instruction_a');
     await expect(message).toHaveValue(/Requalification de votre projet/);
-    await expect(hint).toContainText('Vérifiez que la date indiquée');
+    await expect(hint).toContainText('sera remplacée par');
 
     await stage.selectOption('closed');
     await expect(message).toHaveValue(/classé sans suite/i);
@@ -181,7 +173,7 @@ test.describe('Procedure modal — dynamic form', () => {
     await stage.selectOption('preparing_decision');
     await expect(page.locator('#form-group-due_date > label')).toContainText("Échéance de l'étape");
     await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-decision');
-    await expect(page.locator('#form-group-applicant_message + * + button[type="submit"]')).toHaveCount(1);
+    await expect(page.locator('#form-group-applicant_message + button[type="submit"]')).toHaveCount(1);
 
     await stage.selectOption('instruction_a');
     await expect(message).toHaveValue(typed);

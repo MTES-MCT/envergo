@@ -6,7 +6,9 @@ Je vous informe que votre projet de destruction de haie, dont le récépissé de
 
 [À COMPLÉTER : motif de la bascule en autorisation]
 
-La décision sera prise sous la forme d’un arrêté d’autorisation fixant les prescriptions nécessaires au respect des législations mentionnées aux articles L. 412-24 et suivants. Compte-tenu des avis qui doivent être recueillis, cette décision interviendra au plus tard le {{ due_date|date:"DATE_FORMAT" }}.
+La décision sera prise sous la forme d’un arrêté d’autorisation fixant les prescriptions nécessaires au respect des législations mentionnées aux articles L. 412-24 et suivants.
+
+{{ refusal_deadline_placeholder }}
 
 Le silence gardé au-delà de cette date vaut décision de refus.
 
