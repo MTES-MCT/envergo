@@ -5243,6 +5243,33 @@ def test_stage_change_without_switch_sends_no_applicant_message(
     mock_message_task.delay.assert_not_called()
 
 
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_applicant_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_authorization_switch_status_change_failure(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
+):
+    """If the DN status change fails, the switch rolls back and no message is sent."""
+    client.force_login(haie_coordinator_44)
+    mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+
+    res = client.post(procedure_url(project), state_change_form_data(), follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        "Impossible de mettre à jour le dossier dans « Démarche numérique »" in content
+    )
+
+    project.refresh_from_db()
+    assert project.stage == "instruction_d"
+    assert project.status_history.count() == 1
+    mock_message_task.delay.assert_not_called()
+
+
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_ep_page_without_compensation(

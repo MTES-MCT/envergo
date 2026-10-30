@@ -129,7 +129,12 @@ test.describe('Procedure modal — dynamic form', () => {
 
     await page.locator('#id_stage').selectOption('instruction_a');
 
-    await expect(dueDate).toHaveValue(/^\d{2}\/\d{2}\/\d{4}$/);
+    // The server computes the default deadline, the script only copies it.
+    const defaultDueDate = await page
+      .locator('#state-change-modal form')
+      .getAttribute('data-authorization-switch-due-date');
+    expect(defaultDueDate).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+    await expect(dueDate).toHaveValue(defaultDueDate!);
     await expect(page.locator('#form-group-due_date > label')).toContainText(
       'Date limite au-delà de laquelle Silence Vaut Refus'
     );
