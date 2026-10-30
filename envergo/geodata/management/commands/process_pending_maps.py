@@ -22,7 +22,7 @@ from envergo.geodata.management.helpers import (
     refuse_production_settings,
 )
 from envergo.geodata.models import Map
-from envergo.geodata.tasks import process_map
+from envergo.geodata.tasks import process_maps
 
 logger = getLogger(__name__)
 
@@ -81,6 +81,6 @@ class Command(BaseCommand):
             self.stdout.write("Operation cancelled.")
             sys.exit(0)
 
+        process_maps([map_obj.id for map_obj in maps])
         for map_obj in maps:
-            process_map.delay(map_obj.id)
             self.stdout.write(f"  - queued map {map_obj.id} ({map_obj.name})")
