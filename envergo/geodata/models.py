@@ -49,6 +49,12 @@ STATUSES = Choices(
     ("failure", _("Failure")),
 )
 
+LINE_STATUSES = Choices(
+    ("pending", _("Pending")),
+    ("success", _("Success")),
+    ("failure", _("Failure")),
+)
+
 
 class MapQuerySet(models.QuerySet):
     """Custom query set with common filters for maps."""
@@ -204,7 +210,6 @@ class MapImportBatch(models.Model):
     import_date = models.DateTimeField(
         "Date du dernier traitement", null=True, blank=True
     )
-    import_log = models.TextField("Log d'import", blank=True)
 
     class Meta:
         verbose_name = "Lot d'import de cartes"
@@ -213,6 +218,56 @@ class MapImportBatch(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def can_retry_failed_lines(self):
+        """A batch processed but not fully imported can resume on its failed lines."""
+        return self.import_status in (STATUSES.partial_success, STATUSES.failure) and (
+            self.lines.exists()
+        )
+
+    @property
+    def import_summary(self):
+        """Summary of the last run, followed by the outcome of each CSV line."""
+        lines = list(self.lines.all())
+        if not lines:
+            return ""
+        if lines[0].line_number == 0:
+            header = "Aucune ligne importée, csv non valide."
+            return "\n".join([header, lines[0].message])
+
+        total = len(lines)
+        pending = [line for line in lines if line.status == LINE_STATUSES.pending]
+        if self.import_status == STATUSES.failure and pending:
+            # Lines run one at a time: the last settled one is the one that broke.
+            settled = [
+                position
+                for position, line in enumerate(lines, start=1)
+                if line.status != LINE_STATUSES.pending
+            ]
+            header = (
+                f"Import interrompu à la ligne {max(settled, default=0)}/{total} "
+                f"par une erreur inattendue, {len(pending)} ligne(s) non traitée(s)."
+            )
+        else:
+            nb_success = sum(
+                1 for line in lines if line.status == LINE_STATUSES.success
+            )
+            header = f"{nb_success}/{total} ligne(s) importée(s)."
+
+        texts = []
+        for position, line in enumerate(lines, start=1):
+            if line.status == LINE_STATUSES.success:
+                texts.append(
+                    f"L'import {position}/{total} (ligne {line.line_number}) "
+                    f"a réussi : '{line.reference}'."
+                )
+            elif line.status == LINE_STATUSES.failure:
+                texts.append(
+                    f"L'import {position}/{total} (ligne {line.line_number}) "
+                    f"a échoué : {line.message}."
+                )
+        return "\n".join([header, *texts])
 
 
 class MapImportBatchFile(models.Model):
@@ -234,6 +289,30 @@ class MapImportBatchFile(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class MapImportBatchLine(models.Model):
+    """Outcome of one CSV line of a batch import. Line 0 holds CSV-level errors."""
+
+    batch = models.ForeignKey(
+        MapImportBatch, related_name="lines", on_delete=models.CASCADE
+    )
+    line_number = models.PositiveIntegerField("Ligne du CSV")
+    reference = models.CharField("Référence", max_length=255, blank=True)
+    status = models.CharField(
+        "Statut", max_length=32, choices=LINE_STATUSES, default=LINE_STATUSES.pending
+    )
+    message = models.TextField("Message", blank=True)
+    updated_at = models.DateTimeField("Mis à jour le", auto_now=True)
+
+    class Meta:
+        verbose_name = "Ligne de lot d'import"
+        verbose_name_plural = "Lignes de lot d'import"
+        ordering = ["line_number"]
+        unique_together = ("batch", "line_number")
+
+    def __str__(self):
+        return f"Ligne {self.line_number}"
 
 
 class ZoneManager(models.Manager):

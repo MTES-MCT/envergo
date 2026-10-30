@@ -350,7 +350,7 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         "created_by",
         "import_status",
         "import_date",
-        "import_log",
+        "col_import_summary",
         "upload_link",
         "maps_link",
     ]
@@ -360,6 +360,17 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+        # The lines describe the previous CSV: they no longer apply.
+        if change and "csv_file" in form.changed_data:
+            obj.lines.all().delete()
+            obj.import_status = None
+            obj.import_date = None
+            obj.save(update_fields=["import_status", "import_date"])
+
+    @admin.display(description="Résumé du dernier traitement")
+    def col_import_summary(self, obj):
+        return obj.import_summary
 
     @admin.display(description="Fichiers téléversés")
     def col_file_count(self, obj):
@@ -412,7 +423,18 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 reverse("admin:geodata_mapimportbatch_changelist")
             )
 
-        process_map_import_batch.delay(batch.id)
+        only_failed = request.POST.get("mode") == "failed"
+        if only_failed and not batch.can_retry_failed_lines:
+            self.message_user(
+                request,
+                "Seules les lignes en échec d'un lot partiellement importé peuvent être relancées.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(
+                reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
+            )
+
+        process_map_import_batch.delay(batch.id, only_failed=only_failed)
         self.message_user(
             request,
             "Lot en cours de traitement. Cela peut prendre plusieurs minutes.",

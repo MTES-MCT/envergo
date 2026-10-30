@@ -11,8 +11,15 @@ from django.urls import reverse
 
 from envergo.geodata.admin import MapImportBatchForm
 from envergo.geodata.import_batch import parse_batch_row, validate_headers
-from envergo.geodata.models import STATUSES, Map, MapImportBatch, MapImportBatchFile
+from envergo.geodata.models import (
+    LINE_STATUSES,
+    STATUSES,
+    Map,
+    MapImportBatch,
+    MapImportBatchFile,
+)
 from envergo.geodata.tasks import (
+    complete_row,
     finalize_batch,
     import_batch_row,
     process_map,
@@ -59,7 +66,7 @@ def fake_open_map_file(file):
     yield [range(42)]
 
 
-def run_task(batch):
+def run_task(batch, only_failed=False):
     """Run the whole batch chain eagerly and return the ids of processed maps.
 
     `process_map` is stubbed: its geometry import is tested on its own.
@@ -69,9 +76,15 @@ def run_task(batch):
         patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
         patch.object(process_map, "run", side_effect=processed.append),
     ):
-        process_map_import_batch.apply(args=(batch.id,))
+        process_map_import_batch.apply(args=(batch.id, only_failed))
     batch.refresh_from_db()
     return processed
+
+
+def line_statuses(batch):
+    return [
+        (line.line_number, line.reference, line.status) for line in batch.lines.all()
+    ]
 
 
 def test_validate_headers_reports_missing_columns():
@@ -141,7 +154,7 @@ def test_update_does_not_silently_wipe_description():
 
     existing.refresh_from_db()
     assert batch.import_status == STATUSES.failure
-    assert "description manquante" in batch.import_log
+    assert "description manquante" in batch.lines.get().message
     assert existing.description == "Description existante"
     assert existing.departments == ["44", "56"]
 
@@ -200,7 +213,7 @@ def test_batch_with_missing_columns_fails_without_touching_maps():
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
-    assert "Colonnes manquantes" in batch.import_log
+    assert "Colonnes manquantes" in batch.lines.get(line_number=0).message
     assert Map.objects.count() == 0
     assert len(queued) == 0
 
@@ -215,10 +228,14 @@ def test_batch_creates_maps():
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.success
-    assert batch.import_log.splitlines() == [
-        "Résumé : 2/2 ligne(s) importée(s).",
-        "L'import 1/2 a réussi : 'r1'",
-        "L'import 2/2 a réussi : 'r2'",
+    assert batch.import_summary.splitlines() == [
+        "2/2 ligne(s) importée(s).",
+        "L'import 1/2 (ligne 2) a réussi : 'r1'.",
+        "L'import 2/2 (ligne 3) a réussi : 'r2'.",
+    ]
+    assert line_statuses(batch) == [
+        (2, "r1", LINE_STATUSES.success),
+        (3, "r2", LINE_STATUSES.success),
     ]
 
     map_a = Map.objects.get(reference="r1")
@@ -316,7 +333,7 @@ def test_batch_metadata_only_update_requires_existing_map():
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
-    assert "fichier manquant pour une carte inexistante" in batch.import_log
+    assert "fichier manquant pour une carte inexistante" in batch.lines.get().message
     assert Map.objects.count() == 0
     assert len(queued) == 0
 
@@ -377,10 +394,7 @@ def test_batch_row_deletes_its_new_file_when_the_save_fails():
     ):
         with pytest.raises(RuntimeError):
             import_batch_row.run(
-                None,
                 batch.id,
-                0,
-                1,
                 2,
                 {
                     "reference": "r1",
@@ -413,12 +427,14 @@ def test_batch_with_invalid_csv_imports_nothing():
     processed = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
-    lines = batch.import_log.splitlines()
-    assert lines[0] == "Résumé : aucune ligne importée, csv non valide."
-    assert len(lines) == 4
-    assert "Ligne 2 : map_type inconnu" in lines[1]
-    assert "Ligne 4 : fichier référencé non téléversé : missing.gpkg" in lines[2]
-    assert "Ligne 5 : référence en double" in lines[3]
+    assert (
+        batch.import_summary.splitlines()[0] == "Aucune ligne importée, csv non valide."
+    )
+    messages = batch.lines.get(line_number=0).message.splitlines()
+    assert len(messages) == 3
+    assert messages[0].startswith("Ligne 2") and "map_type inconnu" in messages[0]
+    assert messages[1].startswith("Ligne 4") and "missing.gpkg" in messages[1]
+    assert messages[2].startswith("Ligne 5") and "référence en double" in messages[2]
     assert Map.objects.count() == 0
     assert processed == []
 
@@ -450,19 +466,25 @@ def test_batch_is_failed_when_a_map_processing_crashes():
     batch.refresh_from_db()
 
     assert batch.import_status == STATUSES.failure
-    # The first map is imported; the crash happens while processing it.
-    assert batch.import_log.splitlines() == [
-        "Résumé : import interrompu à la ligne 1/2 par une erreur inattendue, "
+    # The crash happens while processing the first map: its line is the one
+    # failing, the next one stays pending so a retry can pick it up.
+    assert line_statuses(batch) == [
+        (2, "", LINE_STATUSES.failure),
+        (3, "", LINE_STATUSES.pending),
+    ]
+    assert batch.lines.get(line_number=2).message == "erreur inattendue (boom)"
+    assert batch.import_summary.splitlines() == [
+        "Import interrompu à la ligne 1/2 par une erreur inattendue, "
         "1 ligne(s) non traitée(s).",
-        "L'import 1/2 a échoué : erreur inattendue (boom)",
+        "L'import 1/2 (ligne 2) a échoué : erreur inattendue (boom).",
     ]
     assert batch.import_date is not None
     # The chain stopped at the first map.
     assert Map.objects.filter(reference="r2").count() == 0
 
 
-def test_import_batch_row_logs_errors_and_skips_the_row():
-    """A row failing validation is logged and reported to the next task."""
+def test_import_batch_row_records_errors_on_its_line_and_skips_the_row():
+    """A row failing validation is recorded on its line, and no map is created."""
     batch = make_batch(f"{CSV_HEADER}\n")
     raw_row = {
         "reference": "r1",
@@ -472,62 +494,113 @@ def test_import_batch_row_logs_errors_and_skips_the_row():
         "departments": "44",
     }
 
-    result = import_batch_row.apply(args=(None, batch.id, 0, 3, 2, raw_row)).get()
-    batch.refresh_from_db()
+    import_batch_row.apply(args=(batch.id, 2, raw_row)).get()
 
-    assert list(result) == [0]
-    assert "missing.gpkg" in result[0][0]
-    assert batch.import_log.startswith("L'import 1/3 a échoué : ")
-    assert "missing.gpkg" in batch.import_log
+    line = batch.lines.get(line_number=2)
+    assert line.status == LINE_STATUSES.failure
+    assert line.reference == "r1"
+    assert "missing.gpkg" in line.message
     assert Map.objects.count() == 0
 
-    # The dict built by the previous rows is completed, not replaced, and the
-    # log keeps the previous lines.
-    result = import_batch_row.apply(
-        args=({"3": ["avant"]}, batch.id, 1, 3, 3, raw_row)
-    ).get()
-    batch.refresh_from_db()
 
-    assert set(result) == {"3", 1}
-    assert len(batch.import_log.splitlines()) == 2
-    assert batch.import_log.splitlines()[1].startswith("L'import 2/3 a échoué")
-
-
-def test_finalize_batch_puts_the_summary_before_the_row_lines():
+def test_import_summary_counts_the_lines_and_the_interruption():
     batch = make_batch(f"{CSV_HEADER}\n")
-    batch.import_log = "L'import 1/4 a réussi : 'r1'\nL'import 2/4 a échoué : x"
+    batch.lines.create(line_number=2, reference="r1", status=LINE_STATUSES.success)
+    batch.lines.create(line_number=3, status=LINE_STATUSES.failure, message="x")
+    batch.lines.create(line_number=4, status=LINE_STATUSES.pending)
+    batch.import_status = STATUSES.failure
     batch.save()
-    # Keys are strings once the dict went through the json serializer.
-    errors_by_line = {"1": ["x"], "2": ["y"]}
 
-    finalize_batch.apply(args=(errors_by_line, batch.id, 4))
-    batch.refresh_from_db()
-
-    assert batch.import_status == STATUSES.partial_success
-    assert batch.import_log.splitlines() == [
-        "Résumé : 2/4 ligne(s) importée(s).",
-        "L'import 1/4 a réussi : 'r1'",
-        "L'import 2/4 a échoué : x",
+    assert batch.import_summary.splitlines() == [
+        "Import interrompu à la ligne 2/3 par une erreur inattendue, "
+        "1 ligne(s) non traitée(s).",
+        "L'import 1/3 (ligne 2) a réussi : 'r1'.",
+        "L'import 2/3 (ligne 3) a échoué : x.",
     ]
-    assert batch.import_date is not None
 
 
 @pytest.mark.parametrize(
-    "errors_by_line,expected",
+    "statuses,expected",
     [
-        (None, STATUSES.success),
-        ({}, STATUSES.success),
-        ({"0": ["e"]}, STATUSES.partial_success),
-        ({"0": ["e"], "1": ["e"]}, STATUSES.failure),
+        ([], STATUSES.success),
+        ([LINE_STATUSES.success, LINE_STATUSES.success], STATUSES.success),
+        ([LINE_STATUSES.success, LINE_STATUSES.failure], STATUSES.partial_success),
+        ([LINE_STATUSES.failure, LINE_STATUSES.failure], STATUSES.failure),
     ],
 )
-def test_finalize_batch_status(errors_by_line, expected):
+def test_finalize_batch_status(statuses, expected):
     batch = make_batch(f"{CSV_HEADER}\n")
+    for line_number, status in enumerate(statuses, start=2):
+        batch.lines.create(line_number=line_number, status=status)
 
-    finalize_batch.apply(args=(errors_by_line, batch.id, 2))
+    finalize_batch.apply(args=(batch.id,))
     batch.refresh_from_db()
 
     assert batch.import_status == expected
+
+
+def test_batch_rerun_all_replaces_the_previous_lines():
+    csv_content = f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n"
+    batch = make_batch(csv_content, filenames=["a.gpkg"])
+    batch.lines.create(line_number=2, reference="r1", status=LINE_STATUSES.success)
+    batch.lines.create(line_number=7, status=LINE_STATUSES.failure)
+
+    run_task(batch)
+
+    assert batch.import_status == STATUSES.success
+    assert line_statuses(batch) == [(2, "r1", LINE_STATUSES.success)]
+
+
+def test_batch_retry_failed_lines_skips_the_imported_ones():
+    csv_content = (
+        f"{CSV_HEADER}\n"
+        "r1,a.gpkg,Carte A,Description A,44\n"
+        "r2,b.gpkg,Carte B,Description B,29\n"
+    )
+    batch = make_batch(csv_content, filenames=["a.gpkg", "b.gpkg"])
+    batch.lines.create(line_number=2, reference="r1", status=LINE_STATUSES.success)
+    batch.lines.create(line_number=3, reference="r2", status=LINE_STATUSES.failure)
+    batch.import_status = STATUSES.partial_success
+    batch.save()
+
+    processed = run_task(batch, only_failed=True)
+
+    # r1 was already imported: it is neither processed nor created again.
+    assert Map.objects.filter(reference="r1").exists() is False
+    assert processed == [Map.objects.get(reference="r2").id]
+    assert batch.import_status == STATUSES.success
+    assert line_statuses(batch) == [
+        (2, "r1", LINE_STATUSES.success),
+        (3, "r2", LINE_STATUSES.success),
+    ]
+
+
+def test_imported_row_marks_the_batch_partial_success():
+    """An interrupted run keeps a status once one row is imported."""
+    batch = make_batch(f"{CSV_HEADER}\n")
+    batch.lines.create(line_number=2, reference="r1")
+
+    complete_row.apply(args=(batch.id, 2, "r1"))
+    batch.refresh_from_db()
+
+    assert batch.import_status == STATUSES.partial_success
+    assert batch.lines.get(line_number=2).status == LINE_STATUSES.success
+
+
+def test_row_failing_validation_keeps_the_batch_unprocessed():
+    batch = make_batch(f"{CSV_HEADER}\n")
+    raw_row = {
+        "reference": "r1",
+        "file": "missing.gpkg",
+        "name": "Carte A",
+        "description": "Description A",
+        "departments": "44",
+    }
+
+    import_batch_row.apply(args=(batch.id, 2, raw_row)).get()
+    batch.refresh_from_db()
+
+    assert batch.import_status is None
 
 
 class TestUploadView:
@@ -686,7 +759,7 @@ class TestUploadView:
             res = admin_client.post(self.process_url(batch))
 
         assert res.status_code == 302
-        mock_delay.assert_called_once_with(batch.id)
+        mock_delay.assert_called_once_with(batch.id, only_failed=False)
 
     def test_process_queues_file_less_batch(self, admin_client):
         """A batch without files is a legitimate metadata-only update."""
@@ -697,7 +770,41 @@ class TestUploadView:
         ) as mock_delay:
             admin_client.post(self.process_url(batch))
 
-        mock_delay.assert_called_once_with(batch.id)
+        mock_delay.assert_called_once_with(batch.id, only_failed=False)
+
+    def test_process_retries_only_failed_lines_of_partial_batch(self, admin_client):
+        batch = MapImportBatchFactory(import_status=STATUSES.partial_success)
+        batch.lines.create(line_number=2, status=LINE_STATUSES.failure)
+
+        with patch(
+            "envergo.geodata.admin.process_map_import_batch.delay"
+        ) as mock_delay:
+            admin_client.post(self.process_url(batch), {"mode": "failed"})
+
+        mock_delay.assert_called_once_with(batch.id, only_failed=True)
+
+    def test_process_refuses_failed_retry_on_unprocessed_batch(self, admin_client):
+        batch = MapImportBatchFactory(import_status=None)
+
+        with patch(
+            "envergo.geodata.admin.process_map_import_batch.delay"
+        ) as mock_delay:
+            res = admin_client.post(self.process_url(batch), {"mode": "failed"})
+
+        assert res.status_code == 302
+        mock_delay.assert_not_called()
+
+    def test_change_page_offers_retry_only_on_partial_batch(self, admin_client):
+        batch = MapImportBatchFactory(import_status=STATUSES.partial_success)
+        batch.lines.create(line_number=2, status=LINE_STATUSES.failure)
+        url = reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
+
+        content = admin_client.get(url).content.decode()
+
+        assert "Relancer les lignes en échec" in content
+        assert "Relancer tout le lot" in content
+        assert "Traiter le lot" not in content
+        assert "(ligne 2) a échoué" in content
 
     def test_process_requires_post(self, admin_client):
         batch = MapImportBatchFactory()

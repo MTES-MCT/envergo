@@ -8,7 +8,13 @@ from django.utils import timezone
 
 from config.celery_app import BaseTaskWithRetry, app
 from envergo.geodata.import_batch import is_blank_row, is_file_valid, is_line_valid
-from envergo.geodata.models import STATUSES, Map, MapImportBatch
+from envergo.geodata.models import (
+    LINE_STATUSES,
+    STATUSES,
+    Map,
+    MapImportBatch,
+    MapImportBatchLine,
+)
 from envergo.geodata.utils import (
     make_polygons_valid,
     open_map_file,
@@ -91,143 +97,144 @@ def process_maps(map_ids):
 
 
 @app.task(max_retries=0)
-def process_map_import_batch(batch_id):
+def process_map_import_batch(batch_id, only_failed=False):
     """Create or update Map objects described in a batch CSV.
 
     The CSV is validated first: any error fails the batch before any import.
-    Rows are then imported one at a time in a sequential chain.
-    A row that fails validation again is logged and skipped.
+    Rows are then imported one at a time in a sequential chain, each row
+    recording its outcome on a MapImportBatchLine.
+    A row that fails validation again is recorded and skipped.
     Any other error, timeouts included, stops the chain and mark the batch as failed.
+
+    With `only_failed`, the lines already imported are kept and only the
+    other rows are processed again.
     """
     logger.info(f"Starting import on map batch {batch_id}")
 
     batch = MapImportBatch.objects.get(pk=batch_id)
-
-    # Reset the state of a previous run.
-    batch.import_log = ""
-    batch.import_date = timezone.now()
     batch.import_status = None
-    batch.save()
+    batch.import_date = timezone.now()
+    batch.save(update_fields=["import_status", "import_date"])
 
     errors = is_file_valid(batch.csv_file, batch.files)
 
     if errors:
-        batch.import_status = STATUSES.failure
-        batch.import_log = "\n".join(
-            ["Résumé : aucune ligne importée, csv non valide.", *errors]
+        batch.lines.all().delete()
+        batch.lines.create(
+            line_number=0, status=LINE_STATUSES.failure, message="\n".join(errors)
         )
+        batch.import_status = STATUSES.failure
         batch.import_date = timezone.now()
-        batch.save()
+        batch.save(update_fields=["import_status", "import_date"])
         return
 
     reader = csv.DictReader(read_csv_file(batch.csv_file))
     rows = [(reader.line_num, row) for row in reader if not is_blank_row(row)]
-    nb_rows = len(rows)
 
-    if nb_rows == 0:
-        batch.import_status = STATUSES.success
-        batch.import_date = timezone.now()
-        batch.save()
+    if only_failed:
+        done = set(
+            batch.lines.filter(status=LINE_STATUSES.success).values_list(
+                "line_number", flat=True
+            )
+        )
+        batch.lines.exclude(line_number__in=done).delete()
+    else:
+        done = set()
+        batch.lines.all().delete()
+    rows = [
+        (csv_line_number, row)
+        for csv_line_number, row in rows
+        if csv_line_number not in done
+    ]
+
+    MapImportBatchLine.objects.bulk_create(
+        MapImportBatchLine(batch=batch, line_number=csv_line_number)
+        for csv_line_number, _ in rows
+    )
+
+    if not rows:
+        set_final_status(batch)
         return
 
     chain(
-        # Each task receives the previous one's `errors_by_line`; the first
-        # one has no predecessor, so it gets None explicitly.
-        import_batch_row.s(None, batch_id, 0, nb_rows, *rows[0]),
         *(
-            import_batch_row.s(batch_id, index, nb_rows, csv_line_number, raw_row)
-            for index, (csv_line_number, raw_row) in enumerate(rows)
-            if index > 0
+            import_batch_row.si(batch_id, csv_line_number, raw_row)
+            for csv_line_number, raw_row in rows
         ),
-        finalize_batch.s(batch_id, nb_rows),
-    ).apply_async(link_error=fail_batch.s(batch_id, nb_rows))
+        finalize_batch.si(batch_id),
+    ).apply_async(link_error=fail_batch.s(batch_id))
 
 
-def append_batch_log(batch, line):
-    """Add a line to the batch log, so the progress survives a broken chain.
-
-    Rows are processed one at a time, so there is no concurrent write.
-    """
-    batch.import_log = "\n".join(filter(None, [batch.import_log, line]))
-    batch.save(update_fields=["import_log"])
+def set_line_status(batch, csv_line_number, status, reference="", message=""):
+    """Record the outcome of a CSV line, so the progress survives a broken chain."""
+    MapImportBatchLine.objects.update_or_create(
+        batch=batch,
+        line_number=csv_line_number,
+        defaults={"status": status, "reference": reference, "message": message},
+    )
 
 
 @app.task
-def fail_batch(request, exc, traceback, batch_id, total):
+def fail_batch(request, exc, traceback, batch_id):
     """Error callback of the batch chain: record the failure on the batch."""
     batch = MapImportBatch.objects.get(pk=batch_id)
     if batch.import_status == STATUSES.failure:
         # The callback is linked to every task of the chain: only the first
-        # call describes the failure, later ones must not rewrite the log.
+        # call describes the failure.
         return
 
-    logged = batch.import_log.splitlines()
-    position = len(logged) + 1
+    # Rows are processed one at a time: the first pending line is the one that broke.
+    # The lines after it stay pending, so they can be retried on their own.
+    line = batch.lines.filter(status=LINE_STATUSES.pending).first()
+    if line is not None:
+        line.status = LINE_STATUSES.failure
+        line.message = f"erreur inattendue ({exc})"
+        line.save()
 
-    if position > total:
-        # Every row was handled: only the finalization failed.
-        summary = f"Résumé : import interrompu à la finalisation ({exc})."
-        lines = logged
-    else:
-        summary = (
-            f"Résumé : import interrompu à la ligne {position}/{total} "
-            f"par une erreur inattendue, {total - position} ligne(s) non traitée(s)."
-        )
-        lines = [
-            *logged,
-            f"L'import {position}/{total} a échoué : erreur inattendue ({exc})",
-        ]
     batch.import_status = STATUSES.failure
-    batch.import_log = "\n".join([summary, *lines])
     batch.import_date = timezone.now()
-    batch.save()
+    batch.save(update_fields=["import_status", "import_date"])
 
 
-@app.task
-def finalize_batch(errors_by_line, batch_id, total):
-    """Write the batch outcome on top of the per-row lines of the log."""
-    batch = MapImportBatch.objects.get(pk=batch_id)
-    nb_failed = len(errors_by_line or {})
-    if nb_failed == 0:
+def set_final_status(batch):
+    """Set the batch status from the outcome of its lines."""
+    if not batch.lines.exclude(status=LINE_STATUSES.success).exists():
         batch.import_status = STATUSES.success
-    elif nb_failed < total:
+    elif batch.lines.filter(status=LINE_STATUSES.success).exists():
         batch.import_status = STATUSES.partial_success
     else:
         batch.import_status = STATUSES.failure
-
-    summary = f"Résumé : {total - nb_failed}/{total} ligne(s) importée(s)."
-    batch.import_log = "\n".join(filter(None, [summary, batch.import_log]))
     batch.import_date = timezone.now()
-    batch.save()
+    batch.save(update_fields=["import_status", "import_date"])
+
+
+@app.task
+def finalize_batch(batch_id):
+    set_final_status(MapImportBatch.objects.get(pk=batch_id))
 
 
 @app.task(bind=True)
-def import_batch_row(
-    task, errors_by_line, batch_id, index, total, csv_line_number, raw_row
-):
+def import_batch_row(task, batch_id, csv_line_number, raw_row):
     """Create or update the Map described by a CSV row, and then process it if needed.
 
-    Chained task: it receives the `errors_by_line` dict ({row index: [errors]})
-    from the previous row and returns it, completed, to the next one.
-
-    Each row logs its outcome on the batch as it goes. A row failing
-    validation is added to `errors_by_line` and skipped.
+    A row failing validation is recorded on its line and skipped.
     Otherwise the map is saved: required columns always overwrite, optional
     ones only when non-empty, and a blank `departments` clears the field.
     A row with a file replaces the map's file; a blank file cell only updates
     the metadata of an existing map. The task then replaces itself with
     `process_map`, so the next row starts once the geometries are imported.
     """
-    if errors_by_line is None:
-        errors_by_line = {}
     batch = MapImportBatch.objects.get(pk=batch_id)
     row, errors = is_line_valid(csv_line_number, raw_row, batch.files)
     if errors:
-        errors_by_line[index] = errors
-        append_batch_log(
-            batch, f"L'import {index + 1}/{total} a échoué : {' ; '.join(errors)}"
+        set_line_status(
+            batch,
+            csv_line_number,
+            LINE_STATUSES.failure,
+            reference=(raw_row.get("reference") or "").strip(),
+            message=" ; ".join(errors),
         )
-        return errors_by_line
+        return None
 
     now = timezone.now()
 
@@ -278,20 +285,22 @@ def import_batch_row(
         return task.replace(
             chain(
                 process_map.si(map.id),
-                complete_row.si(errors_by_line, batch_id, index, total, row.reference),
+                complete_row.si(batch_id, csv_line_number, row.reference),
             )
         )
     else:
         # Metadata only update do not need map re-processing.
-        return complete_row(errors_by_line, batch_id, index, total, row.reference)
+        return complete_row(batch_id, csv_line_number, row.reference)
 
 
 @app.task
-def complete_row(errors_by_line, batch_id, index, total, reference):
-    """Log the successful import of a row and pass the errors on to the next one."""
+def complete_row(batch_id, csv_line_number, reference):
+    """Mark the line of a successfully imported row."""
     batch = MapImportBatch.objects.get(pk=batch_id)
-    append_batch_log(batch, f"L'import {index + 1}/{total} a réussi : '{reference}'")
-    return errors_by_line
+    set_line_status(batch, csv_line_number, LINE_STATUSES.success, reference=reference)
+    if batch.import_status is None:
+        batch.import_status = STATUSES.partial_success
+        batch.save(update_fields=["import_status"])
 
 
 @app.task(bind=True)
