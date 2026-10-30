@@ -370,10 +370,7 @@ class StateChangeForm(forms.ModelForm):
                 ),
             )
 
-        enters_authorization = (
-            stage == "instruction_a" and previous_stage != "instruction_a"
-        )
-        if enters_authorization and not self.can_switch_to_authorization:
+        if self.enters_authorization and not self.can_switch_to_authorization:
             self.add_error(
                 "stage",
                 ValidationError(
@@ -397,13 +394,22 @@ class StateChangeForm(forms.ModelForm):
         return cleaned_data
 
     @property
-    def is_authorization_switch(self):
-        """Whether the submitted stage switches the dossier to authorisation.
+    def enters_authorization(self):
+        """Whether the submitted stage moves the dossier into authorisation instruction.
 
         Only meaningful once the form is cleaned.
         """
         stage = self.cleaned_data.get("stage")
-        return self.can_switch_to_authorization and stage == "instruction_a"
+        previous_stage = self.initial["stage"]
+        return stage == "instruction_a" and previous_stage != "instruction_a"
+
+    @property
+    def is_authorization_switch(self):
+        """Whether the dossier enters authorisation instruction from its declaration phase.
+
+        Only meaningful once the form is cleaned.
+        """
+        return self.enters_authorization and self.can_switch_to_authorization
 
     def clean_authorization_switch_fields(self, cleaned_data):
         """Enforce the deadline and the message the applicant is notified of."""
