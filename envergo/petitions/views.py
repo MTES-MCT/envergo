@@ -70,6 +70,7 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
+    AUTHORIZATION_REASON_PLACEHOLDER,
     REFUSAL_DEADLINE_PLACEHOLDER,
     REFUSAL_DEADLINE_SENTENCE,
     HruInvitationForm,
@@ -1960,6 +1961,9 @@ class PetitionProjectInstructorProcedureView(
         )
         if self.object.can_switch_to_authorization:
             context["authorization_switch_due_date"] = two_months_from_today()
+            context["authorization_reason_placeholder"] = (
+                AUTHORIZATION_REASON_PLACEHOLDER
+            )
             context["refusal_deadline_placeholder"] = REFUSAL_DEADLINE_PLACEHOLDER
             context["refusal_deadline_sentence_preview"] = (
                 REFUSAL_DEADLINE_SENTENCE.format(deadline="[date limite saisie]")

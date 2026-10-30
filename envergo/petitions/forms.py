@@ -181,8 +181,8 @@ CLOSING_FIELD_ERRORS = {
     ),
 }
 
-# Prefix of every placeholder the instructor must replace in a message template.
-TO_COMPLETE_MARKER = "[À COMPLÉTER"
+# The switch message line that the instructor must replace with the reason.
+AUTHORIZATION_REASON_PLACEHOLDER = "[À COMPLÉTER : motif de la bascule en autorisation]"
 
 # The switch message line that the form swaps for the deadline sentence.
 REFUSAL_DEADLINE_PLACEHOLDER = (
@@ -429,7 +429,7 @@ class StateChangeForm(forms.ModelForm):
                     code="missing_applicant_message",
                 ),
             )
-        elif TO_COMPLETE_MARKER in message:
+        elif AUTHORIZATION_REASON_PLACEHOLDER in message:
             self.add_error(
                 "applicant_message",
                 ValidationError(

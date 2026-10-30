@@ -4,7 +4,7 @@ Madame, Monsieur,
 
 Je vous informe que votre projet de destruction de haie, dont le récépissé de dépôt de déclaration porte le n° {{ dossier_number|format_ds_number }}, est subordonné à l'obtention d'une autorisation sur le fondement de l'article L. 412-23 du code de l’environnement et de l’article R. 412-70 du code de l’environnement.
 
-[À COMPLÉTER : motif de la bascule en autorisation]
+{{ authorization_reason_placeholder }}
 
 La décision sera prise sous la forme d’un arrêté d’autorisation fixant les prescriptions nécessaires au respect des législations mentionnées aux articles L. 412-24 et suivants.
 

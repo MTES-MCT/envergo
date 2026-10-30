@@ -39,6 +39,7 @@ from envergo.moulinette.tests.utils import (
 )
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
+    AUTHORIZATION_REASON_PLACEHOLDER,
     REFUSAL_DEADLINE_PLACEHOLDER,
     SimulationForm,
     two_months_from_today,
@@ -5110,7 +5111,7 @@ def test_state_change_modal_embeds_the_authorization_switch_message(
     assert "porte le n° 2105-9675," in message
     assert f"L. 412-24 et suivants.\n\n{REFUSAL_DEADLINE_PLACEHOLDER}\n\n" in message
     assert "au plus tard le" not in message
-    assert "[À COMPLÉTER : motif de la bascule en autorisation]" in message
+    assert AUTHORIZATION_REASON_PLACEHOLDER in message
     # Inside a <script> block, the browser does not decode &#x27;
     assert "l'obtention d'une autorisation" in message
     assert (
