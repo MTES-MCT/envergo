@@ -2324,7 +2324,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             "type_haie": "str",
             "sur_parcelle_pac": "str",
             "category": "str",
-            "longueur": "float",
+            "longueur_m": "float",
             "bord_voie": "str",
             "proximite_mare": "str",
             "vieil_arbre": "str",
@@ -2412,7 +2412,7 @@ class PetitionProjectHedgeDataExport(DetailView):
         # Additional hedge fields
         props += (
             ("category", self.exported_categories[hedge.category]),
-            ("longueur", round(hedge.length, 3)),
+            ("longueur_m", round(hedge.length, 3)),
             ("bord_voie", yesno(hedge.prop("bord_voie"))),
             ("proximite_mare", yesno(hedge.prop("proximite_mare"))),
             ("vieil_arbre", yesno(hedge.prop("vieil_arbre"))),
