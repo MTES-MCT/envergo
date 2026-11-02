@@ -383,9 +383,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         declaration_filed_on = None
         declaration_due_date = None
+        is_first_submission = not self.is_dossier_submitted
 
-        if not self.is_dossier_submitted:
-            # first time we have some data about this dossier
+        if is_first_submission:
             department = extract_param_from_url(self.moulinette_url, "department")
             if "dateDepot" in dossier and dossier["dateDepot"]:
                 date_depot = parser.isoparse(dossier["dateDepot"]).date()
@@ -522,11 +522,20 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         self.demarche_numerique_last_sync = timezone.now()
         self.save()
 
-        # Scheduled after the save, so the task reads the project as the dépôt left it.
+        # Scheduled after the save, so the tasks read the project as the dépôt left it.
+        if is_first_submission:
+            self.schedule_new_dossier_email()
         if declaration_filed_on:
             self.schedule_declaration_receipt(
                 declaration_filed_on, declaration_due_date
             )
+
+    def schedule_new_dossier_email(self):
+        """Queue the GUH mailbox email for after commit, so a mail failure blocks nothing."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_new_dossier_email_async
+
+        transaction.on_commit(lambda: send_new_dossier_email_async.delay(self.pk))
 
     def schedule_declaration_receipt(self, received_on, due_date):
         """Queue the déclaration receipt for after commit, so a DN failure blocks nothing."""
