@@ -2339,10 +2339,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             "numero_pacage": "str",
             "beneficiaire": "str",
             "commune": "str",
-            "procedure": "str",
-            "decision": "str",
             "date_depot_dossier": "date",
-            "date_cloture_dossier": "date",
         },
     }
 
@@ -2452,10 +2449,7 @@ class PetitionProjectHedgeDataExport(DetailView):
             "numero_pacage": declared_dn_field(project, "pacage") or None,
             "beneficiaire": applicant,
             "commune": declared_commune(project) or None,
-            "procedure": None,
-            "decision": project.decision,
             "date_depot_dossier": filed_on,
-            "date_cloture_dossier": project.closed_on,
         }
 
 

@@ -1749,12 +1749,6 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
             "2025-03-21T11:08:34+01:00"
         ),
     )
-    StatusLogFactory(
-        petition_project=project,
-        stage=STAGES.closed,
-        decision=DECISIONS.express_agreement,
-        status_date=date(2025, 9, 1),
-    )
 
     geopkg_url = reverse(
         "petition_project_hedge_data_export",
@@ -1788,10 +1782,7 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
     assert row["numero_pacage"] == "123456789"
     assert row["beneficiaire"] == "LAMARR Hedy"
     assert row["commune"] == "Laon (02000)"
-    assert row["procedure"] is None
-    assert row["decision"] == DECISIONS.express_agreement
     assert row["date_depot_dossier"] == "2025-03-21"
-    assert row["date_cloture_dossier"] == "2025-09-01"
 
 
 def test_petition_project_instructor_notes_form(
