@@ -1770,7 +1770,7 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
     row = rows[0]
     assert row["id"] == "D1"
     assert row["type"] == "A_DETRUIRE"
-    assert row["type_haie"] == "degradee"
+    assert row["type_haie"] == "Haie dégradée ou résiduelle basse"
     assert row["sur_parcelle_pac"] == "oui"
     assert row["category"] == "regime_unique"
     assert row["longueur_m"] == round(hedge.length, 3)

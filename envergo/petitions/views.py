@@ -2372,6 +2372,7 @@ class PetitionProjectHedgeDataExport(DetailView):
         The file's other tables stay untouched.
         """
         dossier_properties = self.export_dossier_properties(project)
+        hedge_type_labels = self.export_hedge_type_labels(project)
         transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
 
         with fiona.open(
@@ -2385,14 +2386,28 @@ class PetitionProjectHedgeDataExport(DetailView):
             for hedge in project.hedge_data.hedges():
                 lambert_line = transform(transformer.transform, hedge.geometry)
                 geometry = Geometry.from_dict(lambert_line)
-                hedge_properties = self.export_hedge_properties(hedge)
+                hedge_properties = self.export_hedge_properties(
+                    hedge, hedge_type_labels
+                )
                 properties = Properties.from_dict(
                     {**hedge_properties, **dossier_properties}
                 )
                 dst.write(Feature(geometry=geometry, properties=properties))
 
-    def export_hedge_properties(self, hedge) -> dict:
-        """Build data exported as geojson for each hedge."""
+    def export_hedge_type_labels(self, project) -> dict[str, str]:
+        """Map hedge type codes to their labels in the project's configuration."""
+        single_procedure = project.config.single_procedure
+        hedge_types = HedgeTypeFactory.build_from_context(
+            single_procedure=single_procedure
+        )
+        return dict(hedge_types.choices)
+
+    def export_hedge_properties(self, hedge, hedge_type_labels: dict[str, str]) -> dict:
+        """Build the hedge columns of one exported row.
+
+        A hedge type code missing from `hedge_type_labels` exports as is.
+        """
+        hedge_type_label = hedge_type_labels.get(hedge.hedge_type, hedge.hedge_type)
 
         def yesno(val):
             if val is None:
@@ -2405,7 +2420,7 @@ class PetitionProjectHedgeDataExport(DetailView):
         props = (
             ("id", hedge.id),
             ("type", ("A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE")),
-            ("type_haie", hedge.hedge_type),
+            ("type_haie", hedge_type_label),
             ("sur_parcelle_pac", yesno(hedge.is_on_pac)),
         )
 
