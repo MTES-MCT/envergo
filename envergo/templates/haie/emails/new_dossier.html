@@ -1,0 +1,21 @@
+{% extends 'emails/_base.html' %}
+
+{% block email_title %}Nouveau dossier déposé{% endblock %}
+
+{% block content %}
+
+  <p>Bonjour,</p>
+
+  <p>Un nouveau dossier a été déposé sur le portail du guichet unique de la haie.</p>
+
+  <p>Numéro de dossier : {{ dossier_number }}</p>
+
+  <p>
+    Pour examiner la demande :
+    <br />
+    <a href="{{ instruction_url }}">{{ instruction_url }}</a>
+  </p>
+
+  {% include 'haie/emails/_email_signature.html' %}
+
+{% endblock %}
