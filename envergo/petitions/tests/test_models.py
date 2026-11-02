@@ -396,3 +396,33 @@ class TestResultSnapshot:
         project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
 
         assert not mock_task.delay.called
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    def test_dossier_submission_sends_the_new_dossier_email(self, mock_task):
+        """The GUH mailbox hears about a dossier when it is first submitted."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
+
+        mock_task.delay.assert_called_once_with(project.pk)
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    def test_resync_of_submitted_dossier_sends_no_new_dossier_email(self, mock_task):
+        """A dossier already submitted is not announced again."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_construction
+        )
+
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
+
+        assert not mock_task.delay.called
