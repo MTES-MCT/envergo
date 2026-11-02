@@ -2,8 +2,11 @@ import csv
 import logging
 
 from celery import chain
+from django.conf import settings
 from django.core.files import File
 from django.db import transaction
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 
 from config.celery_app import BaseTaskWithRetry, app
@@ -24,8 +27,33 @@ from envergo.geodata.utils import (
     simplify_lines,
     simplify_map,
 )
+from envergo.utils.tchap import notify
+from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)
+
+
+def notify_map_failure(map, error):
+    """Warn the cartographers of a failed map import, with links to the map and batch."""
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    batch_url = None
+    if map.import_batch_id:
+        batch_url = base_url + reverse(
+            "admin:geodata_mapimportbatch_change", args=[map.import_batch_id]
+        )
+
+    message = render_to_string(
+        "geodata/mattermost_map_import_failure.txt",
+        context={
+            "map_id": map.id,
+            "map_url": base_url + reverse("admin:geodata_map_change", args=[map.id]),
+            "error": error,
+            "batch_id": map.import_batch_id,
+            "batch_url": batch_url,
+            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
+        },
+    )
+    notify(message, "amenagement")
 
 
 class ProcessMapTask(BaseTaskWithRetry):
@@ -35,12 +63,16 @@ class ProcessMapTask(BaseTaskWithRetry):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         map_id = args[0] if args else kwargs.get("map_id")
+        error = f"Erreur d'import ({exc})"
         Map.objects.filter(pk=map_id).update(
             import_status=STATUSES.failure,
-            import_error_msg=f"Erreur d'import ({exc})",
+            import_error_msg=error,
             import_date=timezone.now(),
             task_id=None,
         )
+        map = Map.objects.filter(pk=map_id).first()
+        if map is not None:
+            notify_map_failure(map, error)
 
 
 @app.task(bind=True, base=ProcessMapTask)
@@ -85,6 +117,9 @@ def process_map(task, map_id):
     map.imported_geometries = nb_imported_geometries
     map.import_date = timezone.now()
     map.save()
+
+    if map.import_status == STATUSES.failure:
+        notify_map_failure(map, "Aucune géométrie importée.")
 
 
 def process_maps(map_ids):
