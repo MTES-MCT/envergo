@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="statuslog",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(
                         ("suspension_date__isnull", False),
                         ("response_due_date__isnull", False),
@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="statuslog",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("info_receipt_date__isnull", True),
                     models.Q(
                         ("info_receipt_date__isnull", False),

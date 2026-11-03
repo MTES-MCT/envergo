@@ -50,7 +50,7 @@ jobs:
     # Configure the database service
     services:
       database:
-        image: postgis/postgis:14-master
+        image: postgis/postgis:17-master
         env:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
@@ -119,7 +119,7 @@ jobs:
     # Configure the database service
     services:
       database:
-        image: postgis/postgis:14-master
+        image: postgis/postgis:17-master
         env:
           POSTGRES_USER: envergo
           POSTGRES_PASSWORD: envergo
