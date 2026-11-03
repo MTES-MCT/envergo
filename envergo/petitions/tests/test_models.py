@@ -504,3 +504,23 @@ class TestResultSnapshot:
         assert mock_alert_task.delay.call_count == 1
         assert mock_email_task.delay.call_count == 1
         assert mock_receipt_task.delay.call_count == 1
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    @patch("envergo.petitions.tasks.send_team_alert_async")
+    def test_failing_alert_enqueue_still_queues_the_other_messages(
+        self, mock_alert_task, mock_email_task, mock_receipt_task
+    ):
+        """A team alert that cannot be queued does not cost the email and receipt."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+        mock_alert_task.delay.side_effect = ConnectionError
+
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
+
+        assert mock_email_task.delay.call_count == 1
+        assert mock_receipt_task.delay.call_count == 1

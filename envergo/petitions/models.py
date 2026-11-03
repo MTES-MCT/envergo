@@ -452,7 +452,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         from envergo.petitions.tasks import send_team_alert_async
 
         alert = dossier_submission_alert(self, fetched_dossier)
-        transaction.on_commit(lambda: send_team_alert_async.delay(alert))
+        transaction.on_commit(lambda: send_team_alert_async.delay(alert), robust=True)
 
     def schedule_outside_change_alert(self, fetched_dossier: dict):
         """Queue the team alert reporting a state change made outside the guichet, for after commit."""
@@ -460,14 +460,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         from envergo.petitions.tasks import send_team_alert_async
 
         alert = dossier_state_changed_outside_guh_alert(self, fetched_dossier)
-        transaction.on_commit(lambda: send_team_alert_async.delay(alert))
+        transaction.on_commit(lambda: send_team_alert_async.delay(alert), robust=True)
 
     def schedule_new_dossier_email(self):
         """Queue the GUH mailbox email for after commit, so a mail failure blocks nothing."""
         # Imported here: the tasks module imports this one.
         from envergo.petitions.tasks import send_new_dossier_email_async
 
-        transaction.on_commit(lambda: send_new_dossier_email_async.delay(self.pk))
+        transaction.on_commit(
+            lambda: send_new_dossier_email_async.delay(self.pk), robust=True
+        )
 
     def schedule_declaration_receipt(self, received_on, due_date):
         """Queue the déclaration receipt for after commit, so a DN failure blocks nothing."""
@@ -480,7 +482,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         transaction.on_commit(
             lambda: send_declaration_receipt_async.delay(
                 self.pk, received_on_iso, due_date_iso
-            )
+            ),
+            robust=True,
         )
 
     def get_moulinette(self):
