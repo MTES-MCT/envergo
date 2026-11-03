@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models import Q
@@ -18,8 +17,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices, FieldTracker
 
-from envergo.analytics.models import Event
-from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import Department
 from envergo.hedges.models import HedgeCategory, HedgeData
@@ -28,10 +25,10 @@ from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Re
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.services import (
+    log_dossier_submission_event,
     notify_dossier_state_changed_outside_guh,
     notify_dossier_submission,
 )
-from envergo.users.models import User
 from envergo.utils.models import ResultSnapshotBase
 from envergo.utils.urls import extract_param_from_url, update_qs
 
@@ -86,9 +83,6 @@ LOG_TYPES = Choices(
     ("suspension", "Demande de compléments"),
     ("resumption", "Compléments reçus"),
 )
-
-# This session key is used when we are not able to find the real user session key.
-SESSION_KEY = "untracked_dossier_submission"
 
 
 def dn_archive_file_format(instance, filename):
@@ -406,39 +400,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 )
 
             notify_dossier_submission(self, dossier)
-
-            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-            creation_event = (
-                Event.objects.order_by("-date_created")
-                .filter(
-                    metadata__reference=self.reference,
-                    category="demande",
-                    event="creation",
-                )
-                .first()
-            )
-            if not creation_event:
-                logger.warning(
-                    f"Unable to find creation event for project {self.reference}. "
-                    f"The submission event will be logged with a mocked session key.",
-                    extra={
-                        "project": self,
-                        "session_key": SESSION_KEY,
-                    },
-                )
-
-            visitor_id = creation_event.session_key if creation_event else SESSION_KEY
-
-            user = User(is_staff=False)
-
-            log_event_raw(
-                "demande",
-                "depot",
-                visitor_id,
-                user,
-                haie_site,
-                **self.get_log_event_data(),
-            )
+            log_dossier_submission_event(self)
 
         elif (
             self.demarche_numerique_state

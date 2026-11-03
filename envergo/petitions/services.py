@@ -9,6 +9,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
+from envergo.analytics.models import Event
+from envergo.analytics.utils import log_event_raw
 from envergo.demarchenumerique.models import DemarcheConfig
 from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
@@ -26,10 +28,14 @@ from envergo.petitions.demarche_numerique.models import (
     PieceJustificativeChamp,
     YesNoChamp,
 )
+from envergo.users.models import User
 from envergo.utils.tchap import notify
 from envergo.utils.tools import display_form_details, get_base_url
 
 logger = logging.getLogger(__name__)
+
+# Stands in for the applicant's visitor id when their project creation was not tracked.
+UNTRACKED_SUBMISSION_SESSION_KEY = "untracked_dossier_submission"
 
 
 DEMARCHE_NUMERIQUE_STATUS_MAPPING = {
@@ -478,6 +484,44 @@ def notify_dossier_state_changed_outside_guh(petition_project, dossier: dict):
         },
     )
     notify(message, "haie")
+
+
+def log_dossier_submission_event(petition_project):
+    """Log the dépôt analytics event under the visitor who created the project."""
+    creation_event = (
+        Event.objects.order_by("-date_created")
+        .filter(
+            metadata__reference=petition_project.reference,
+            category="demande",
+            event="creation",
+        )
+        .first()
+    )
+    if not creation_event:
+        logger.warning(
+            f"Unable to find creation event for project {petition_project.reference}. "
+            f"The submission event will be logged with a mocked session key.",
+            extra={
+                "project": petition_project,
+                "session_key": UNTRACKED_SUBMISSION_SESSION_KEY,
+            },
+        )
+    visitor_id = (
+        creation_event.session_key
+        if creation_event
+        else UNTRACKED_SUBMISSION_SESSION_KEY
+    )
+
+    haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+    applicant = User(is_staff=False)
+    log_event_raw(
+        "demande",
+        "depot",
+        visitor_id,
+        applicant,
+        haie_site,
+        **petition_project.get_log_event_data(),
+    )
 
 
 def project_department_name(petition_project):

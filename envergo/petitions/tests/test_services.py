@@ -34,7 +34,6 @@ from envergo.moulinette.tests.utils import (
     make_moulinette_haie_data,
 )
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
-from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
@@ -52,6 +51,7 @@ from envergo.petitions.regulations.loi_sur_leau_haie import (
     loi_sur_leau_haie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
+    UNTRACKED_SUBMISSION_SESSION_KEY,
     compute_instructor_informations_ds,
     declaration_receipt_message,
     get_context_from_dn,
@@ -100,7 +100,9 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     dossier = get_demarche_numerique_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
-    assert Event.objects.get(category="demande", event="depot", session_key=SESSION_KEY)
+    assert Event.objects.get(
+        category="demande", event="depot", session_key=UNTRACKED_SUBMISSION_SESSION_KEY
+    )
 
     # AND the project details are correctly populated
     project_details = get_context_from_dn(petition_project)
