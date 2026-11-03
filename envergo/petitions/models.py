@@ -1,3 +1,4 @@
+import inspect
 import logging
 import secrets
 from datetime import date, timedelta
@@ -310,6 +311,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 lambda: ResultSnapshot.create_for_project(project=self)
             )
 
+    def refresh_from_db(self, *args, **kwargs):
+        super().refresh_from_db(*args, **kwargs)
+        self.clear_cached_properties()
+
+    def clear_cached_properties(self):
+        """Forget every cached property, so each one is recomputed from the current fields."""
+        for name, attribute in inspect.getmembers(type(self)):
+            if isinstance(attribute, cached_property):
+                self.__dict__.pop(name, None)
+
     @property
     def is_closed(self):
         return self.stage == STAGES.closed
@@ -409,8 +420,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
 
         self.demarche_numerique_raw_dossier = fetched_dossier
-        if hasattr(self, "prefetched_dossier"):
-            del self.prefetched_dossier
+        self.clear_cached_properties()
 
         # Dossiers fetched without messages keep the previous date.
         if "messages" in fetched_dossier:
@@ -423,6 +433,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """Evaluate the project and its simulations with the rules in force on `submission_date`."""
         date_param = {"date": submission_date.isoformat()}
         self.moulinette_url = update_qs(self.moulinette_url, date_param)
+        self.clear_cached_properties()
 
         simulations = list(self.simulations.all())
         for simulation in simulations:
@@ -488,12 +499,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
-        if not hasattr(self, "_moulinette"):
-            moulinette_data = self._parse_moulinette_data()
-            moulinette_data["haies"] = self.hedge_data
-            form_data = {"initial": moulinette_data, "data": moulinette_data}
-            self._moulinette = MoulinetteHaie(form_data)
-        return self._moulinette
+        return self.moulinette
+
+    @cached_property
+    def moulinette(self):
+        moulinette_data = self._parse_moulinette_data()
+        moulinette_data["haies"] = self.hedge_data
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        return MoulinetteHaie(form_data)
 
     def get_triage_form(self):
         """Recreate triage form from moulinette url"""

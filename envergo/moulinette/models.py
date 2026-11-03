@@ -1788,14 +1788,11 @@ class MoulinetteHaieUrlMixin(MoulinetteUrlMixin):
             return None
         return ConfigHaie.objects.get_valid_config(self.department, self.date)
 
-    @property
+    @cached_property
     def hedge_types(self):
-        if not hasattr(self, "_hedge_types"):
-            self._hedge_types = HedgeTypeFactory.build_from_context(
-                single_procedure=self.config.single_procedure
-            )
-
-        return self._hedge_types
+        return HedgeTypeFactory.build_from_context(
+            single_procedure=self.config.single_procedure
+        )
 
 
 class Moulinette(MoulinetteUrlMixin, ABC):

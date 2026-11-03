@@ -22,6 +22,7 @@ from envergo.petitions.tests.factories import (
     SimulationFactory,
 )
 from envergo.users.tests.factories import UserFactory
+from envergo.utils.urls import update_qs
 
 pytestmark = pytest.mark.django_db
 
@@ -146,6 +147,30 @@ def test_result_url_active_returns_project_url():
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
     assert "project_reference" not in params
+
+
+def test_pinned_simulation_date_replaces_the_evaluated_date():
+    """Pinning the simulation date changes the date the project is evaluated on."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    assert project.date != date(2025, 1, 29)
+
+    project.pin_simulation_date(date(2025, 1, 29))
+
+    assert project.date == date(2025, 1, 29)
+
+
+def test_reloaded_project_is_evaluated_on_its_stored_date():
+    """A reload picks up the simulation date stored in the database."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    assert project.date != date(2025, 1, 29)
+    pinned_url = update_qs(project.moulinette_url, {"date": "2025-01-29"})
+    PetitionProject.objects.filter(pk=project.pk).update(moulinette_url=pinned_url)
+
+    project.refresh_from_db()
+
+    assert project.date == date(2025, 1, 29)
 
 
 @pytest.mark.django_db(transaction=True)
@@ -524,3 +549,23 @@ class TestResultSnapshot:
 
         assert mock_email_task.delay.call_count == 1
         assert mock_receipt_task.delay.call_count == 1
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    @patch("envergo.petitions.tasks.send_team_alert_async")
+    def test_submission_evaluates_the_project_on_its_depot_date(self, *mock_tasks):
+        """After the dépôt, the project is evaluated with the rules of its dépôt date."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+        # Evaluated before the sync, as an instructor page does.
+        assert project.date != date(2025, 1, 29)
+        assert project.get_moulinette().date != date(2025, 1, 29)
+
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
+
+        assert project.date == date(2025, 1, 29)
+        assert project.get_moulinette().date == date(2025, 1, 29)
