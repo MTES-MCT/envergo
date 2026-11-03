@@ -173,20 +173,20 @@ def test_reloaded_project_is_evaluated_on_its_stored_date():
     assert project.date == date(2025, 1, 29)
 
 
+def fake_dossier(state):
+    """A « Démarche numérique » dossier, as the synchronization reads it."""
+    return {
+        "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+        "state": state,
+        "dateDepot": "2025-01-29T16:25:03+01:00",
+        "usager": {"email": "test@example.com"},
+        "demarche": {"number": 103363},
+    }
+
+
 @pytest.mark.django_db(transaction=True)
 class TestResultSnapshot:
     """Tests for ResultSnapshot model and automatic creation."""
-
-    @staticmethod
-    def fake_dossier(state):
-        """A « Démarche numérique » dossier, as the synchronization reads it."""
-        return {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": state,
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
 
     def test_create_for_project(self):
         """ResultSnapshot.create_for_project creates a snapshot with correct data."""
@@ -284,9 +284,7 @@ class TestResultSnapshot:
         initial_count = ResultSnapshot.objects.filter(project=project).count()
 
         # Simulate dossier submission from « Démarche numérique »
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (
@@ -300,6 +298,12 @@ class TestResultSnapshot:
         # The snapshot should have the updated moulinette_url (with date param added)
         assert "date=2025-01-29" in latest_snapshot.moulinette_url
 
+
+# The sync's commit callbacks only run in a real transaction.
+@pytest.mark.django_db(transaction=True)
+class TestDemarcheNumeriqueSync:
+    """Synchronization of a project with its « Démarche numérique » dossier."""
+
     @pytest.mark.haie
     def test_simulations_date_updated_on_dossier_submission(self):
         """All simulations get the date param added to their moulinette_url on first submission."""
@@ -308,9 +312,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         alternative = SimulationFactory(project=project, comment="Alternative")
 
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         alternative.refresh_from_db()
         assert "date=2025-01-29" in alternative.moulinette_url
@@ -328,7 +330,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         assert project.stage == "to_be_processed"
 
-        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+        project.synchronize_with_demarche_numerique(fake_dossier("en_instruction"))
 
         status_log = StatusLog.objects.filter(
             petition_project=project,
@@ -358,7 +360,7 @@ class TestResultSnapshot:
         )
         assert project.stage == "to_be_processed"
 
-        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+        project.synchronize_with_demarche_numerique(fake_dossier("en_instruction"))
 
         status_log = StatusLog.objects.filter(
             petition_project=project,
@@ -381,7 +383,7 @@ class TestResultSnapshot:
         # Default factory category is "ru"
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
-        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+        project.synchronize_with_demarche_numerique(fake_dossier("en_instruction"))
 
         assert mock_task.delay.call_count == 1
         # Due two months after the dépôt
@@ -402,7 +404,7 @@ class TestResultSnapshot:
             demarche_numerique_state=DOSSIER_STATES.draft,
         )
 
-        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+        project.synchronize_with_demarche_numerique(fake_dossier("en_instruction"))
 
         assert not mock_task.delay.called
 
@@ -414,9 +416,7 @@ class TestResultSnapshot:
         DCConfigHaieFactory()
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         mock_task.delay.assert_called_once_with(project.pk)
 
@@ -430,9 +430,7 @@ class TestResultSnapshot:
             demarche_numerique_state=DOSSIER_STATES.en_construction
         )
 
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         assert not mock_task.delay.called
 
@@ -446,7 +444,7 @@ class TestResultSnapshot:
             demarche_numerique_state=DOSSIER_STATES.en_construction
         )
 
-        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+        project.synchronize_with_demarche_numerique(fake_dossier("en_instruction"))
 
         mock_notify.assert_called_once()
         message = mock_notify.call_args[0][0]
@@ -470,9 +468,7 @@ class TestResultSnapshot:
         status_logs = StatusLog.objects.filter(petition_project=project)
         status_log_count = status_logs.count()
 
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         assert not mock_notify.called
         assert not mock_email_task.delay.called
@@ -496,9 +492,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
         with pytest.raises(RuntimeError):
-            project.synchronize_with_demarche_numerique(
-                self.fake_dossier("en_construction")
-            )
+            project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         project.refresh_from_db()
         assert project.demarche_numerique_state == DOSSIER_STATES.draft
@@ -521,7 +515,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         first_copy = PetitionProject.objects.get(pk=project.pk)
         stale_copy = PetitionProject.objects.get(pk=project.pk)
-        dossier = self.fake_dossier("en_construction")
+        dossier = fake_dossier("en_construction")
 
         first_copy.synchronize_with_demarche_numerique(dossier)
         stale_copy.synchronize_with_demarche_numerique(dossier)
@@ -543,9 +537,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         mock_alert_task.delay.side_effect = ConnectionError
 
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         assert mock_email_task.delay.call_count == 1
         assert mock_receipt_task.delay.call_count == 1
@@ -563,9 +555,7 @@ class TestResultSnapshot:
         assert project.date != date(2025, 1, 29)
         assert project.get_moulinette().date != date(2025, 1, 29)
 
-        project.synchronize_with_demarche_numerique(
-            self.fake_dossier("en_construction")
-        )
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
 
         assert project.date == date(2025, 1, 29)
         assert project.get_moulinette().date == date(2025, 1, 29)
