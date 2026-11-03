@@ -1138,16 +1138,19 @@ def test_update_demarches_numerique_state():
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
-@patch("envergo.petitions.services.notify")
-def test_update_demarches_numerique_state_sends_no_outside_change_alert(mock_notify):
+@patch("envergo.petitions.tasks.notify")
+def test_update_demarches_numerique_state_sends_no_outside_change_alert(
+    mock_notify, django_capture_on_commit_callbacks
+):
     """A status change made from the guichet is not reported as made outside it."""
     petition_project = PetitionProjectFactory(
         demarche_numerique_state="en_construction"
     )
 
-    update_demarche_numerique_status(
-        petition_project, DossierState.en_instruction.value
-    )
+    with django_capture_on_commit_callbacks(execute=True):
+        update_demarche_numerique_status(
+            petition_project, DossierState.en_instruction.value
+        )
 
     assert not mock_notify.called
 

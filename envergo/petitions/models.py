@@ -25,9 +25,9 @@ from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Re
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.services import (
+    dossier_state_changed_outside_guh_alert,
+    dossier_submission_alert,
     log_dossier_submission_event,
-    notify_dossier_state_changed_outside_guh,
-    notify_dossier_submission,
 )
 from envergo.utils.models import ResultSnapshotBase
 from envergo.utils.urls import extract_param_from_url, update_qs
@@ -355,23 +355,18 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """Refresh the project's cached « Démarche numérique » data and react to the dossier's state change."""
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
-        is_first_submission = not self.is_dossier_submitted
+        with transaction.atomic():
+            if not self.is_dossier_submitted:
+                self.record_submission(fetched_dossier)
+            elif fetched_dossier["state"] != self.demarche_numerique_state:
+                self.schedule_outside_change_alert(fetched_dossier)
 
-        if is_first_submission:
-            submission_date = read_submission_date(fetched_dossier)
-            self.record_submission(fetched_dossier, submission_date)
-        elif fetched_dossier["state"] != self.demarche_numerique_state:
-            notify_dossier_state_changed_outside_guh(self, fetched_dossier)
+            self.update_demarche_numerique_cache(fetched_dossier)
+            self.save()
 
-        self.update_demarche_numerique_cache(fetched_dossier)
-        self.save()
-
-        # Scheduled after the save, so the tasks read the project as the dépôt left it.
-        if is_first_submission:
-            self.schedule_submission_messages(submission_date)
-
-    def record_submission(self, fetched_dossier: dict, submission_date: date):
+    def record_submission(self, fetched_dossier: dict):
         """Apply the dépôt of the dossier to the project."""
+        submission_date = read_submission_date(fetched_dossier)
         self.pin_simulation_date(submission_date)
 
         # Some démarches open a dossier straight into instruction on dépôt.
@@ -381,8 +376,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         ):
             self.start_instruction_on_submission(submission_date)
 
-        notify_dossier_submission(self, fetched_dossier)
         log_dossier_submission_event(self)
+        self.schedule_submission_alert(fetched_dossier)
+        self.schedule_submission_messages(submission_date)
 
     def schedule_submission_messages(self, submission_date: date):
         """Queue the GUH mailbox email and, for a déclaration, the applicant's receipt."""
@@ -443,6 +439,22 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             update_comment="Dépôt du dossier : passage automatique en instruction.",
             due_date=due_date,
         )
+
+    def schedule_submission_alert(self, fetched_dossier: dict):
+        """Queue the team alert announcing the dépôt, for after commit."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_team_alert_async
+
+        alert = dossier_submission_alert(self, fetched_dossier)
+        transaction.on_commit(lambda: send_team_alert_async.delay(alert))
+
+    def schedule_outside_change_alert(self, fetched_dossier: dict):
+        """Queue the team alert reporting a state change made outside the guichet, for after commit."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_team_alert_async
+
+        alert = dossier_state_changed_outside_guh_alert(self, fetched_dossier)
+        transaction.on_commit(lambda: send_team_alert_async.delay(alert))
 
     def schedule_new_dossier_email(self):
         """Queue the GUH mailbox email for after commit, so a mail failure blocks nothing."""

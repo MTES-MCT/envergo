@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from django.contrib.auth.models import AnonymousUser
 
+from envergo.analytics.models import Event
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
@@ -410,7 +411,7 @@ class TestResultSnapshot:
         assert not mock_task.delay.called
 
     @pytest.mark.haie
-    @patch("envergo.petitions.services.notify")
+    @patch("envergo.petitions.tasks.notify")
     def test_state_changed_outside_guh_alerts_the_team(self, mock_notify):
         """A state changed directly on « Démarche numérique » alerts the team."""
         SiteFactory(domain="testserver", name="testserver")
@@ -430,7 +431,7 @@ class TestResultSnapshot:
     @pytest.mark.haie
     @patch("envergo.petitions.tasks.send_declaration_receipt_async")
     @patch("envergo.petitions.tasks.send_new_dossier_email_async")
-    @patch("envergo.petitions.services.notify")
+    @patch("envergo.petitions.tasks.notify")
     def test_resync_with_unchanged_state_has_no_effect(
         self, mock_notify, mock_email_task, mock_receipt_task
     ):
@@ -451,3 +452,32 @@ class TestResultSnapshot:
         assert not mock_email_task.delay.called
         assert not mock_receipt_task.delay.called
         assert status_logs.count() == status_log_count
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    @patch("envergo.petitions.tasks.send_team_alert_async")
+    @patch(
+        "envergo.petitions.models.PetitionProject.update_demarche_numerique_cache",
+        side_effect=RuntimeError,
+    )
+    def test_failed_sync_rolls_back_and_sends_nothing(
+        self, mock_cache_update, mock_alert_task, mock_email_task, mock_receipt_task
+    ):
+        """A sync failing after the dépôt steps leaves the project as it was and sends nothing."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+
+        with pytest.raises(RuntimeError):
+            project.synchronize_with_demarche_numerique(
+                self.fake_dossier("en_construction")
+            )
+
+        project.refresh_from_db()
+        assert project.demarche_numerique_state == DOSSIER_STATES.draft
+        assert "date=" not in project.moulinette_url
+        assert not Event.objects.filter(category="demande", event="depot").exists()
+        assert not mock_alert_task.delay.called
+        assert not mock_email_task.delay.called
+        assert not mock_receipt_task.delay.called

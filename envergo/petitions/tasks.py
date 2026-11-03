@@ -12,7 +12,14 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
 )
 from envergo.petitions.templatetags.petitions import format_ds_number
+from envergo.utils.tchap import notify
 from envergo.utils.tools import get_base_url
+
+
+@app.task
+def send_team_alert_async(alert):
+    """Post the alert to the haie team channels."""
+    notify(alert, "haie")
 
 
 @app.task

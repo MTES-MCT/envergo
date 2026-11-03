@@ -440,15 +440,15 @@ def get_header_explanation_from_ds_demarche(demarche):
     return header_sections, explication_champs
 
 
-def notify_dossier_submission(petition_project, dossier: dict):
-    """Alert the team that the applicant just submitted the dossier."""
+def dossier_submission_alert(petition_project, dossier: dict) -> str:
+    """The team alert announcing that the applicant just submitted the dossier."""
     usager_email = (
         dossier["usager"]["email"]
         if "usager" in dossier and "email" in dossier["usager"]
         else "non renseigné"
     )
 
-    message = render_to_string(
+    return render_to_string(
         "haie/petitions/mattermost_dossier_submission_notif.txt",
         context={
             "department": project_department_name(petition_project),
@@ -460,11 +460,10 @@ def notify_dossier_submission(petition_project, dossier: dict):
             "length_to_remove": petition_project.hedge_data.length_to_remove(),
         },
     )
-    notify(message, "haie")
 
 
-def notify_dossier_state_changed_outside_guh(petition_project, dossier: dict):
-    """Alert the team that the dossier state changed on « Démarche numérique », bypassing the guichet."""
+def dossier_state_changed_outside_guh_alert(petition_project, dossier: dict) -> str:
+    """The team alert reporting a state change made on « Démarche numérique », bypassing the guichet."""
     demarche_number = (
         dossier["demarche"]["number"]
         if "demarche" in dossier and "number" in dossier["demarche"]
@@ -474,7 +473,7 @@ def notify_dossier_state_changed_outside_guh(petition_project, dossier: dict):
         demarche_number
     )
 
-    message = render_to_string(
+    return render_to_string(
         "haie/petitions/mattermost_dossier_state_updated_outside_of_guh.txt",
         context={
             "department": project_department_name(petition_project),
@@ -483,7 +482,6 @@ def notify_dossier_state_changed_outside_guh(petition_project, dossier: dict):
             "admin_url": project_admin_url(petition_project),
         },
     )
-    notify(message, "haie")
 
 
 def log_dossier_submission_event(petition_project):
