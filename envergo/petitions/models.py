@@ -337,24 +337,11 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             and self.demarche_numerique_state != DOSSIER_STATES.prefilled
         )
 
-    def synchronize_with_demarche_numerique(self, dossier: dict):
+    def synchronize_with_demarche_numerique(self, fetched_dossier: dict):
         """Update the petition project with the latest data from Démarche numérique
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
-
-        def get_latest_petitioner_msg():
-            parsed_dossier = Dossier.from_dict(dossier)
-            dates = sorted(
-                [
-                    msg.createdAt
-                    for msg in parsed_dossier.messages
-                    if msg.email == parsed_dossier.usager.email
-                ],
-                reverse=True,
-            )
-            return dates[0] if len(dates) else None
-
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
         declaration_filed_on = None
@@ -362,8 +349,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         is_first_submission = not self.is_dossier_submitted
 
         if is_first_submission:
-            if "dateDepot" in dossier and dossier["dateDepot"]:
-                date_depot = parser.isoparse(dossier["dateDepot"]).date()
+            if "dateDepot" in fetched_dossier and fetched_dossier["dateDepot"]:
+                date_depot = parser.isoparse(fetched_dossier["dateDepot"]).date()
             else:
                 date_depot = timezone.localdate()
             self.pin_simulation_date(date_depot)
@@ -375,34 +362,21 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
             # Some démarches open a dossier straight into instruction on dépôt.
             if (
-                dossier["state"] == DOSSIER_STATES.en_instruction
+                fetched_dossier["state"] == DOSSIER_STATES.en_instruction
                 and self.stage == STAGES.to_be_processed
             ):
                 self.start_instruction_on_submission(declaration_due_date)
 
-            notify_dossier_submission(self, dossier)
+            notify_dossier_submission(self, fetched_dossier)
             log_dossier_submission_event(self)
 
         elif (
             self.demarche_numerique_state
-            and dossier["state"] != self.demarche_numerique_state
+            and fetched_dossier["state"] != self.demarche_numerique_state
         ):
-            notify_dossier_state_changed_outside_guh(self, dossier)
+            notify_dossier_state_changed_outside_guh(self, fetched_dossier)
 
-        self.demarche_numerique_dossier_id = dossier["id"]
-        self.demarche_numerique_state = dossier["state"]
-
-        if "dateDepot" in dossier and dossier["dateDepot"]:
-            self.demarche_numerique_date_depot = parser.isoparse(dossier["dateDepot"])
-
-        self.demarche_numerique_raw_dossier = dossier
-        if hasattr(self, "prefetched_dossier"):
-            del self.prefetched_dossier
-
-        if "messages" in dossier:
-            self.latest_petitioner_msg = get_latest_petitioner_msg()
-
-        self.demarche_numerique_last_sync = timezone.now()
+        self.update_demarche_numerique_cache(fetched_dossier)
         self.save()
 
         # Scheduled after the save, so the tasks read the project as the dépôt left it.
@@ -412,6 +386,29 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.schedule_declaration_receipt(
                 declaration_filed_on, declaration_due_date
             )
+
+    def update_demarche_numerique_cache(self, fetched_dossier: dict):
+        """Copy the fetched « Démarche numérique » dossier into the project's cached fields.
+
+        The cached dossier may lack messages, so reading messages requires a forced fetch.
+        """
+        self.demarche_numerique_dossier_id = fetched_dossier["id"]
+        self.demarche_numerique_state = fetched_dossier["state"]
+        if fetched_dossier.get("dateDepot"):
+            self.demarche_numerique_date_depot = parser.isoparse(
+                fetched_dossier["dateDepot"]
+            )
+
+        self.demarche_numerique_raw_dossier = fetched_dossier
+        if hasattr(self, "prefetched_dossier"):
+            del self.prefetched_dossier
+
+        # Dossiers fetched without messages keep the previous date.
+        if "messages" in fetched_dossier:
+            dossier = Dossier.from_dict(fetched_dossier)
+            self.latest_petitioner_msg = dossier.latest_applicant_message_date
+
+        self.demarche_numerique_last_sync = timezone.now()
 
     def pin_simulation_date(self, submission_date):
         """Evaluate the project and its simulations with the rules in force on `submission_date`."""
