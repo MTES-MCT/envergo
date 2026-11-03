@@ -5,7 +5,7 @@ from django.db.models.fields.files import FieldFile
 from django.urls import reverse
 
 from envergo.geodata.models import STATUSES
-from envergo.geodata.tasks import process_map, process_maps
+from envergo.geodata.tasks import fail_map_processing, process_map, process_maps
 from envergo.geodata.tests.factories import MapFactory, MapImportBatchFactory
 
 pytestmark = pytest.mark.django_db
@@ -28,7 +28,7 @@ def test_import_error_is_recorded_on_the_map():
     map = MapFactory(zones=None, expected_geometries=3)
 
     with patch("envergo.geodata.tasks.open_map_file", side_effect=ValueError("boom")):
-        process_map.apply(args=(map.id,))
+        process_maps([map.id])
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -36,11 +36,11 @@ def test_import_error_is_recorded_on_the_map():
     assert map.task_id is None
 
 
-def test_task_failure_hook_records_the_failure():
+def test_task_failure_callback_records_the_failure():
     """A crash outside the import itself (e.g. database down) is not silent."""
     map = MapFactory(zones=None)
 
-    process_map.on_failure(RuntimeError("db down"), "tid", (map.id,), {}, None)
+    fail_map_processing(None, RuntimeError("db down"), None, map.id)
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -52,7 +52,7 @@ def test_failure_notification_links_the_map_and_its_batch(notify_mock, settings)
     batch = MapImportBatchFactory()
     map = MapFactory(zones=None, import_batch=batch)
 
-    process_map.on_failure(RuntimeError("db down"), "tid", (map.id,), {}, None)
+    fail_map_processing(None, RuntimeError("db down"), None, map.id)
 
     message, site = notify_mock.call_args.args
     assert site == "amenagement"
@@ -65,7 +65,7 @@ def test_failure_notification_links_the_map_and_its_batch(notify_mock, settings)
 def test_failure_notification_without_batch_has_no_batch_link(notify_mock):
     map = MapFactory(zones=None)
 
-    process_map.on_failure(RuntimeError("db down"), "tid", (map.id,), {}, None)
+    fail_map_processing(None, RuntimeError("db down"), None, map.id)
 
     message, _ = notify_mock.call_args.args
     assert reverse("admin:geodata_map_change", args=[map.id]) in message
@@ -114,6 +114,12 @@ def test_maps_are_queued_as_a_chain():
 
     signatures = mock_chain.call_args.args
     assert [sig.args for sig in signatures] == [(3,), (1,), (2,)]
+    # The failure callback is run even if the worker is killed
+    assert [sig.options["link_error"][0].args for sig in signatures] == [
+        (3,),
+        (1,),
+        (2,),
+    ]
     mock_chain.return_value.delay.assert_called_once_with()
 
 
