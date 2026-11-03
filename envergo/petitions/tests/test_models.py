@@ -559,3 +559,43 @@ class TestDemarcheNumeriqueSync:
 
         assert project.date == date(2025, 1, 29)
         assert project.get_moulinette().date == date(2025, 1, 29)
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_team_alert_async")
+    def test_older_fetched_copy_is_skipped(self, mock_alert_task):
+        """A copy fetched before the dossier's latest change does not overwrite it."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        cached_dossier = fake_dossier("en_instruction")
+        cached_dossier["dateDerniereModification"] = "2025-02-01T10:00:00+01:00"
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_instruction,
+            demarche_numerique_raw_dossier=cached_dossier,
+        )
+        older_copy = fake_dossier("en_construction")
+        older_copy["dateDerniereModification"] = "2025-01-31T10:00:00+01:00"
+
+        project.synchronize_with_demarche_numerique(older_copy)
+
+        project.refresh_from_db()
+        assert project.demarche_numerique_state == DOSSIER_STATES.en_instruction
+        assert not mock_alert_task.delay.called
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_team_alert_async")
+    def test_fetched_copy_without_modification_date_is_synced(self, mock_alert_task):
+        """A copy carrying no modification date is synced as usual."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        cached_dossier = fake_dossier("en_instruction")
+        cached_dossier["dateDerniereModification"] = "2025-02-01T10:00:00+01:00"
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_instruction,
+            demarche_numerique_raw_dossier=cached_dossier,
+        )
+
+        project.synchronize_with_demarche_numerique(fake_dossier("en_construction"))
+
+        project.refresh_from_db()
+        assert project.demarche_numerique_state == DOSSIER_STATES.en_construction
+        assert mock_alert_task.delay.call_count == 1

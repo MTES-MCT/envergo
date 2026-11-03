@@ -1,7 +1,7 @@
 import inspect
 import logging
 import secrets
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from os.path import splitext
 from urllib.parse import urlparse
 
@@ -114,6 +114,16 @@ def read_submission_date(fetched_dossier: dict) -> date:
     else:
         submission_date = timezone.localdate()
     return submission_date
+
+
+def read_last_modification(dossier: dict | None) -> datetime | None:
+    """When « Démarche numérique » last modified the dossier, or None when unknown."""
+    raw_last_modification = (dossier or {}).get("dateDerniereModification")
+    if raw_last_modification:
+        last_modification = parser.isoparse(raw_last_modification)
+    else:
+        last_modification = None
+    return last_modification
 
 
 def declaration_due_date(submission_date: date) -> date:
@@ -372,6 +382,12 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         with transaction.atomic():
             # Prevents overlapping syncs from acting on a stale copy.
             self.reload_with_lock()
+            if self.has_newer_cached_dossier(fetched_dossier):
+                logger.info(
+                    f"Skipping a stale « Démarche numérique » copy of {self.reference}"
+                )
+                return
+
             if not self.is_dossier_submitted:
                 self.record_submission(fetched_dossier)
             elif fetched_dossier["state"] != self.demarche_numerique_state:
@@ -383,6 +399,12 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     def reload_with_lock(self):
         """Reload the project from its row, locked until the transaction ends."""
         self.refresh_from_db(from_queryset=PetitionProject.objects.select_for_update())
+
+    def has_newer_cached_dossier(self, fetched_dossier: dict) -> bool:
+        """Whether the cached dossier was modified after the fetched one."""
+        cached_at = read_last_modification(self.demarche_numerique_raw_dossier)
+        fetched_at = read_last_modification(fetched_dossier)
+        return bool(cached_at and fetched_at and cached_at > fetched_at)
 
     def update_cache_after_guichet_state_change(self, fetched_dossier: dict):
         """Cache the dossier « Démarche numérique » returned for a state change made from the guichet."""
