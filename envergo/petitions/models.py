@@ -1,6 +1,6 @@
 import logging
 import secrets
-from datetime import timedelta
+from datetime import date, timedelta
 from os.path import splitext
 from urllib.parse import urlparse
 
@@ -48,6 +48,8 @@ DOSSIER_STATES = Choices(
     ("refuse", _("Refused")),
     ("sans_suite", _("No follow-up")),
 )
+
+UNSUBMITTED_DOSSIER_STATES = (DOSSIER_STATES.draft, DOSSIER_STATES.prefilled)
 
 STAGES = Choices(
     ("to_be_processed", "À instruire"),
@@ -101,6 +103,21 @@ def prefectural_order_file_format(instance, filename):
     secret = secrets.token_urlsafe(16)
     reference = instance.petition_project.reference
     return f"arrete_prefectoral/{reference}_{secret}{extension}"
+
+
+def read_submission_date(fetched_dossier: dict) -> date:
+    """The dossier's dépôt date, or today when « Démarche numérique » gives none."""
+    raw_date_depot = fetched_dossier.get("dateDepot")
+    if raw_date_depot:
+        submission_date = parser.isoparse(raw_date_depot).date()
+    else:
+        submission_date = timezone.localdate()
+    return submission_date
+
+
+def declaration_due_date(submission_date: date) -> date:
+    """End of the two-month tacit agreement delay of a déclaration."""
+    return submission_date + relativedelta(months=2)
 
 
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
@@ -332,48 +349,18 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @property
     def is_dossier_submitted(self):
-        return (
-            self.demarche_numerique_state != DOSSIER_STATES.draft
-            and self.demarche_numerique_state != DOSSIER_STATES.prefilled
-        )
+        return self.demarche_numerique_state not in UNSUBMITTED_DOSSIER_STATES
 
     def synchronize_with_demarche_numerique(self, fetched_dossier: dict):
-        """Update the petition project with the latest data from Démarche numérique
-
-        a notification is sent to the mattermost channel when the dossier is submitted for the first time
-        """
+        """Refresh the project's cached « Démarche numérique » data and react to the dossier's state change."""
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
-        declaration_filed_on = None
-        declaration_due_date = None
         is_first_submission = not self.is_dossier_submitted
 
         if is_first_submission:
-            if "dateDepot" in fetched_dossier and fetched_dossier["dateDepot"]:
-                date_depot = parser.isoparse(fetched_dossier["dateDepot"]).date()
-            else:
-                date_depot = timezone.localdate()
-            self.pin_simulation_date(date_depot)
-
-            # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
-            if self.category == HedgeCategory.ru:
-                declaration_filed_on = date_depot
-                declaration_due_date = date_depot + relativedelta(months=2)
-
-            # Some démarches open a dossier straight into instruction on dépôt.
-            if (
-                fetched_dossier["state"] == DOSSIER_STATES.en_instruction
-                and self.stage == STAGES.to_be_processed
-            ):
-                self.start_instruction_on_submission(declaration_due_date)
-
-            notify_dossier_submission(self, fetched_dossier)
-            log_dossier_submission_event(self)
-
-        elif (
-            self.demarche_numerique_state
-            and fetched_dossier["state"] != self.demarche_numerique_state
-        ):
+            submission_date = read_submission_date(fetched_dossier)
+            self.record_submission(fetched_dossier, submission_date)
+        elif fetched_dossier["state"] != self.demarche_numerique_state:
             notify_dossier_state_changed_outside_guh(self, fetched_dossier)
 
         self.update_demarche_numerique_cache(fetched_dossier)
@@ -381,10 +368,30 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         # Scheduled after the save, so the tasks read the project as the dépôt left it.
         if is_first_submission:
-            self.schedule_new_dossier_email()
-        if declaration_filed_on:
+            self.schedule_submission_messages(submission_date)
+
+    def record_submission(self, fetched_dossier: dict, submission_date: date):
+        """Apply the dépôt of the dossier to the project."""
+        self.pin_simulation_date(submission_date)
+
+        # Some démarches open a dossier straight into instruction on dépôt.
+        if (
+            fetched_dossier["state"] == DOSSIER_STATES.en_instruction
+            and self.stage == STAGES.to_be_processed
+        ):
+            self.start_instruction_on_submission(submission_date)
+
+        notify_dossier_submission(self, fetched_dossier)
+        log_dossier_submission_event(self)
+
+    def schedule_submission_messages(self, submission_date: date):
+        """Queue the GUH mailbox email and, for a déclaration, the applicant's receipt."""
+        self.schedule_new_dossier_email()
+
+        # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
+        if self.is_regime_unique():
             self.schedule_declaration_receipt(
-                declaration_filed_on, declaration_due_date
+                submission_date, declaration_due_date(submission_date)
             )
 
     def update_demarche_numerique_cache(self, fetched_dossier: dict):
@@ -410,7 +417,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self.demarche_numerique_last_sync = timezone.now()
 
-    def pin_simulation_date(self, submission_date):
+    def pin_simulation_date(self, submission_date: date):
         """Evaluate the project and its simulations with the rules in force on `submission_date`."""
         date_param = {"date": submission_date.isoformat()}
         self.moulinette_url = update_qs(self.moulinette_url, date_param)
@@ -420,12 +427,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             simulation.moulinette_url = update_qs(simulation.moulinette_url, date_param)
         Simulation.objects.bulk_update(simulations, ["moulinette_url"])
 
-    def start_instruction_on_submission(self, due_date):
+    def start_instruction_on_submission(self, submission_date: date):
         """Move the project into instruction, as « Démarche numérique » did on dépôt."""
         if self.is_regime_unique():
             instruction_stage = STAGES.instruction_d
+            due_date = declaration_due_date(submission_date)
         else:
             instruction_stage = STAGES.instruction_h
+            due_date = None
 
         StatusLog.objects.create(
             petition_project=self,
