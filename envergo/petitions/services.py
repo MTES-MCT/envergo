@@ -643,9 +643,9 @@ def update_demarche_numerique_status(petition_project, new_status):
         raise ValueError(f"Unknown status {new_status}")
 
     if response:
-        # the status change was successful, we update the petition project
-        petition_project.demarche_numerique_state = response["dossier"]["state"]
-        petition_project.synchronize_with_demarche_numerique(response["dossier"])
+        # The guichet made this change. A full sync has nothing to detect.
+        petition_project.update_demarche_numerique_cache(response["dossier"])
+        petition_project.save()
     else:
         # update failed, notification should have been sent by the « Démarche numérique » client
         raise DemarcheNumeriqueError(

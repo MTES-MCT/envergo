@@ -356,6 +356,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
         with transaction.atomic():
+            # Prevents overlapping syncs from acting on a stale copy.
+            self.reload_with_lock()
             if not self.is_dossier_submitted:
                 self.record_submission(fetched_dossier)
             elif fetched_dossier["state"] != self.demarche_numerique_state:
@@ -363,6 +365,10 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
             self.update_demarche_numerique_cache(fetched_dossier)
             self.save()
+
+    def reload_with_lock(self):
+        """Reload the project from its row, locked until the transaction ends."""
+        self.refresh_from_db(from_queryset=PetitionProject.objects.select_for_update())
 
     def record_submission(self, fetched_dossier: dict):
         """Apply the dépôt of the dossier to the project."""

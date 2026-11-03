@@ -12,6 +12,7 @@ from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import (
     DOSSIER_STATES,
     LOG_TYPES,
+    PetitionProject,
     ResultSnapshot,
     StatusLog,
 )
@@ -481,3 +482,25 @@ class TestResultSnapshot:
         assert not mock_alert_task.delay.called
         assert not mock_email_task.delay.called
         assert not mock_receipt_task.delay.called
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    @patch("envergo.petitions.tasks.send_team_alert_async")
+    def test_stale_copy_does_not_replay_the_submission(
+        self, mock_alert_task, mock_email_task, mock_receipt_task
+    ):
+        """Two syncs of the same draft project handle its dépôt only once."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+        first_copy = PetitionProject.objects.get(pk=project.pk)
+        stale_copy = PetitionProject.objects.get(pk=project.pk)
+        dossier = self.fake_dossier("en_construction")
+
+        first_copy.synchronize_with_demarche_numerique(dossier)
+        stale_copy.synchronize_with_demarche_numerique(dossier)
+
+        assert mock_alert_task.delay.call_count == 1
+        assert mock_email_task.delay.call_count == 1
+        assert mock_receipt_task.delay.call_count == 1
