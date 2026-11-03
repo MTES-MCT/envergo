@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="statuslog",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("stage", "closed"), ("decision", "unset"), _negated=True
                 ),
                 name="forbid_closed_with_unset_decision",

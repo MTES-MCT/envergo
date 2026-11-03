@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="configamenagement",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("valid_from__isnull", True),
                     ("valid_until__isnull", True),
                     ("valid_from__lt", models.F("valid_until")),
@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("valid_from__isnull", True),
                     ("valid_until__isnull", True),
                     ("valid_from__lt", models.F("valid_until")),

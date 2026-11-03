@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("is_activated", False),
                     ("demarche_numerique_number__isnull", False),
                     _connector="OR",
@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("demarche_numerique_number__isnull", True),
                     ("demarche_numerique_display_fields__project_url__isnull", False),
                     _connector="OR",
