@@ -20,6 +20,7 @@ from envergo.geodata.models import (
 )
 from envergo.geodata.tasks import (
     complete_row,
+    fail_map_processing,
     finalize_batch,
     import_batch_row,
     process_map,
@@ -481,6 +482,30 @@ def test_batch_is_failed_when_a_map_processing_crashes():
     assert batch.import_date is not None
     # The chain stopped at the first map.
     assert Map.objects.filter(reference="r2").count() == 0
+
+
+def test_batch_row_queues_the_map_with_its_failure_callback():
+    """The map is failed even if its worker is killed.
+
+    Checked on the queued signature: an eager chain replaces the error callbacks
+    of its tasks with its own.
+    """
+    batch = make_batch(
+        f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n", filenames=["a.gpkg"]
+    )
+
+    with (
+        patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
+        patch.object(import_batch_row, "replace") as mock_replace,
+    ):
+        process_map_import_batch.apply(args=(batch.id,))
+
+    map = Map.objects.get(reference="r1")
+    process_map_sig = mock_replace.call_args.args[0].tasks[0]
+    assert process_map_sig.args == (map.id,)
+    [errback] = process_map_sig.options["link_error"]
+    assert errback["task"] == fail_map_processing.name
+    assert tuple(errback["args"]) == (map.id,)
 
 
 def test_import_batch_row_records_errors_on_its_line_and_skips_the_row():

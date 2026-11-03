@@ -9,7 +9,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
-from config.celery_app import BaseTaskWithRetry, app
+from config.celery_app import app
 from envergo.geodata.import_batch import is_blank_row, is_file_valid, is_line_valid
 from envergo.geodata.models import (
     LINE_STATUSES,
@@ -56,26 +56,27 @@ def notify_map_failure(map, error):
     notify(message, "amenagement")
 
 
-class ProcessMapTask(BaseTaskWithRetry):
-    """Make sure a map never stays silently unprocessed."""
-
-    max_retries = 1
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        map_id = args[0] if args else kwargs.get("map_id")
-        error = f"Erreur d'import ({exc})"
-        Map.objects.filter(pk=map_id).update(
-            import_status=STATUSES.failure,
-            import_error_msg=error,
-            import_date=timezone.now(),
-            task_id=None,
-        )
-        map = Map.objects.filter(pk=map_id).first()
-        if map is not None:
-            notify_map_failure(map, error)
+@app.task
+def fail_map_processing(request, exc, traceback, map_id):
+    """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
+    error = f"Erreur d'import ({exc})"
+    Map.objects.filter(pk=map_id).update(
+        import_status=STATUSES.failure,
+        import_error_msg=error,
+        import_date=timezone.now(),
+        task_id=None,
+    )
+    map = Map.objects.filter(pk=map_id).first()
+    if map is not None:
+        notify_map_failure(map, error)
 
 
-@app.task(bind=True, base=ProcessMapTask)
+def queue_process_map(map_id):
+    """Signature of `process_map` with its error callback, to queue the task."""
+    return process_map.si(map_id).on_error(fail_map_processing.s(map_id))
+
+
+@app.task(bind=True, max_retries=1)
 def process_map(task, map_id):
     logger.info(f"Starting import on map {map_id}")
     map = Map.objects.get(pk=map_id)
@@ -128,7 +129,7 @@ def process_maps(map_ids):
     Chaining the process avoid a too heavy load on DB and memory for big objects
     """
     if map_ids:
-        chain(*(process_map.si(map_id) for map_id in map_ids)).delay()
+        chain(*(queue_process_map(map_id) for map_id in map_ids)).delay()
 
 
 @app.task(max_retries=0)
@@ -319,7 +320,7 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
     if batch_file:
         return task.replace(
             chain(
-                process_map.si(map.id),
+                queue_process_map(map.id),
                 complete_row.si(batch_id, csv_line_number, row.reference),
             )
         )
