@@ -410,7 +410,7 @@ class TestResultSnapshot:
         assert not mock_task.delay.called
 
     @pytest.mark.haie
-    @patch("envergo.petitions.models.notify")
+    @patch("envergo.petitions.services.notify")
     def test_state_changed_outside_guh_alerts_the_team(self, mock_notify):
         """A state changed directly on « Démarche numérique » alerts the team."""
         SiteFactory(domain="testserver", name="testserver")
@@ -430,7 +430,7 @@ class TestResultSnapshot:
     @pytest.mark.haie
     @patch("envergo.petitions.tasks.send_declaration_receipt_async")
     @patch("envergo.petitions.tasks.send_new_dossier_email_async")
-    @patch("envergo.petitions.models.notify")
+    @patch("envergo.petitions.services.notify")
     def test_resync_with_unchanged_state_has_no_effect(
         self, mock_notify, mock_email_task, mock_receipt_task
     ):

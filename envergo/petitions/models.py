@@ -12,7 +12,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models import Q
 from django.http import QueryDict
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -22,15 +21,18 @@ from model_utils import Choices, FieldTracker
 from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
-from envergo.geodata.models import DEPARTMENT_CHOICES, Department
+from envergo.geodata.models import Department
 from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
+from envergo.petitions.services import (
+    notify_dossier_state_changed_outside_guh,
+    notify_dossier_submission,
+)
 from envergo.users.models import User
 from envergo.utils.models import ResultSnapshotBase
-from envergo.utils.tchap import notify
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -347,26 +349,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
 
-        def get_admin_url():
-            return reverse(
-                "admin:petitions_petitionproject_change",
-                args=[self.pk],
-            )
-
-        def get_instructor_url():
-            return reverse(
-                "petition_project_summary", kwargs={"reference": self.reference}
-            )
-
-        def get_ds_url():
-            demarche_number = (
-                dossier["demarche"]["number"]
-                if "demarche" in dossier and "number" in dossier["demarche"]
-                else "Numéro inconnu"
-            )
-
-            return self.get_demarche_numerique_instructor_url(demarche_number)
-
         def get_latest_petitioner_msg():
             parsed_dossier = Dossier.from_dict(dossier)
             dates = sorted(
@@ -386,7 +368,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         is_first_submission = not self.is_dossier_submitted
 
         if is_first_submission:
-            department = extract_param_from_url(self.moulinette_url, "department")
             if "dateDepot" in dossier and dossier["dateDepot"]:
                 date_depot = parser.isoparse(dossier["dateDepot"]).date()
             else:
@@ -424,27 +405,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     due_date=declaration_due_date,
                 )
 
-            usager_email = (
-                dossier["usager"]["email"]
-                if "usager" in dossier and "email" in dossier["usager"]
-                else "non renseigné"
-            )
+            notify_dossier_submission(self, dossier)
+
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-
-            message_body = render_to_string(
-                "haie/petitions/mattermost_dossier_submission_notif.txt",
-                context={
-                    "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "dossier_number": self.demarche_numerique_dossier_number,
-                    "created_at": self.created_at.date(),
-                    "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
-                    "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
-                    "usager_email": usager_email,
-                    "length_to_remove": self.hedge_data.length_to_remove(),
-                },
-            )
-            notify(message_body, "haie")
-
             creation_event = (
                 Event.objects.order_by("-date_created")
                 .filter(
@@ -481,20 +444,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.demarche_numerique_state
             and dossier["state"] != self.demarche_numerique_state
         ):
-            # « Démarche numérique » state have been changed outside of GUH. We are trying to prevent this. Notify admin
-            department = extract_param_from_url(self.moulinette_url, "department")
-            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-
-            message_body = render_to_string(
-                "haie/petitions/mattermost_dossier_state_updated_outside_of_guh.txt",
-                context={
-                    "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
-                    "ds_url": get_ds_url(),
-                    "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
-                },
-            )
-            notify(message_body, "haie")
+            notify_dossier_state_changed_outside_guh(self, dossier)
 
         self.demarche_numerique_dossier_id = dossier["id"]
         self.demarche_numerique_state = dossier["state"]

@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.demarchenumerique.models import DemarcheConfig
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
 from envergo.petitions.demarche_numerique.client import (
@@ -431,6 +432,78 @@ def get_header_explanation_from_ds_demarche(demarche):
                 explication_champs.append(champ_id)
 
     return header_sections, explication_champs
+
+
+def notify_dossier_submission(petition_project, dossier: dict):
+    """Alert the team that the applicant just submitted the dossier."""
+    usager_email = (
+        dossier["usager"]["email"]
+        if "usager" in dossier and "email" in dossier["usager"]
+        else "non renseigné"
+    )
+
+    message = render_to_string(
+        "haie/petitions/mattermost_dossier_submission_notif.txt",
+        context={
+            "department": project_department_name(petition_project),
+            "dossier_number": petition_project.demarche_numerique_dossier_number,
+            "created_at": petition_project.created_at.date(),
+            "instructor_url": project_instructor_url(petition_project),
+            "admin_url": project_admin_url(petition_project),
+            "usager_email": usager_email,
+            "length_to_remove": petition_project.hedge_data.length_to_remove(),
+        },
+    )
+    notify(message, "haie")
+
+
+def notify_dossier_state_changed_outside_guh(petition_project, dossier: dict):
+    """Alert the team that the dossier state changed on « Démarche numérique », bypassing the guichet."""
+    demarche_number = (
+        dossier["demarche"]["number"]
+        if "demarche" in dossier and "number" in dossier["demarche"]
+        else "Numéro inconnu"
+    )
+    demarche_numerique_url = petition_project.get_demarche_numerique_instructor_url(
+        demarche_number
+    )
+
+    message = render_to_string(
+        "haie/petitions/mattermost_dossier_state_updated_outside_of_guh.txt",
+        context={
+            "department": project_department_name(petition_project),
+            "instructor_url": project_instructor_url(petition_project),
+            "ds_url": demarche_numerique_url,
+            "admin_url": project_admin_url(petition_project),
+        },
+    )
+    notify(message, "haie")
+
+
+def project_department_name(petition_project):
+    """The project's department name, or its code when the code is unknown."""
+    department_code = petition_project.get_department_code()
+    return dict(DEPARTMENT_CHOICES).get(department_code, department_code)
+
+
+def project_instructor_url(petition_project):
+    """Absolute URL of the project's instruction page."""
+    path = reverse(
+        "petition_project_summary",
+        kwargs={"reference": petition_project.reference},
+        urlconf="config.urls_haie",
+    )
+    return f"{get_base_url(settings.ENVERGO_HAIE_DOMAIN)}{path}"
+
+
+def project_admin_url(petition_project):
+    """Absolute URL of the project's admin page."""
+    path = reverse(
+        "admin:petitions_petitionproject_change",
+        args=[petition_project.pk],
+        urlconf="config.urls_haie",
+    )
+    return f"{get_base_url(settings.ENVERGO_HAIE_DOMAIN)}{path}"
 
 
 def get_demarche_numerique_dossier(

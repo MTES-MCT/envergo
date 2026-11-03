@@ -222,7 +222,10 @@ def test_fetch_project_details_from_demarche_numerique_not_enabled(caplog, haie_
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
 ):
-    petition_project = PetitionProjectFactory()
+    # Already submitted, so the sync sends no submission alert
+    petition_project = PetitionProjectFactory(
+        demarche_numerique_state="en_construction"
+    )
 
     incomplete_dn_config = DemarcheConfigFactory(
         display_fields={
@@ -1133,7 +1136,7 @@ def test_update_demarches_numerique_state():
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.services.notify")
 def test_update_demarches_numerique_state_sends_no_outside_change_alert(mock_notify):
     """A status change made from the guichet is not reported as made outside it."""
     petition_project = PetitionProjectFactory(

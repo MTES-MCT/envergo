@@ -37,7 +37,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.services.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert(
@@ -140,7 +140,7 @@ def test_dossier_submission_admin_alert(
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.services.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_ignores_expired_config(
@@ -164,7 +164,7 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.services.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_stage_instruction(
