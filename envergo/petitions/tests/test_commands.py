@@ -7,7 +7,9 @@ from django.core.management import call_command
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
+from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.demarche_numerique.models import DossierState
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -215,3 +217,58 @@ def test_dossier_submission_admin_alert_stage_instruction(
     assert project.due_date == datetime.date(
         2025, 3, 29
     )  # date_depot 2025-01-29 + 2 months
+
+
+COMMAND_PATH = "envergo.petitions.management.commands.dossier_submission_admin_alert"
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch(f"{COMMAND_PATH}.Command.handle_dossier", side_effect=[RuntimeError, None])
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_dossier_submission_admin_alert_survives_a_failing_dossier(
+    mock_post, mock_handle_dossier
+):
+    """A dossier that fails to sync does not stop the next one."""
+    mock_post.return_value = {
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {"hasNextPage": False, "endCursor": None},
+                "nodes": [
+                    {
+                        "number": 21059675,
+                        "id": "RG9zc2llci0x",
+                        "state": "en_construction",
+                    },
+                    {
+                        "number": 21059676,
+                        "id": "RG9zc2llci0y",
+                        "state": "en_construction",
+                    },
+                ],
+            },
+        }
+    }
+    DCConfigHaieFactory()
+
+    call_command("dossier_submission_admin_alert")
+
+    assert mock_handle_dossier.call_count == 2
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch(
+    f"{COMMAND_PATH}.Command.synchronize_demarche",
+    side_effect=[DemarcheNumeriqueError("", {}, "unreachable"), None],
+)
+def test_dossier_submission_admin_alert_survives_a_failing_demarche(
+    mock_synchronize_demarche,
+):
+    """A démarche that fails to sync does not stop the next one."""
+    DCConfigHaieFactory()
+    DCConfigHaieFactory(department=Department34Factory())
+
+    call_command("dossier_submission_admin_alert")
+
+    assert mock_synchronize_demarche.call_count == 2
