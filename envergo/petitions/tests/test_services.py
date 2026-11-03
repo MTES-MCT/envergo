@@ -1132,6 +1132,21 @@ def test_update_demarches_numerique_state():
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
 
 
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
+@patch("envergo.petitions.models.notify")
+def test_update_demarches_numerique_state_sends_no_outside_change_alert(mock_notify):
+    """A status change made from the guichet is not reported as made outside it."""
+    petition_project = PetitionProjectFactory(
+        demarche_numerique_state="en_construction"
+    )
+
+    update_demarche_numerique_status(
+        petition_project, DossierState.en_instruction.value
+    )
+
+    assert not mock_notify.called
+
+
 def test_bcae8_get_instructor_view_context():  # noqa
     """bcae8_get_instructor_view_context (Ru/Hru/L3503) only reads petition_project.hedge_data,
     dispatching hedges into three category buckets (régime unique, alignements

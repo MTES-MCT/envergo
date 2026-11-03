@@ -408,3 +408,46 @@ class TestResultSnapshot:
         )
 
         assert not mock_task.delay.called
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.models.notify")
+    def test_state_changed_outside_guh_alerts_the_team(self, mock_notify):
+        """A state changed directly on « Démarche numérique » alerts the team."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_construction
+        )
+
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+
+        mock_notify.assert_called_once()
+        message = mock_notify.call_args[0][0]
+        assert "changement de statut a eu lieu depuis" in message
+        project.refresh_from_db()
+        assert project.demarche_numerique_state == DOSSIER_STATES.en_instruction
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    @patch("envergo.petitions.tasks.send_new_dossier_email_async")
+    @patch("envergo.petitions.models.notify")
+    def test_resync_with_unchanged_state_has_no_effect(
+        self, mock_notify, mock_email_task, mock_receipt_task
+    ):
+        """A sync that brings no state change alerts nobody and queues nothing."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_construction
+        )
+        status_logs = StatusLog.objects.filter(petition_project=project)
+        status_log_count = status_logs.count()
+
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
+
+        assert not mock_notify.called
+        assert not mock_email_task.delay.called
+        assert not mock_receipt_task.delay.called
+        assert status_logs.count() == status_log_count
