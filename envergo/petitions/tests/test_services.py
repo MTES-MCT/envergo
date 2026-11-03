@@ -224,10 +224,7 @@ def test_fetch_project_details_from_demarche_numerique_not_enabled(caplog, haie_
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
 ):
-    # Already submitted, so the sync sends no submission alert
-    petition_project = PetitionProjectFactory(
-        demarche_numerique_state="en_construction"
-    )
+    petition_project = PetitionProjectFactory()
 
     incomplete_dn_config = DemarcheConfigFactory(
         display_fields={

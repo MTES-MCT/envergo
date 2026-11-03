@@ -22,9 +22,7 @@ DOMAIN_BLACK_LIST = settings.DEMARCHE_NUMERIQUE["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
-    help = (
-        "Fetch freshly submitted dossier on « Démarche numérique » and notify admins."
-    )
+    help = "Sync the dossiers recently updated on « Démarche numérique »."
 
     def handle(self, *args, **options):
         """Sync the dossiers recently updated on « Démarche numérique »."""

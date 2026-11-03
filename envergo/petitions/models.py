@@ -363,7 +363,10 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return self.demarche_numerique_state not in UNSUBMITTED_DOSSIER_STATES
 
     def synchronize_with_demarche_numerique(self, fetched_dossier: dict):
-        """Refresh the project's cached « Démarche numérique » data and react to the dossier's state change."""
+        """Refresh the project's cached « Démarche numérique » data and react to the dossier's state change.
+
+        Discards unsaved changes on the instance. Alerts and emails go out once the transaction commits.
+        """
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
         with transaction.atomic():
