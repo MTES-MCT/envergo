@@ -384,6 +384,13 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """Reload the project from its row, locked until the transaction ends."""
         self.refresh_from_db(from_queryset=PetitionProject.objects.select_for_update())
 
+    def update_cache_after_guichet_state_change(self, fetched_dossier: dict):
+        """Cache the dossier « Démarche numérique » returned for a state change made from the guichet."""
+        with transaction.atomic():
+            self.reload_with_lock()
+            self.update_demarche_numerique_cache(fetched_dossier)
+            self.save()
+
     def record_submission(self, fetched_dossier: dict):
         """Apply the dépôt of the dossier to the project."""
         submission_date = read_submission_date(fetched_dossier)

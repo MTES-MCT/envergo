@@ -644,8 +644,7 @@ def update_demarche_numerique_status(petition_project, new_status):
 
     if response:
         # The guichet made this change. A full sync has nothing to detect.
-        petition_project.update_demarche_numerique_cache(response["dossier"])
-        petition_project.save()
+        petition_project.update_cache_after_guichet_state_change(response["dossier"])
     else:
         # update failed, notification should have been sent by the « Démarche numérique » client
         raise DemarcheNumeriqueError(

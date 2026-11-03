@@ -34,6 +34,7 @@ from envergo.moulinette.tests.utils import (
     make_moulinette_haie_data,
 )
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
+from envergo.petitions.models import PetitionProject
 from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
@@ -1150,6 +1151,32 @@ def test_update_demarches_numerique_state_sends_no_outside_change_alert(
         )
 
     assert not mock_notify.called
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.services.DemarcheNumeriqueClient.pass_dossier_to_instruction")
+def test_status_change_keeps_a_message_date_saved_meanwhile(mock_mutation):
+    """A status change does not overwrite data another sync committed after the page loaded."""
+    petition_project = PetitionProjectFactory(
+        demarche_numerique_state="en_construction",
+        demarche_numerique_dossier_id="RG9zc2llci0yMzE3ODQ0Mw==",
+    )
+    # State-change mutations return the dossier without its messages
+    mock_mutation.return_value = {
+        "dossier": {"id": "RG9zc2llci0yMzE3ODQ0Mw==", "state": "en_instruction"}
+    }
+    newer_message_date = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    PetitionProject.objects.filter(pk=petition_project.pk).update(
+        latest_petitioner_msg=newer_message_date
+    )
+
+    update_demarche_numerique_status(
+        petition_project, DossierState.en_instruction.value
+    )
+
+    petition_project.refresh_from_db()
+    assert petition_project.latest_petitioner_msg == newer_message_date
+    assert petition_project.demarche_numerique_state == "en_instruction"
 
 
 def test_bcae8_get_instructor_view_context():  # noqa
