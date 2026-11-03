@@ -373,20 +373,12 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 declaration_filed_on = date_depot
                 declaration_due_date = date_depot + relativedelta(months=2)
 
-            # For some ConfigHaie, « Démarche numérique » is configured to set dossier "en_instruction" on creation.
-            # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
-            if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
-                stage = STAGES.instruction_h
-                if self.category == HedgeCategory.ru:
-                    stage = STAGES.instruction_d
-
-                StatusLog.objects.create(
-                    petition_project=self,
-                    type=LOG_TYPES.status_change,
-                    stage=stage,
-                    update_comment="Dépôt du dossier : passage automatique en instruction.",
-                    due_date=declaration_due_date,
-                )
+            # Some démarches open a dossier straight into instruction on dépôt.
+            if (
+                dossier["state"] == DOSSIER_STATES.en_instruction
+                and self.stage == STAGES.to_be_processed
+            ):
+                self.start_instruction_on_submission(declaration_due_date)
 
             notify_dossier_submission(self, dossier)
             log_dossier_submission_event(self)
@@ -430,6 +422,21 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         for simulation in simulations:
             simulation.moulinette_url = update_qs(simulation.moulinette_url, date_param)
         Simulation.objects.bulk_update(simulations, ["moulinette_url"])
+
+    def start_instruction_on_submission(self, due_date):
+        """Move the project into instruction, as « Démarche numérique » did on dépôt."""
+        if self.is_regime_unique():
+            instruction_stage = STAGES.instruction_d
+        else:
+            instruction_stage = STAGES.instruction_h
+
+        StatusLog.objects.create(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=instruction_stage,
+            update_comment="Dépôt du dossier : passage automatique en instruction.",
+            due_date=due_date,
+        )
 
     def schedule_new_dossier_email(self):
         """Queue the GUH mailbox email for after commit, so a mail failure blocks nothing."""
