@@ -366,18 +366,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 date_depot = parser.isoparse(dossier["dateDepot"]).date()
             else:
                 date_depot = timezone.localdate()
-            # add date in the url or overwrite it if there is already one
-            self.moulinette_url = update_qs(
-                self.moulinette_url, {"date": date_depot.isoformat()}
-            )
-
-            simulations = list(self.simulations.all())
-            for simulation in simulations:
-                simulation.moulinette_url = update_qs(
-                    simulation.moulinette_url, {"date": date_depot.isoformat()}
-                )
-
-            Simulation.objects.bulk_update(simulations, ["moulinette_url"])
+            self.pin_simulation_date(date_depot)
 
             # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
             if self.category == HedgeCategory.ru:
@@ -431,6 +420,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.schedule_declaration_receipt(
                 declaration_filed_on, declaration_due_date
             )
+
+    def pin_simulation_date(self, submission_date):
+        """Evaluate the project and its simulations with the rules in force on `submission_date`."""
+        date_param = {"date": submission_date.isoformat()}
+        self.moulinette_url = update_qs(self.moulinette_url, date_param)
+
+        simulations = list(self.simulations.all())
+        for simulation in simulations:
+            simulation.moulinette_url = update_qs(simulation.moulinette_url, date_param)
+        Simulation.objects.bulk_update(simulations, ["moulinette_url"])
 
     def schedule_new_dossier_email(self):
         """Queue the GUH mailbox email for after commit, so a mail failure blocks nothing."""
