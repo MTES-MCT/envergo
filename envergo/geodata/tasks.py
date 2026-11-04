@@ -56,8 +56,24 @@ def notify_map_failure(map, error):
     notify(message, "amenagement")
 
 
+def notify_batch_failure(batch):
+    """Warn the cartographers of a failed batch import, with its summary."""
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    message = render_to_string(
+        "geodata/mattermost_batch_import_failure.txt",
+        context={
+            "batch_id": batch.id,
+            "batch_url": base_url
+            + reverse("admin:geodata_mapimportbatch_change", args=[batch.id]),
+            "summary": batch.import_summary,
+            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
+        },
+    )
+    notify(message, "amenagement")
+
+
 @app.task
-def fail_map_processing(request, exc, traceback, map_id):
+def fail_map_processing(request, exc, traceback, map_id, notify_failure=True):
     """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
     error = f"Erreur d'import ({exc})"
     Map.objects.filter(pk=map_id).update(
@@ -67,13 +83,15 @@ def fail_map_processing(request, exc, traceback, map_id):
         task_id=None,
     )
     map = Map.objects.filter(pk=map_id).first()
-    if map is not None:
+    if notify_failure and map is not None:
         notify_map_failure(map, error)
 
 
-def queue_process_map(map_id):
+def queue_process_map(map_id, notify_failure=True):
     """Signature of `process_map` with its error callback, to queue the task."""
-    return process_map.si(map_id).on_error(fail_map_processing.s(map_id))
+    return process_map.si(map_id).on_error(
+        fail_map_processing.s(map_id, notify_failure=notify_failure)
+    )
 
 
 @app.task(bind=True, max_retries=1)
@@ -162,6 +180,7 @@ def process_map_import_batch(batch_id, only_failed=False):
         batch.import_status = STATUSES.failure
         batch.import_date = timezone.now()
         batch.save(update_fields=["import_status", "import_date"])
+        notify_batch_failure(batch)
         return
 
     reader = csv.DictReader(read_csv_file(batch.csv_file))
@@ -230,6 +249,7 @@ def fail_batch(request, exc, traceback, batch_id):
     batch.import_status = STATUSES.failure
     batch.import_date = timezone.now()
     batch.save(update_fields=["import_status", "import_date"])
+    notify_batch_failure(batch)
 
 
 def set_final_status(batch):
@@ -242,6 +262,8 @@ def set_final_status(batch):
         batch.import_status = STATUSES.failure
     batch.import_date = timezone.now()
     batch.save(update_fields=["import_status", "import_date"])
+    if batch.import_status == STATUSES.failure:
+        notify_batch_failure(batch)
 
 
 @app.task
@@ -320,7 +342,8 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
     if batch_file:
         return task.replace(
             chain(
-                queue_process_map(map.id),
+                # The batch failure callback notifies the failure, with the summary.
+                queue_process_map(map.id, notify_failure=False),
                 complete_row.si(batch_id, csv_line_number, row.reference),
             )
         )
