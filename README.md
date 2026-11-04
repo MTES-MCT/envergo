@@ -716,3 +716,4 @@ Voici un petit index des acronymes et termes métiers fréquemment rencontrés.
 - DREAL : Direction régionale de l'Environnement, de l'aménagement et du logement.
 - CEREMA : Centre d'études et d'expertise sur les risques, l'environnement, la mobilité et l'aménagement
 - DGALN : Direction générale de l'Aménagement, du Logement et de la Nature
+- EP : espèces protégées

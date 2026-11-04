@@ -33,6 +33,8 @@ USE_I18N = True
 USE_TZ = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#locale-paths
 LOCALE_PATHS = [str(ROOT_DIR / "locale")]
+# https://docs.djangoproject.com/en/5.2/ref/forms/fields/#django.forms.URLField.assume_scheme
+FORMS_URLFIELD_ASSUME_HTTPS = True
 
 # DATABASES
 # ------------------------------------------------------------------------------
