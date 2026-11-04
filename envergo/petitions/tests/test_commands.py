@@ -7,7 +7,9 @@ from django.core.management import call_command
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
+from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.demarche_numerique.models import DossierState
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -37,11 +39,18 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+@patch("envergo.petitions.tasks.send_new_dossier_email_async")
+@patch("envergo.petitions.tasks.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert(
-    mock_post, mock_notify_command, mock_notify_model
+    mock_post,
+    mock_notify_command,
+    mock_notify_team,
+    mock_email_task,
+    mock_receipt_task,
+    django_capture_on_commit_callbacks,
 ):
     # Define the first mock response
     mock_response_1 = {
@@ -113,9 +122,10 @@ def test_dossier_submission_admin_alert(
     project = PetitionProjectFactory()
     assert "date=" not in project.moulinette_url
     DCConfigHaieFactory()
-    call_command("dossier_submission_admin_alert")
+    with django_capture_on_commit_callbacks(execute=True):
+        call_command("dossier_submission_admin_alert")
 
-    args, kwargs = mock_notify_model.call_args_list[0]
+    args, kwargs = mock_notify_team.call_args_list[0]
     assert "### Nouveau dossier – Loire-Atlantique (44)" in args[0]
     assert "haie" in args[1]
 
@@ -128,7 +138,7 @@ def test_dossier_submission_admin_alert(
     assert "haie" in args[1]
 
     assert mock_notify_command.call_count == 2
-    assert mock_notify_model.call_count == 1
+    assert mock_notify_team.call_count == 1
     project.refresh_from_db()
     assert project.demarche_numerique_date_depot == datetime.datetime(
         2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
@@ -140,11 +150,11 @@ def test_dossier_submission_admin_alert(
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.tasks.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_ignores_expired_config(
-    mock_post, mock_notify_command, mock_notify_model
+    mock_post, mock_notify_command, mock_notify_team
 ):
     """The command should not process expired configs."""
     today = date.today()
@@ -164,11 +174,11 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.tasks.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_stage_instruction(
-    mock_post, mock_notify_command, mock_notify_model
+    mock_post, mock_notify_command, mock_notify_team
 ):
     """Test if project is with stage instruction on creation when DS returns 'En instruction'"""
     # Define the mock response
@@ -207,3 +217,58 @@ def test_dossier_submission_admin_alert_stage_instruction(
     assert project.due_date == datetime.date(
         2025, 3, 29
     )  # date_depot 2025-01-29 + 2 months
+
+
+COMMAND_PATH = "envergo.petitions.management.commands.dossier_submission_admin_alert"
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch(f"{COMMAND_PATH}.Command.handle_dossier", side_effect=[RuntimeError, None])
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_dossier_submission_admin_alert_survives_a_failing_dossier(
+    mock_post, mock_handle_dossier
+):
+    """A dossier that fails to sync does not stop the next one."""
+    mock_post.return_value = {
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {"hasNextPage": False, "endCursor": None},
+                "nodes": [
+                    {
+                        "number": 21059675,
+                        "id": "RG9zc2llci0x",
+                        "state": "en_construction",
+                    },
+                    {
+                        "number": 21059676,
+                        "id": "RG9zc2llci0y",
+                        "state": "en_construction",
+                    },
+                ],
+            },
+        }
+    }
+    DCConfigHaieFactory()
+
+    call_command("dossier_submission_admin_alert")
+
+    assert mock_handle_dossier.call_count == 2
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch(
+    f"{COMMAND_PATH}.Command.synchronize_demarche",
+    side_effect=[DemarcheNumeriqueError("", {}, "unreachable"), None],
+)
+def test_dossier_submission_admin_alert_survives_a_failing_demarche(
+    mock_synchronize_demarche,
+):
+    """A démarche that fails to sync does not stop the next one."""
+    DCConfigHaieFactory()
+    DCConfigHaieFactory(department=Department34Factory())
+
+    call_command("dossier_submission_admin_alert")
+
+    assert mock_synchronize_demarche.call_count == 2

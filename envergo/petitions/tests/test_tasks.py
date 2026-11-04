@@ -10,6 +10,7 @@ from envergo.petitions.tasks import (
     send_closing_message_async,
     send_declaration_receipt_async,
     send_new_dossier_email_async,
+    send_team_alert_async,
 )
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -154,3 +155,11 @@ def test_send_new_dossier_email_without_guh_email(mailoutbox):
     send_new_dossier_email_async(project.pk)
 
     assert len(mailoutbox) == 0
+
+
+@patch("envergo.petitions.tasks.notify")
+def test_send_team_alert(mock_notify):
+    """A team alert is posted to the haie channels."""
+    send_team_alert_async("### Nouveau dossier")
+
+    mock_notify.assert_called_once_with("### Nouveau dossier", "haie")

@@ -1127,6 +1127,16 @@ class Dossier:
         return representative_name
 
     @property
+    def latest_applicant_message_date(self):
+        """Date of the applicant's latest message, or None when they sent none."""
+        applicant_message_dates = [
+            message.createdAt
+            for message in self.messages or []
+            if message.email == self.usager.email
+        ]
+        return max(applicant_message_dates, default=None)
+
+    @property
     def instructor_emails(self) -> list[str]:
         if self.instructeurs:
             return [i.email for i in self.instructeurs]
