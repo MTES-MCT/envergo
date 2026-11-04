@@ -1,0 +1,91 @@
+{% extends "pages/faq/index.html" %}
+
+{% load static %}
+
+{% block title %}Exemples d’avis réglementaires émis{% endblock %}
+
+{% block faq_content %}
+  <h1>Exemples d’avis réglementaires émis</h1>
+  <p>
+    Il existe une multitude de typologies de projets. Les exemples ci-dessous montrent dans trois cas précis (fictifs) à quoi peut ressembler un avis réglementaire Envergo.
+  </p>
+
+  <div class="fr-tabs">
+    <ul class="fr-tabs__list"
+        role="tablist"
+        aria-label="Exemples d’avis réglementaires">
+      <li role="presentation">
+        <button type="button"
+                id="tab-soumis"
+                class="fr-tabs__tab"
+                tabindex="0"
+                role="tab"
+                aria-selected="true"
+                aria-controls="tab-soumis-panel">Projet soumis</button>
+      </li>
+      <li role="presentation">
+        <button type="button"
+                id="tab-action-requise"
+                class="fr-tabs__tab"
+                tabindex="-1"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-action-requise-panel">Projet action requise</button>
+      </li>
+      <li role="presentation">
+        <button type="button"
+                id="tab-non-soumis"
+                class="fr-tabs__tab"
+                tabindex="-1"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-non-soumis-panel">Projet non soumis</button>
+      </li>
+    </ul>
+    <div id="tab-soumis-panel"
+         class="fr-tabs__panel fr-tabs__panel--selected"
+         role="tabpanel"
+         aria-labelledby="tab-soumis"
+         tabindex="0">
+      <figure role="group"
+              class="fr-content-media evaluation-email-example"
+              aria-label="Description / Source">
+        <div class="fr-content-media__img">
+          <img class="fr-responsive-img"
+               src="{% static 'images/evaluation_example_soumis.png' %}"
+               alt="Exemple d'email envoyé dans le cadre d'un avis réglementaire pour un projet soumis à au moins une réglementation." />
+        </div>
+      </figure>
+    </div>
+    <div id="tab-action-requise-panel"
+         class="fr-tabs__panel"
+         role="tabpanel"
+         aria-labelledby="tab-action-requise"
+         tabindex="0">
+      <figure role="group"
+              class="fr-content-media evaluation-email-example"
+              aria-label="Description / Source">
+        <div class="fr-content-media__img">
+          <img class="fr-responsive-img"
+               src="{% static 'images/evaluation_example_action_requise.png' %}"
+               alt="Exemple d'email envoyé dans le cadre d'un avis réglementaire requérant une action." />
+        </div>
+      </figure>
+    </div>
+    <div id="tab-non-soumis-panel"
+         class="fr-tabs__panel"
+         role="tabpanel"
+         aria-labelledby="tab-non-soumis"
+         tabindex="0">
+      <figure role="group"
+              class="fr-content-media evaluation-email-example"
+              aria-label="Description / Source">
+        <div class="fr-content-media__img">
+          <img class="fr-responsive-img"
+               src="{% static 'images/evaluation_example_non_soumis.png' %}"
+               alt="Exemple d'email envoyé dans le cadre d'un avis réglementaire pour un projet soumis à aucune réglementation." />
+        </div>
+      </figure>
+    </div>
+  </div>
+{% endblock %}
