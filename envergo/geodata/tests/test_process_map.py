@@ -62,6 +62,18 @@ def test_failure_notification_links_the_map_and_its_batch(notify_mock, settings)
     assert "ping carto" in message
 
 
+def test_failure_callback_can_leave_the_notification_to_the_caller(notify_mock):
+    map = MapFactory(zones=None)
+
+    fail_map_processing(
+        None, RuntimeError("db down"), None, map.id, notify_failure=False
+    )
+
+    map.refresh_from_db()
+    assert map.import_status == STATUSES.failure
+    notify_mock.assert_not_called()
+
+
 def test_failure_notification_without_batch_has_no_batch_link(notify_mock):
     map = MapFactory(zones=None)
 

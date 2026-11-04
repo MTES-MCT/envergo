@@ -34,6 +34,13 @@ from envergo.geodata.tests.factories import (
 
 pytestmark = pytest.mark.django_db
 
+
+@pytest.fixture
+def notify_mock():
+    with patch("envergo.geodata.tasks.notify") as mock:
+        yield mock
+
+
 CSV_HEADER = "reference,file,name,description,departments"
 
 # A real geopackage, so libmagic detects a sqlite database and not plain text
@@ -209,7 +216,7 @@ def test_parse_batch_row_normalises_values():
     assert parsed.display_for_user is False
 
 
-def test_batch_with_missing_columns_fails_without_touching_maps():
+def test_batch_with_missing_columns_fails_without_touching_maps(notify_mock):
     batch = make_batch("reference,file\nr1,a.gpkg\n")
     queued = run_task(batch)
 
@@ -217,6 +224,8 @@ def test_batch_with_missing_columns_fails_without_touching_maps():
     assert "Colonnes manquantes" in batch.lines.get(line_number=0).message
     assert Map.objects.count() == 0
     assert len(queued) == 0
+    message, _ = notify_mock.call_args.args
+    assert "Colonnes manquantes" in message
 
 
 def test_batch_creates_maps():
@@ -449,7 +458,7 @@ def test_batch_blank_rows_are_skipped():
     assert Map.objects.count() == 1
 
 
-def test_batch_is_failed_when_a_map_processing_crashes():
+def test_batch_is_failed_when_a_map_processing_crashes(notify_mock, settings):
     """A crash in process_map stops the chain: the batch must not stay pending."""
     csv_content = (
         f"{CSV_HEADER}\n"
@@ -457,6 +466,7 @@ def test_batch_is_failed_when_a_map_processing_crashes():
         "r2,b.gpkg,Carte B,Description B,29\n"
     )
     batch = make_batch(csv_content, filenames=["a.gpkg", "b.gpkg"])
+    settings.CARTO_NOTIFICATION_HANDLERS = ["carto"]
 
     with (
         patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
@@ -482,6 +492,13 @@ def test_batch_is_failed_when_a_map_processing_crashes():
     assert batch.import_date is not None
     # The chain stopped at the first map.
     assert Map.objects.filter(reference="r2").count() == 0
+    # The cartographers are warned once, with the batch summary
+    notify_mock.assert_called_once()
+    message, site = notify_mock.call_args.args
+    assert site == "amenagement"
+    assert reverse("admin:geodata_mapimportbatch_change", args=[batch.id]) in message
+    assert "erreur inattendue (boom)" in message
+    assert "ping carto" in message
 
 
 def test_batch_row_queues_the_map_with_its_failure_callback():
@@ -506,6 +523,8 @@ def test_batch_row_queues_the_map_with_its_failure_callback():
     [errback] = process_map_sig.options["link_error"]
     assert errback["task"] == fail_map_processing.name
     assert tuple(errback["args"]) == (map.id,)
+    # Only the batch failure is notified
+    assert errback["kwargs"] == {"notify_failure": False}
 
 
 def test_import_batch_row_records_errors_on_its_line_and_skips_the_row():
@@ -553,7 +572,7 @@ def test_import_summary_counts_the_lines_and_the_interruption():
         ([LINE_STATUSES.failure, LINE_STATUSES.failure], STATUSES.failure),
     ],
 )
-def test_finalize_batch_status(statuses, expected):
+def test_finalize_batch_status(statuses, expected, notify_mock):
     batch = make_batch(f"{CSV_HEADER}\n")
     for line_number, status in enumerate(statuses, start=2):
         batch.lines.create(line_number=line_number, status=status)
@@ -562,6 +581,8 @@ def test_finalize_batch_status(statuses, expected):
     batch.refresh_from_db()
 
     assert batch.import_status == expected
+    # Only a failed batch is notified
+    assert notify_mock.called == (expected == STATUSES.failure)
 
 
 def test_batch_rerun_all_replaces_the_previous_lines():
