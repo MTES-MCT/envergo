@@ -10,6 +10,34 @@
     }
   };
 
+  class FullScreenControl extends L.Control {
+    onAdd(map) {
+      const fs_button = L.DomUtil.create("button", "leaflet-controls-full-screen-toggle")
+      fs_button.type = "button"
+      const text_content = L.DomUtil.create("span", "fr-sr-only", fs_button)
+      text_content.innerText = "Plein écran"
+
+      L.DomEvent.on(fs_button, "click", (e) => {
+        map.getContainer().classList.toggle("full-screen");
+        setTimeout(map.invalidateSize(), 20);
+      });
+
+      L.DomEvent.on(map.getContainer(), "keypress", (e) => {
+        if (e.key === "escape") {
+          map.getContainer().classList.toggle("full-screen", false);
+        }
+        console.log(e.key);
+      })
+
+      return fs_button
+    }
+
+    onRemove(map) {
+      // Nothing to do here
+    }
+  }
+
+
   /**
    * Settings and behavior for the moulinette form map widget.
    */
@@ -86,6 +114,11 @@
 
     const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
+
+    if (true) {
+      const fullScreenControl = new FullScreenControl();
+      fullScreenControl.addTo(map);
+    }
 
     return map;
   };
