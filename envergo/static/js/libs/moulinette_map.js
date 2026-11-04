@@ -19,14 +19,27 @@
 
       L.DomEvent.on(fs_button, "click", (e) => {
         map.getContainer().classList.toggle("full-screen");
-        setTimeout(map.invalidateSize(), 20);
+        setTimeout(() => {map.invalidateSize()}, 70);
       });
 
-      L.DomEvent.on(map.getContainer(), "keypress", (e) => {
-        if (e.key === "escape") {
+      L.DomEvent.on(map.getContainer(), "keyup", (e) => {
+        if (e.key === "Escape") {
           map.getContainer().classList.toggle("full-screen", false);
+          setTimeout(() => {map.invalidateSize()}, 70);
         }
-        console.log(e.key);
+      });
+
+      // basic focus trap for modal behaviour
+      L.DomEvent.on(window, "focusout", (e) => {
+        const container = map.getContainer();
+        if (!container.classList.contains("full-screen")) {
+          // full screen disabled: no need for focus trap
+          return;
+        }
+        if (!container.contains(e.relatedTarget)) {
+          // losing focus: force it back on first focusable element in container
+          container.querySelector("a, button").focus({focusVisible:true})
+        }
       })
 
       return fs_button
