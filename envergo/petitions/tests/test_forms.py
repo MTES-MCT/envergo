@@ -223,25 +223,15 @@ def test_closed_to_closed_is_forbidden():
     )
 
 
-def test_entering_authorization_without_switch_is_forbidden():
+def test_entering_authorization_without_switch_needs_no_message():
+    """Outside the RU switch, a dossier enters authorisation without notifying the applicant."""
     form = make_state_change_form(
         {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
         previous_stage="preparing_decision",
     )
 
-    assert not form.is_valid()
-    assert form.errors["stage"][0].startswith(
-        "L'étape « Instruction autorisation » n'est accessible que"
-    )
-
-
-def test_staying_in_authorization_is_allowed():
-    form = make_state_change_form(
-        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
-        previous_stage="instruction_a",
-    )
-
     assert form.is_valid(), form.errors
+    assert not form.is_authorization_switch
 
 
 def make_switch_form(**overrides):

@@ -355,16 +355,6 @@ class StateChangeForm(forms.ModelForm):
                 ),
             )
 
-        if self.enters_authorization and not self.can_switch_to_authorization:
-            self.add_error(
-                "stage",
-                ValidationError(
-                    "L'étape « Instruction autorisation » n'est accessible que pour un dossier relevant du "
-                    "régime unique, depuis les étapes « À instruire » ou « Instruction déclaration ».",
-                    code="forbidden_transition",
-                ),
-            )
-
         if stage == "closed":
             self.clean_closing_fields(cleaned_data)
         elif self.is_authorization_switch:
@@ -379,22 +369,13 @@ class StateChangeForm(forms.ModelForm):
         return cleaned_data
 
     @property
-    def enters_authorization(self):
-        """Whether the submitted stage moves the dossier into authorisation instruction.
-
-        Only meaningful once the form is cleaned.
-        """
-        stage = self.cleaned_data.get("stage")
-        previous_stage = self.initial["stage"]
-        return stage == "instruction_a" and previous_stage != "instruction_a"
-
-    @property
     def is_authorization_switch(self):
         """Whether the dossier enters authorisation instruction from its declaration phase.
 
         Only meaningful once the form is cleaned.
         """
-        return self.enters_authorization and self.can_switch_to_authorization
+        stage = self.cleaned_data.get("stage")
+        return stage == "instruction_a" and self.can_switch_to_authorization
 
     def clean_authorization_switch_fields(self, cleaned_data):
         """Enforce the deadline and the message the applicant is notified of."""
