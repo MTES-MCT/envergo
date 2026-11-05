@@ -358,6 +358,11 @@ class Evaluation(models.Model):
             for criterion in all_criteria
         )
 
+    @property
+    def published_version(self):
+        """The published version, or None if the avis is not published."""
+        return next((v for v in self.versions.all() if v.published), None)
+
     def unpublish(self):
         """Unpublish the evaluation."""
 
@@ -511,9 +516,7 @@ def build_regulatory_notice_context(evaluation, moulinette, request):
         "show_transmission_card": show_transmission_card,
         "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
         "required_actions_interdit": list(moulinette.all_required_actions_interdit()),
-        "published_version": next(
-            (v for v in evaluation.versions.all() if v.published), None
-        ),
+        "published_version": evaluation.published_version,
     }
 
 
