@@ -44,7 +44,7 @@
 
       // The `navigator.clipboard` API is only available on `https` urls
       if (navigator.clipboard != undefined) {
-        navigator.clipboard.writeText('{{ upload_files_url }}');
+        navigator.clipboard.writeText('{{ secret_upload_files_url }}');
         button.value = "Lien copié !";
       } else {
         button.value = "Impossible de copier le lien";
