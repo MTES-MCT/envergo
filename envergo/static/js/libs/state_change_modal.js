@@ -5,8 +5,10 @@
  *  - the per-stage objective help text,
  *  - the closing fields (simulation check, prefectural order, applicant
  *    message) plus the message template pre-filled from the decision,
- *  - the switch of an RU dossier to authorisation. It pre-fills, relabels and
- *    groups the due date and the applicant message.
+ *  - the due dates: the stage due date, or the refusal deadline during a
+ *    switch,
+ *  - the switch of an RU dossier to authorisation. It pre-fills the refusal
+ *    deadline, groups it with the applicant message and relabels the message.
  *
  * This is purely an instructor convenience: StateChangeForm re-enforces every
  * rule server-side, so nothing here is load-bearing for data integrity.
@@ -41,10 +43,9 @@
     },
   ];
 
-  // Date and comment fields hidden while closing: a closing is always
-  // effective immediately, with no next due date nor back-dating.
+  // Effective date and comment fields, hidden while closing. A closing is
+  // always effective immediately.
   const NON_CLOSING_FIELD_IDS = [
-    "form-group-due_date",
     "form-group-update_comment",
     "form-group-status_date",
   ];
@@ -53,7 +54,7 @@
   const SWITCH_MESSAGE_TEMPLATE_ID = "authorization-switch-message";
 
   // Fields whose label reads differently during a switch to authorisation.
-  const SWITCH_LABELED_FIELDS = ["due_date", "applicant_message"];
+  const SWITCH_LABELED_FIELDS = ["applicant_message"];
 
   const show = (elt, visible) => {
     if (elt) elt.style.display = visible ? "block" : "none";
@@ -67,14 +68,16 @@
       this.stageInput = form.querySelector("#id_stage");
       this.decisionInput = form.querySelector("#id_decision");
       this.dueDateInput = form.querySelector("#id_due_date");
+      this.refusalDeadlineInput = form.querySelector("#id_refusal_deadline");
       this.applicantMessageInput = form.querySelector("#id_applicant_message");
       this.dueDateGroup = document.getElementById("form-group-due_date");
+      this.refusalDeadlineGroup = document.getElementById("form-group-refusal_deadline");
       this.decisionGroup = document.getElementById("form-group-decision");
       this.applicantMessageGroup = document.getElementById("form-group-applicant_message");
       this.submitButton = form.querySelector("button[type='submit']");
 
       // Undefined when the dossier cannot switch to authorisation.
-      this.switchDueDate = form.dataset.authorizationSwitchDueDate;
+      this.defaultRefusalDeadline = form.dataset.defaultRefusalDeadline;
 
       // Each label keeps its server-rendered content, restored after a switch.
       this.switchLabels = SWITCH_LABELED_FIELDS.map((name) => {
@@ -97,7 +100,7 @@
       this.relocateSupersedeNotice();
 
       this.stageInput.addEventListener("change", () => {
-        this.prefillSwitchDueDate();
+        this.prefillRefusalDeadline();
         this.refresh();
       });
       this.decisionInput.addEventListener("change", () => this.refresh());
@@ -117,10 +120,13 @@
       return this.stage === STAGE_CLOSED;
     }
     get canSwitchToAuthorization() {
-      return this.switchDueDate !== undefined;
+      return this.defaultRefusalDeadline !== undefined;
     }
     get isAuthorizationSwitch() {
       return this.canSwitchToAuthorization && this.stage === STAGE_AUTHORIZATION;
+    }
+    get asksStageDueDate() {
+      return !this.isClosing && !this.isAuthorizationSwitch;
     }
 
     /** Id of the template the applicant message starts from, or null when hidden. */
@@ -138,6 +144,7 @@
     refresh() {
       this.syncStageObjective();
       this.syncClosingFields();
+      this.syncDueDates();
       this.syncApplicantMessage();
       this.syncSwitchLabels();
       this.syncFieldOrder();
@@ -164,13 +171,24 @@
      */
     syncClosingFields() {
       NON_CLOSING_FIELD_IDS.forEach((id) => show(document.getElementById(id), !this.isClosing));
-      if (this.isClosing) this.dueDateInput.value = "";
 
       CLOSING_FIELDS.forEach(({ groupId, isMandatory, companions = [] }) => {
         const visible = this.isClosing && isMandatory(this.decision);
         show(document.getElementById(groupId), visible);
         companions.forEach((id) => show(document.getElementById(id), visible));
       });
+    }
+
+    /**
+     * Show the date the form asks for, and clear the stage due date while closing.
+     *
+     * A switch asks for the refusal deadline. The server copies it into the
+     * stage due date, and drops it outside a switch.
+     */
+    syncDueDates() {
+      show(this.dueDateGroup, this.asksStageDueDate);
+      show(this.refusalDeadlineGroup, this.isAuthorizationSwitch);
+      if (this.isClosing) this.dueDateInput.value = "";
     }
 
     /** Show the applicant message, filled from the template of the current mode. */
@@ -188,14 +206,14 @@
     }
 
     /**
-     * During a switch, put the due date and the message stating it right
-     * under the decision. Otherwise, restore the server order.
+     * During a switch, put the refusal deadline and the message stating it
+     * right under the decision. Otherwise, restore the server order.
      */
     syncFieldOrder() {
       if (this.isAuthorizationSwitch) {
-        this.decisionGroup.after(this.dueDateGroup, this.applicantMessageGroup);
+        this.decisionGroup.after(this.refusalDeadlineGroup, this.applicantMessageGroup);
       } else {
-        this.decisionGroup.before(this.dueDateGroup);
+        this.decisionGroup.before(this.dueDateGroup, this.refusalDeadlineGroup);
         this.submitButton.before(this.applicantMessageGroup);
       }
     }
@@ -233,12 +251,12 @@
       return text;
     }
 
-    /** On a switch, pre-fill an empty due date with the default deadline. */
-    prefillSwitchDueDate() {
+    /** On a switch, pre-fill an empty refusal deadline with the default one. */
+    prefillRefusalDeadline() {
       if (!this.isAuthorizationSwitch) return;
-      if (this.dueDateInput.value !== "") return;
+      if (this.refusalDeadlineInput.value !== "") return;
 
-      this.dueDateInput.value = this.switchDueDate;
+      this.refusalDeadlineInput.value = this.defaultRefusalDeadline;
     }
 
     /**

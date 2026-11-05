@@ -94,7 +94,8 @@ def fake_moulinette(
             slug="loi_sur_leau",
             is_cas_par_cas=False,
             do_not_call_in_templates=True,
-            get_evaluator=Mock(return_value=Mock(has_icpe=lse_has_icpe)),
+            # A plain callable, because templates refuse to call a Mock.
+            get_evaluator=lambda: Mock(has_icpe=lse_has_icpe),
         ),
         Mock(
             wraps=regulation,

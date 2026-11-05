@@ -5199,18 +5199,18 @@ def test_authorization_switch_message_omits_blank_guh_contact_lines(
     ) in message
 
 
-def test_state_change_modal_exposes_the_switch_due_date_to_the_script(
+def test_state_change_modal_exposes_the_default_refusal_deadline_to_the_script(
     client, haie_coordinator_44, site
 ):
-    """The script prefills the due date in the format the text input expects."""
+    """The script prefills the refusal deadline in the format the text input expects."""
     RUConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     content = client.get(procedure_url(project)).content.decode()
 
-    due_date = two_months_from_today().strftime("%d/%m/%Y")
-    assert f'data-authorization-switch-due-date="{due_date}"' in content
+    refusal_deadline = two_months_from_today().strftime("%d/%m/%Y")
+    assert f'data-default-refusal-deadline="{refusal_deadline}"' in content
 
 
 def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch(
@@ -5229,7 +5229,7 @@ def state_change_form_data(**overrides):
         "action": "state_change",
         "stage": "instruction_a",
         "decision": "unset",
-        "due_date": two_months_from_today().strftime("%d/%m/%Y"),
+        "refusal_deadline": two_months_from_today().strftime("%d/%m/%Y"),
         "status_date": date.today().strftime("%d/%m/%Y"),
         "applicant_message": f"Votre projet relève d'une autorisation.\n{REFUSAL_DEADLINE_PLACEHOLDER}",
     }
@@ -5249,7 +5249,7 @@ def test_authorization_switch_sends_the_applicant_message(
     RUConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
     data = state_change_form_data(
-        due_date="21/09/2099", update_comment="Haie en site Natura 2000."
+        refusal_deadline="21/09/2099", update_comment="Haie en site Natura 2000."
     )
 
     res = client.post(procedure_url(project), data, follow=True)
@@ -5263,6 +5263,7 @@ def test_authorization_switch_sends_the_applicant_message(
     assert project.stage == "instruction_a"
 
     log = project.status_history.order_by("-created_at").first()
+    assert log.refusal_deadline == date(2099, 9, 21)
     assert log.due_date == date(2099, 9, 21)
     assert log.applicant_message == (
         "Votre projet relève d'une autorisation.\n"

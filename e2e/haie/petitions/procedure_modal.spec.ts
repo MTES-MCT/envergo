@@ -37,10 +37,12 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(page.locator('#form-group-due_date')).toBeVisible();
     await expect(page.locator('#form-group-status_date')).toBeVisible();
     await expect(page.locator('#form-group-update_comment')).toBeVisible();
+    await expect(page.locator('#form-group-refusal_deadline')).toBeHidden();
 
     // Closing is immediate: those fields disappear.
     await stage.selectOption('closed');
     await expect(page.locator('#form-group-due_date')).toBeHidden();
+    await expect(page.locator('#form-group-refusal_deadline')).toBeHidden();
     await expect(page.locator('#form-group-status_date')).toBeHidden();
     await expect(page.locator('#form-group-update_comment')).toBeHidden();
   });
@@ -122,30 +124,32 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toHaveValue(typed);
   });
 
-  test('switching to authorisation prefills the due date and the message', async ({ page }) => {
-    const dueDate = page.locator('#id_due_date');
+  test('switching to authorisation prefills the refusal deadline and the message', async ({ page }) => {
+    const refusalDeadline = page.locator('#id_refusal_deadline');
     const message = page.locator('#id_applicant_message');
     const hint = page.locator('#form-group-applicant_message .fr-hint-text');
 
     await page.locator('#id_stage').selectOption('instruction_a');
 
     // The server computes the default deadline, the script only copies it.
-    const defaultDueDate = await page
+    const defaultRefusalDeadline = await page
       .locator('#state-change-modal form')
-      .getAttribute('data-authorization-switch-due-date');
-    expect(defaultDueDate).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
-    await expect(dueDate).toHaveValue(defaultDueDate!);
-    await expect(page.locator('#form-group-due_date > label')).toContainText(
-      'Date limite au-delà de laquelle Silence Vaut Refus'
+      .getAttribute('data-default-refusal-deadline');
+    expect(defaultRefusalDeadline).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+    await expect(refusalDeadline).toHaveValue(defaultRefusalDeadline!);
+    await expect(page.locator('#form-group-refusal_deadline > label')).toContainText(
+      'Date limite au-delà de laquelle le silence vaut refus'
     );
+    // The server sets the stage due date from the refusal deadline.
+    await expect(page.locator('#form-group-due_date')).toBeHidden();
     await expect(message).toBeVisible();
     await expect(message).toHaveValue(/Requalification de votre projet/);
     await expect(message).toHaveValue(/\[DATE LIMITE – NE PAS MODIFIER/);
     await expect(hint).toContainText('sera remplacée par');
 
     // Under the decision come the deadline, then the message stating it.
-    await expect(page.locator('#form-group-decision + *')).toHaveId('form-group-due_date');
-    await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-applicant_message');
+    await expect(page.locator('#form-group-decision + *')).toHaveId('form-group-refusal_deadline');
+    await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-applicant_message');
   });
 
   test('closing and switching each bring their own message and hint', async ({ page }) => {
@@ -174,10 +178,12 @@ test.describe('Procedure modal — dynamic form', () => {
     await stage.selectOption('instruction_a');
     await message.fill(typed);
 
-    // Leaving the switch restores the due date's label and the server order.
+    // Leaving the switch restores the stage due date and the server order.
     await stage.selectOption('preparing_decision');
-    await expect(page.locator('#form-group-due_date > label')).toContainText("Échéance de l'étape");
-    await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-decision');
+    await expect(page.locator('#form-group-due_date')).toBeVisible();
+    await expect(page.locator('#form-group-refusal_deadline')).toBeHidden();
+    await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-refusal_deadline');
+    await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-decision');
     await expect(page.locator('#form-group-applicant_message + button[type="submit"]')).toHaveCount(1);
 
     await stage.selectOption('instruction_a');

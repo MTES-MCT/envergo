@@ -1963,7 +1963,7 @@ class PetitionProjectInstructorProcedureView(
             ),
         )
         if self.object.can_switch_to_authorization:
-            context["authorization_switch_due_date"] = two_months_from_today()
+            context["default_refusal_deadline"] = two_months_from_today()
             context["authorization_reason_placeholder"] = (
                 AUTHORIZATION_REASON_PLACEHOLDER
             )

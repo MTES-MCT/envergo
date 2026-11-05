@@ -223,25 +223,15 @@ def test_closed_to_closed_is_forbidden():
     )
 
 
-def test_entering_authorization_without_switch_is_forbidden():
+def test_entering_authorization_without_switch_needs_no_message():
+    """Outside the RU switch, a dossier enters authorisation without notifying the applicant."""
     form = make_state_change_form(
         {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
         previous_stage="preparing_decision",
     )
 
-    assert not form.is_valid()
-    assert form.errors["stage"][0].startswith(
-        "L'étape « Instruction autorisation » n'est accessible que"
-    )
-
-
-def test_staying_in_authorization_is_allowed():
-    form = make_state_change_form(
-        {"stage": "instruction_a", "decision": "unset", "status_date": "10/09/2025"},
-        previous_stage="instruction_a",
-    )
-
     assert form.is_valid(), form.errors
+    assert not form.is_authorization_switch
 
 
 def make_switch_form(**overrides):
@@ -250,7 +240,7 @@ def make_switch_form(**overrides):
         "stage": "instruction_a",
         "decision": "unset",
         "status_date": date.today().isoformat(),
-        "due_date": two_months_from_today().isoformat(),
+        "refusal_deadline": two_months_from_today().isoformat(),
         "applicant_message": f"Votre projet relève de l'autorisation.\n{REFUSAL_DEADLINE_PLACEHOLDER}",
         **overrides,
     }
@@ -259,13 +249,13 @@ def make_switch_form(**overrides):
     )
 
 
-def test_valid_switch_writes_the_due_date_into_the_message():
-    """The applicant reads the very deadline saved in the due date field."""
-    form = make_switch_form(due_date="2099-09-21")
+def test_valid_switch_writes_the_refusal_deadline_into_the_message():
+    """The applicant reads the very deadline saved in the refusal deadline field."""
+    form = make_switch_form(refusal_deadline="2099-09-21")
 
     assert form.is_valid(), form.errors
     assert form.is_authorization_switch
-    assert form.cleaned_data["due_date"] == date(2099, 9, 21)
+    assert form.cleaned_data["refusal_deadline"] == date(2099, 9, 21)
     assert form.cleaned_data["applicant_message"] == (
         "Votre projet relève de l'autorisation.\n"
         "Compte-tenu des avis qui doivent être recueillis, "
@@ -303,12 +293,46 @@ def test_switch_message_needs_the_placeholder_line_once_and_intact(message):
     assert REFUSAL_DEADLINE_PLACEHOLDER in form.errors["applicant_message"][0]
 
 
-def test_switch_requires_a_due_date():
-    """The due date is the deadline after which silence means refusal."""
-    form = make_switch_form(due_date="")
+def test_switch_requires_a_refusal_deadline():
+    """The applicant must learn after which date silence means refusal."""
+    form = make_switch_form(refusal_deadline="")
 
     assert not form.is_valid()
-    assert form.has_error("due_date", code="missing_due_date")
+    assert form.has_error("refusal_deadline", code="missing_refusal_deadline")
+
+
+def test_switch_sets_the_stage_due_date_to_the_refusal_deadline():
+    """On a switch, the refusal deadline overrides any submitted stage due date."""
+    form = make_switch_form(refusal_deadline="2099-09-21", due_date="pas une date")
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["due_date"] == date(2099, 9, 21)
+
+
+@pytest.mark.parametrize(
+    "previous_stage, stage, decision",
+    [
+        ("instruction_d", "preparing_decision", "unset"),
+        ("instruction_d", "closed", "dropped"),
+    ],
+    ids=["other stage change", "closing"],
+)
+def test_refusal_deadline_is_only_kept_on_a_switch(previous_stage, stage, decision):
+    """Only a switch to authorisation sets a refusal deadline."""
+    form = make_state_change_form(
+        {
+            "stage": stage,
+            "decision": decision,
+            "status_date": date.today().isoformat(),
+            "refusal_deadline": "2099-09-21",
+            "applicant_message": "Message.",
+        },
+        previous_stage=previous_stage,
+        can_switch_to_authorization=True,
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["refusal_deadline"] is None
 
 
 @patch(
@@ -320,24 +344,24 @@ def test_two_months_from_today_counts_from_the_paris_date(mock_now):
     assert two_months_from_today() == date(2026, 12, 31)
 
 
-def test_switch_due_date_is_at_least_two_months_away():
+def test_switch_refusal_deadline_is_at_least_two_months_away():
     """One day before today + 2 months is already too soon."""
     day_too_soon = two_months_from_today() - timedelta(days=1)
-    form = make_switch_form(due_date=day_too_soon.isoformat())
+    form = make_switch_form(refusal_deadline=day_too_soon.isoformat())
 
     assert not form.is_valid()
-    assert form.errors["due_date"] == [
+    assert form.errors["refusal_deadline"] == [
         "Le délai indicatif d'instruction ne peut pas être inférieur à 2 mois."
     ]
 
 
-def test_switch_with_an_unparsable_due_date_reports_only_the_format_error():
+def test_switch_with_an_unparsable_refusal_deadline_reports_only_the_format_error():
     """A date that fails to parse is not also reported as missing."""
-    form = make_switch_form(due_date="pas une date")
+    form = make_switch_form(refusal_deadline="pas une date")
 
     assert not form.is_valid()
-    assert not form.has_error("due_date", code="missing_due_date")
-    assert form.has_error("due_date", code="invalid")
+    assert not form.has_error("refusal_deadline", code="missing_refusal_deadline")
+    assert form.has_error("refusal_deadline", code="invalid")
 
 
 def test_switch_requires_a_message():
