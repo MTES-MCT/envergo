@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 import re
@@ -13,8 +14,9 @@ import requests
 from django.contrib.gis.gdal import DataSource, GDALException
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
 from django.contrib.gis.utils.layermapping import LayerMapping
+from django.core.files.uploadedfile import UploadedFile
 from django.core.serializers import serialize
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import QuerySet
 from scipy.interpolate import griddata
 
@@ -84,8 +86,39 @@ class CustomMapping(LayerMapping):
     def __init__(self, *args, **kwargs):
         self.extra_kwargs = kwargs.pop("extra_kwargs")
         super().__init__(*args, **kwargs)
+        self.save_error = None
+        self.model_class = self.model
+        # LayerMapping builds each instance with `self.model(**kwargs)`.
+        self.model = self.build_instance
+
+    def build_instance(self, **kwargs):
+        """Build a model instance that remembers the error of its failed save.
+
+        LayerMapping swallows save errors when not strict and only keeps their
+        message.
+        """
+        instance = self.model_class(**kwargs)
+        original_save = instance.save
+
+        def save(*args, **kwargs):
+            try:
+                return original_save(*args, **kwargs)
+            except Exception as exc:
+                self.save_error = exc
+                raise
+
+        instance.save = save
+        return instance
 
     def feature_kwargs(self, feat):
+        # A swallowed save error may break the surrounding transaction, so every
+        # following feature would fail too: stop at the first one, with the
+        # original error as cause.
+        if transaction.get_connection(self.using).needs_rollback:
+            raise RuntimeError(
+                f"Import interrompu par une erreur de sauvegarde : {self.save_error!r}"
+            ) from self.save_error
+
         kwargs = super().feature_kwargs(feat)
         kwargs.update(self.extra_kwargs)
 
@@ -178,6 +211,22 @@ def open_map_file(file):
         except GDALException as error:
             raise InvalidMapFile("Ce fichier n'est pas une carte lisible") from error
         yield data_source
+
+
+def read_csv_file(field_file):
+    """Return a csv FieldFile's decoded content.
+
+    Decoding with utf-8-sig removes the eventual bom produced by spreadsheet software.
+    """
+    # A freshly uploaded file must stay open
+    if isinstance(field_file, UploadedFile):
+        field_file.seek(0)
+        content = field_file.read()
+        field_file.seek(0)
+        return io.StringIO(content.decode("utf-8-sig"))
+
+    with field_file.open("rb") as f:
+        return io.StringIO(f.read().decode("utf-8-sig"))
 
 
 def process_geographic_file(map, lm, task):

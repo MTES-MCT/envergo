@@ -123,3 +123,25 @@ a#add_id_departments {
     min-width: 10em;
   }
 }
+
+// Look and feel of Django admin Object-tools action for buttons
+.object-tools button {
+  display: block;
+  float: left;
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 15px;
+  cursor: pointer;
+  background: var(--object-tools-bg);
+  color: var(--object-tools-fg);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.25rem;
+
+  &:hover,
+  &:focus {
+    background-color: var(--object-tools-hover-bg);
+  }
+}

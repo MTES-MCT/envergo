@@ -14,7 +14,7 @@ from envergo.geodata.management.commands.batch_import_maps import (
 )
 from envergo.geodata.management.commands.batch_import_maps import ParsedRow
 from envergo.geodata.models import STATUSES, Map
-from envergo.geodata.tasks import process_map
+from envergo.geodata.tasks import queue_process_map
 from envergo.geodata.utils import InvalidMapFile, open_map_file
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -77,7 +77,7 @@ def test_process_map_imports_every_geometry(fixture_name):
     with open(DATA_DIR / fixture_name, "rb") as fixture:
         map.file.save(fixture_name, File(fixture))
 
-    process_map.delay(map.id)
+    queue_process_map(map.id).delay()
 
     map.refresh_from_db()
     assert map.import_error_msg == ""
@@ -92,7 +92,7 @@ def test_process_map_closes_the_stored_file(mock_close):
     with open(DATA_DIR / "zones.gpkg", "rb") as fixture:
         map.file.save("zones.gpkg", File(fixture))
 
-    process_map.delay(map.id)
+    queue_process_map(map.id).delay()
 
     mock_close.assert_called_once()
 
