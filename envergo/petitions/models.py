@@ -322,6 +322,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             .first()
         )
 
+    @property
+    def refusal_deadline(self):
+        """Date after which silence means refusal, set by the latest switch to authorisation.
+
+        None when the dossier never switched.
+        """
+        return (
+            self.status_history.filter(refusal_deadline__isnull=False)
+            .order_by("-created_at")
+            .values_list("refusal_deadline", flat=True)
+            .first()
+        )
+
     @cached_property
     def latest_suspension(self):
         """Get the latest suspension log."""

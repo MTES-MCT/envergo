@@ -19,6 +19,7 @@ from envergo.petitions.tests.factories import (
     InvitationTokenFactory,
     PetitionProjectFactory,
     SimulationFactory,
+    StatusLogFactory,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -104,6 +105,23 @@ def test_can_switch_to_authorization(category, stage, expected):
     project = PetitionProjectFactory.build(underscore_category=category, stage=stage)
 
     assert project.can_switch_to_authorization is expected
+
+
+def test_refusal_deadline_comes_from_the_latest_switch():
+    """A later stage change without a deadline keeps the switch's deadline in force."""
+    project = PetitionProjectFactory()
+    StatusLogFactory(petition_project=project, refusal_deadline=date(2099, 1, 1))
+    StatusLogFactory(petition_project=project, refusal_deadline=date(2099, 9, 21))
+    StatusLogFactory(petition_project=project, stage=STAGES.preparing_decision)
+
+    assert project.refusal_deadline == date(2099, 9, 21)
+
+
+def test_refusal_deadline_is_none_without_a_switch():
+    """A dossier that never switched to authorisation has no refusal deadline."""
+    project = PetitionProjectFactory()
+
+    assert project.refusal_deadline is None
 
 
 def test_form_url_adds_alternative_param():
