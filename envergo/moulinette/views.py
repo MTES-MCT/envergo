@@ -622,6 +622,8 @@ class MoulinetteResultMixin:
         analytics_data = self.get_analytics_context_data(context)
         context.update(analytics_data)
 
+        context["crisp_url_page"] = self.request.build_absolute_uri()
+
         return context
 
 
