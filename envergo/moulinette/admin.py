@@ -474,12 +474,6 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             ].queryset.defer("geometry")
 
     def clean(self):
-        """Enforce the rules that link several config fields.
-
-        These rules only apply to single procedure (régime unique) configs.
-        An activated one needs the GUH contact fields. One with the
-        third-party form handling needs the external form URL.
-        """
         cleaned_data = super().clean()
 
         if not cleaned_data.get("single_procedure"):
