@@ -44,7 +44,7 @@ class Command(BaseCommand):
             emails = request.get_requester_emails()
             faq_url = reverse("faq")
             contact_url = reverse("contact_us")
-            file_upload_url = request.upload_files_url
+            file_upload_url = request.secret_upload_files_url
             context = {
                 "reference": request.reference,
                 "address": request.address,

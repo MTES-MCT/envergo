@@ -624,7 +624,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("demarche_simplifiee_number__isnull", True),
                     ("demarches_simplifiees_project_url_id__isnull", False),
                     _connector="OR",

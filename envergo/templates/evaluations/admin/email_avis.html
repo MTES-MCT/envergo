@@ -133,11 +133,18 @@
       </ul>
     </fieldset>
 
+    {% if not evaluation.published_version %}
+      <ul class="messagelist">
+        <li class="warning">Aucune version de cet avis n'est publiée. Publiez l'avis avant de l'envoyer par email.</li>
+      </ul>
+    {% endif %}
+
     <div class="submit-row">
       <input type="submit"
              value="Envoyer l'avis réglementaire par email"
              class="default"
-             name="_save">
+             name="_save"
+             {% if not evaluation.published_version %}disabled{% endif %}>
     </div>
   </form>
 

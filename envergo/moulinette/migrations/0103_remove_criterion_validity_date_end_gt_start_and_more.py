@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="criterion",
             constraint=models.CheckConstraint(
-                check=models.Q(("validity_range__isempty", False)),
+                condition=models.Q(("validity_range__isempty", False)),
                 name="validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début",
             ),

@@ -922,7 +922,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("single_procedure", False),
                     models.Q(
                         ("single_procedure_settings__has_key", "coeff_compensation"),

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="moulinettetemplate",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(("config__isnull", False), ("criterion", None)),
                     models.Q(("config", None), ("criterion__isnull", False)),
                     _connector="OR",
