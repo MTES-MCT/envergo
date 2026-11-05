@@ -1018,6 +1018,16 @@ div.leaflet-container {
 
 body:has(.leaflet-container.full-screen) {
   overflow: hidden;
+
+  & .header-sticky {
+    display: none;
+  }
+}
+
+.fr-content-media:has(.leaflet-container.full-screen) {
+  position: fixed !important; // original selector is very specific with 2 IDs
+  inset: 0 0 3em;
+  z-index: 1000;
 }
 
 .alt {
@@ -1378,10 +1388,10 @@ $content-max-width: 40rem;
       transition: opacity 0.4s ease-in-out 0s;
       opacity: 0;
       pointer-events: none;
-      z-index: 1000;
+      z-index: 2000;
       position: absolute;
-      right: 1.5em;
-      top: 13em;
+      right: 2em;
+      bottom: 2em;
       background-color: var(--grey-1000-50);
     }
 
