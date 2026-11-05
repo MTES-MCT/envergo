@@ -426,6 +426,10 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
+# GUH contact details shown to petitioners, e.g. in the declaration receipt
+GUH_CONTACT_FIELDS = ["guh_structure", "guh_email", "guh_phone", "guh_address"]
+
+
 class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
     overlap_identity_fields = ["department"]
     overlap_error_message = (
@@ -470,15 +474,19 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             ].queryset.defer("geometry")
 
     def clean(self):
-        """Validate AA L350-3 fields when single procedure is active.
+        """Enforce the rules that link several config fields.
 
-        When the department uses the single procedure (régime unique), the
-        third-party form handling, the external form URL is required.
+        These rules only apply to single procedure (régime unique) configs.
+        An activated one needs the GUH contact fields. One with the
+        third-party form handling needs the external form URL.
         """
         cleaned_data = super().clean()
 
         if not cleaned_data.get("single_procedure"):
             return cleaned_data
+
+        if cleaned_data.get("is_activated"):
+            self.require_guh_contact_fields(cleaned_data)
 
         handling = cleaned_data.get("aa_l3503_handling")
 
@@ -491,6 +499,15 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
                 "est activé et que le mode de dépôt est « formulaire tiers ».",
             )
         return cleaned_data
+
+    def require_guh_contact_fields(self, cleaned_data):
+        for field_name in GUH_CONTACT_FIELDS:
+            if not cleaned_data.get(field_name):
+                self.add_error(
+                    field_name,
+                    "Ce champ est obligatoire pour une configuration "
+                    "activée en régime unique.",
+                )
 
 
 @admin.register(ConfigHaie)
