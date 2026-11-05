@@ -217,11 +217,11 @@ class StateChangeForm(forms.ModelForm):
     - applicant_message: mandatory for every decision, sent to the applicant
       through the Démarches Simplifiées messagerie.
 
-    When an RU dossier switches to authorisation, the due date is the deadline
-    after which silence means refusal. It is mandatory and at least two months
-    away. The applicant message is mandatory and must be fully completed. Its
-    deadline placeholder line must be intact, and the form swaps it for the
-    deadline sentence.
+    When an RU dossier switches to authorisation, the refusal deadline is the
+    date after which silence means refusal. It is mandatory, at least two
+    months away, and becomes the stage due date. The applicant message is
+    mandatory and must be fully completed. Its deadline placeholder line must
+    be intact, and the form swaps it for the deadline sentence.
     """
 
     simulation_check = forms.BooleanField(
@@ -253,6 +253,7 @@ class StateChangeForm(forms.ModelForm):
     field_order = [
         "stage",
         "due_date",
+        "refusal_deadline",
         "decision",
         "status_date",
         "update_comment",
@@ -266,6 +267,7 @@ class StateChangeForm(forms.ModelForm):
         fields = [
             "stage",
             "due_date",
+            "refusal_deadline",
             "decision",
             "status_date",
             "update_comment",
@@ -295,6 +297,7 @@ class StateChangeForm(forms.ModelForm):
         self.is_paused = is_paused
         self.can_switch_to_authorization = can_switch_to_authorization
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+        self.fields["refusal_deadline"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
 
         # Single-procedure departments skip the "to_be_processed" stage entirely,
@@ -365,6 +368,7 @@ class StateChangeForm(forms.ModelForm):
             cleaned_data["simulation_check"] = False
             cleaned_data["prefectural_order"] = None
             cleaned_data["applicant_message"] = ""
+            cleaned_data["refusal_deadline"] = None
 
         return cleaned_data
 
@@ -383,23 +387,29 @@ class StateChangeForm(forms.ModelForm):
         cleaned_data["simulation_check"] = False
         cleaned_data["prefectural_order"] = None
 
-        due_date = cleaned_data.get("due_date")
-        if due_date is None and not self.has_error("due_date"):
+        refusal_deadline = cleaned_data.get("refusal_deadline")
+        if refusal_deadline is None and not self.has_error("refusal_deadline"):
             self.add_error(
-                "due_date",
+                "refusal_deadline",
                 ValidationError(
-                    "Pour basculer le dossier en autorisation, l'échéance de l'étape doit être renseignée.",
-                    code="missing_due_date",
+                    "Pour basculer le dossier en autorisation, la date limite avant refus doit être renseignée.",
+                    code="missing_refusal_deadline",
                 ),
             )
-        elif due_date is not None and due_date < two_months_from_today():
+        elif (
+            refusal_deadline is not None and refusal_deadline < two_months_from_today()
+        ):
             self.add_error(
-                "due_date",
+                "refusal_deadline",
                 ValidationError(
                     "Le délai indicatif d'instruction ne peut pas être inférieur à 2 mois.",
-                    code="due_date_too_soon",
+                    code="refusal_deadline_too_soon",
                 ),
             )
+
+        # The refusal deadline overrides the stage due date, so its errors no longer apply.
+        self._errors.pop("due_date", None)
+        cleaned_data["due_date"] = refusal_deadline
 
         message = cleaned_data.get("applicant_message", "")
         if not message:
@@ -427,8 +437,8 @@ class StateChangeForm(forms.ModelForm):
                     code="altered_refusal_deadline_placeholder",
                 ),
             )
-        elif not self.has_error("due_date"):
-            deadline = date_format(due_date, "DATE_FORMAT")
+        elif not self.has_error("refusal_deadline"):
+            deadline = date_format(refusal_deadline, "DATE_FORMAT")
             sentence = REFUSAL_DEADLINE_SENTENCE.format(deadline=deadline)
             cleaned_data["applicant_message"] = REFUSAL_DEADLINE_PLACEHOLDER_LINE.sub(
                 sentence, message
@@ -437,15 +447,16 @@ class StateChangeForm(forms.ModelForm):
     def reset_hidden_closing_fields(self, cleaned_data):
         """Force the fields hidden by the closing UI to their closing value.
 
-        Closing is always effective immediately, without internal comment nor
-        next due date. Errors on those fields are popped from `self._errors`
-        directly, as the Form API offers no way to clear a single field error
-        once its value is overridden server-side.
+        Closing is always effective immediately, without internal comment, next
+        due date or refusal deadline. Errors on those fields are popped from
+        `self._errors` directly, as the Form API offers no way to clear a
+        single field error once its value is overridden server-side.
         """
-        for field in ("update_comment", "due_date", "status_date"):
+        for field in ("update_comment", "due_date", "refusal_deadline", "status_date"):
             self._errors.pop(field, None)
         cleaned_data["update_comment"] = ""
         cleaned_data["due_date"] = None
+        cleaned_data["refusal_deadline"] = None
         cleaned_data["status_date"] = timezone.localdate()
 
     def clean_closing_fields(self, cleaned_data):
