@@ -5199,18 +5199,18 @@ def test_authorization_switch_message_omits_blank_guh_contact_lines(
     ) in message
 
 
-def test_state_change_modal_exposes_the_switch_due_date_to_the_script(
+def test_state_change_modal_exposes_the_default_refusal_deadline_to_the_script(
     client, haie_coordinator_44, site
 ):
-    """The script prefills the due date in the format the text input expects."""
+    """The script prefills the refusal deadline in the format the text input expects."""
     RUConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     content = client.get(procedure_url(project)).content.decode()
 
-    due_date = two_months_from_today().strftime("%d/%m/%Y")
-    assert f'data-authorization-switch-due-date="{due_date}"' in content
+    refusal_deadline = two_months_from_today().strftime("%d/%m/%Y")
+    assert f'data-default-refusal-deadline="{refusal_deadline}"' in content
 
 
 def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch(
