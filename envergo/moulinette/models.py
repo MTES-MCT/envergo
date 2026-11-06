@@ -621,7 +621,7 @@ class Regulation(models.Model):
     def result_tag_style(self):
         """Return the regulation result tag style."""
         if not self.result:
-            return TagStyleEnum.Grey
+            return TagStyleEnum.Neutral
 
         return TAG_STYLES_BY_RESULT[self.result]
 

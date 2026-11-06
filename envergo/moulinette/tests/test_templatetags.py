@@ -68,8 +68,8 @@ class TestResultTag:
 
     def test_explicit_style_overrides_default(self):
         """Passing an explicit style uses it instead of the default."""
-        html = result_tag(RESULTS.soumis, result_tag_style=TagStyleEnum.Green)
-        assert f"probability-{TagStyleEnum.Green.value}" in html
+        html = result_tag(RESULTS.soumis, result_tag_style=TagStyleEnum.Favorable)
+        assert f"probability-{TagStyleEnum.Favorable.value}" in html
         default_style = TAG_STYLES_BY_RESULT[RESULTS.soumis]
         assert f"probability-{default_style.value}" not in html
 
