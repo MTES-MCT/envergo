@@ -916,6 +916,28 @@ div.leaflet-container {
   height: 100%;
   position: relative;
 
+  &.full-screen {
+    position: fixed;
+    inset: 2vh;
+    height: 96vh;
+    width: auto;
+    z-index: 2000; // to go over sticky header
+    border-radius: 0.5em;
+    box-shadow: 0 0 3em #000a;
+
+    &::after {
+      content: " ";
+      display: block;
+      background: #0007;
+      position: fixed;
+      inset: 0;
+    }
+
+    .leaflet-controls-full-screen-toggle {
+      background-image: url("/static/icons/fullscreen-exit.svg");
+    }
+  }
+
   div.search-control {
     position: absolute;
     top: 0;
@@ -941,6 +963,26 @@ div.leaflet-container {
   div.leaflet-control-layers a {
     background-size: 26px 26px;
     transition: none;
+  }
+
+  // put top buttons on a row
+  div.leaflet-top.leaflet-right {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .leaflet-controls-full-screen-toggle {
+    width: 44px;
+    height: 44px;
+    border: 2px solid rgb(0 0 0 / 20%);
+    background-clip: padding-box;
+    background-color: #fff;
+    border-radius: 5px;
+    background-image: url("/static/icons/fullscreen-enter.svg");
+    background-size: 27px;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    cursor: pointer;
   }
 
   .info {
@@ -973,6 +1015,27 @@ div.leaflet-container {
     margin-right: 8px;
     opacity: 0.7;
   }
+}
+
+body:has(.leaflet-container.full-screen) {
+  overflow: hidden; // prevent scrolling of background while modal is displayed
+
+  .header-sticky,
+  .fr-enlarge-link,
+  .fr-select-group,
+  .fr-input-group,
+  .fr-footer__bottom {
+    // elements with position:relative; creating z-index mess.
+    // Hide them with visibility:hidden instead of display:none;
+    // in order to avoid redrawing the whole page.
+    visibility: hidden;
+  }
+}
+
+.fr-content-media:has(.leaflet-container.full-screen) {
+  position: fixed !important; // original selector is very specific with 2 IDs
+  inset: 0 0 3em;
+  z-index: 1000;
 }
 
 .alt {
@@ -1333,10 +1396,10 @@ $content-max-width: 40rem;
       transition: opacity 0.4s ease-in-out 0s;
       opacity: 0;
       pointer-events: none;
-      z-index: 1000;
+      z-index: 2000;
       position: absolute;
-      right: 1.5em;
-      top: 13em;
+      right: 2em;
+      bottom: 2em;
       background-color: var(--grey-1000-50);
     }
 

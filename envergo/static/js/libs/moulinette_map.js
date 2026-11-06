@@ -10,6 +10,9 @@
     }
   };
 
+
+
+
   /**
    * Settings and behavior for the moulinette form map widget.
    */
@@ -86,6 +89,9 @@
 
     const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
+
+    const fullscreenControl = L.control.fullscreen()
+    fullscreenControl.addTo(map);
 
     return map;
   };
