@@ -5,7 +5,6 @@
 {% block extrahead %}
   {{ block.super }}
   <script src="{% url 'admin:jsi18n' %}"></script>
-  <script src="{% static 'admin/js/collapse.js' %}"></script>
   {{ media }}
 {% endblock %}
 
@@ -109,28 +108,36 @@
     </fieldset>
 
     <fieldset class="module collapse">
-      <h2>Contenu texte</h2>
-      <ul class="rr-preview">
-        <li>
-          <strong>Contenu (txt) :</strong>
-          <div class="rr-content">
-            <iframe class="mail-content"
-                    width="800px"
-                    height="1200px"
-                    srcdoc="{{ email_txt|linebreaksbr }}">
-            </iframe>
-          </div>
-        </li>
-      </ul>
+      <details>
+        <summary>
+          <h2 class="fieldset-heading">Contenu texte</h2>
+        </summary>
+        <ul class="rr-preview">
+          <li>
+            <strong>Contenu (txt) :</strong>
+            <div class="rr-content">
+              <iframe class="mail-content"
+                      width="800px"
+                      height="1200px"
+                      srcdoc="{{ email_txt|linebreaksbr }}">
+              </iframe>
+            </div>
+          </li>
+        </ul>
+      </details>
     </fieldset>
 
     <fieldset class="module collapse">
-      <h2>Templates</h2>
-      <ul class="rr-preview">
-        <li>
-          <strong>Gabarits : <a href="{{ github_prefix }}{{ html_mail_template }}">{{ html_mail_template }}</a> / <a href="{{ github_prefix }}{{ txt_mail_template }}">{{ txt_mail_template }}</a></strong>
-        </li>
-      </ul>
+      <details>
+        <summary>
+          <h2 class="fieldset-heading">Templates</h2>
+        </summary>
+        <ul class="rr-preview">
+          <li>
+            <strong>Gabarits : <a href="{{ github_prefix }}{{ html_mail_template }}">{{ html_mail_template }}</a> / <a href="{{ github_prefix }}{{ txt_mail_template }}">{{ txt_mail_template }}</a></strong>
+          </li>
+        </ul>
+      </details>
     </fieldset>
 
     {% if not evaluation.published_version %}
