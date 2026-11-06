@@ -64,19 +64,24 @@ class TestResultTag:
         """Calling result_tag without style auto-resolves from TAG_STYLES_BY_RESULT."""
         html = result_tag(RESULTS.soumis)
         expected_style = TAG_STYLES_BY_RESULT[RESULTS.soumis]
-        assert f"probability-{expected_style.value}" in html
+        assert expected_style.value in html
 
     def test_explicit_style_overrides_default(self):
         """Passing an explicit style uses it instead of the default."""
         html = result_tag(RESULTS.soumis, result_tag_style=TagStyleEnum.Favorable)
-        assert f"probability-{TagStyleEnum.Favorable.value}" in html
+        assert TagStyleEnum.Favorable.value in html
         default_style = TAG_STYLES_BY_RESULT[RESULTS.soumis]
-        assert f"probability-{default_style.value}" not in html
+        assert default_style.value not in html
 
     def test_result_label_in_output(self):
         """The result label appears in the rendered tag."""
         html = result_tag(RESULTS.non_concerne)
         assert RESULTS[RESULTS.non_concerne] in html
+
+    def test_no_legacy_probability_class(self):
+        """Badges never carry the legacy classes that cached evaluation pages style."""
+        html = result_tag(RESULTS.interdit)
+        assert "probability" not in html
 
 
 class TestShowRegulationBody:

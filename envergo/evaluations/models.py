@@ -131,14 +131,18 @@ EVAL_RESULTS = Choices(
 
 
 class TagStyleEnum(Enum):
-    """Colour of a result tag, named by what the result means for the project."""
+    """Colour of a result badge, named by what the result means for the project.
 
-    Favorable = 1
-    Neutral = 2
-    ToVerify = 3
-    Subject = 4
-    Conditional = 5
-    Forbidden = 6
+    Each value is the CSS class that colours the badge. Neutral keeps the
+    default grey badge.
+    """
+
+    Favorable = "fr-badge--success"
+    Neutral = ""
+    ToVerify = "fr-badge--green-tilleul-verveine"
+    Subject = "fr-badge--pink-tuile"
+    Conditional = "fr-badge--yellow-moutarde"
+    Forbidden = "result-badge--forbidden"
 
 
 TAG_STYLES_BY_RESULT = {

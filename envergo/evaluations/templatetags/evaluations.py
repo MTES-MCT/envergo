@@ -1,5 +1,5 @@
 from django import template
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 
@@ -8,18 +8,29 @@ register = template.Library()
 
 @register.simple_tag
 def result_tag(result, result_tag_style: TagStyleEnum = None):
+    """Render a result badge, or nothing for a result without a label.
+
+    The markup must never carry the legacy `probability` classes: cached
+    evaluation pages still rely on them for their own colours.
+    """
     if result_tag_style is None:
         result_tag_style = TAG_STYLES_BY_RESULT[result]
 
     try:
         result_label = RESULTS[result]
-        display = (
-            f'<span class="fr-tag probability probability-{result_tag_style.value} probability-{result}">'
-            f"{result_label}</span>"
-        )
     except KeyError:
-        display = ""
-    return mark_safe(display)
+        return ""
+
+    badge_classes = "fr-badge fr-badge--no-icon result-badge"
+    if result_tag_style.value:
+        badge_classes = f"{badge_classes} {result_tag_style.value}"
+
+    return format_html(
+        '<span class="{}" data-result="{}">{}</span>',
+        badge_classes,
+        result,
+        result_label,
+    )
 
 
 @register.simple_tag
