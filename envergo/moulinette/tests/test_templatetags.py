@@ -79,7 +79,7 @@ class TestResultTag:
         assert RESULTS[RESULTS.non_concerne] in html
 
     def test_no_legacy_probability_class(self):
-        """Badges never carry the legacy classes that cached evaluation pages style."""
+        """Badges never carry the legacy classes kept to colour cached evaluations."""
         html = result_tag(RESULTS.interdit)
         assert "probability" not in html
 

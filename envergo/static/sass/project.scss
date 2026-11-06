@@ -148,7 +148,7 @@ article {
   }
 }
 
-// No DSFR badge variant has a solid fill, which only "Interdit" uses.
+// Only "Interdit" has a solid fill. No DSFR badge variant offers one.
 .fr-badge.result-badge--forbidden {
   color: var(--text-inverted-grey);
   background-color: var(--background-flat-red-marianne);

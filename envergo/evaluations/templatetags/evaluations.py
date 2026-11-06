@@ -8,11 +8,7 @@ register = template.Library()
 
 @register.simple_tag
 def result_tag(result, result_tag_style: TagStyleEnum = None):
-    """Render a result badge, or nothing for a result without a label.
-
-    The markup must never carry the legacy `probability` classes: cached
-    evaluation pages still rely on them for their own colours.
-    """
+    """Render a result badge, or nothing for a result without a label."""
     if result_tag_style is None:
         result_tag_style = TAG_STYLES_BY_RESULT[result]
 
@@ -21,6 +17,7 @@ def result_tag(result, result_tag_style: TagStyleEnum = None):
     except KeyError:
         return ""
 
+    # Never add a `probability` class. The old colours kept for cached evaluations would apply.
     badge_classes = "fr-badge fr-badge--no-icon result-badge"
     if result_tag_style.value:
         badge_classes = f"{badge_classes} {result_tag_style.value}"

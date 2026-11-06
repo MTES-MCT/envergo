@@ -133,12 +133,11 @@ EVAL_RESULTS = Choices(
 class TagStyleEnum(Enum):
     """Colour of a result badge, named by what the result means for the project.
 
-    Each value is the CSS class that colours the badge. Neutral keeps the
-    default grey badge.
+    Each value is the CSS class that colours the badge.
     """
 
     Favorable = "fr-badge--success"
-    Neutral = ""
+    Neutral = ""  # The default DSFR badge is grey.
     ToVerify = "fr-badge--green-tilleul-verveine"
     Subject = "fr-badge--pink-tuile"
     Conditional = "fr-badge--yellow-moutarde"
