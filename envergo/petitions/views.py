@@ -2302,10 +2302,7 @@ class PetitionProjectInstructorProcedureView(
 
 
 class PetitionProjectHedgeDataExport(BasePetitionProjectInstructorView, DetailView):
-    """Export Hedge data in geopackage.
-
-    The file holds personal data, so it requires the project view permission.
-    """
+    """Export Hedge data in geopackage."""
 
     # Reporting codes, kept stable whatever the internal codes and display labels.
     exported_categories = {
