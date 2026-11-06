@@ -11,6 +11,7 @@ from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import (
     DOSSIER_STATES,
     LOG_TYPES,
+    STAGES,
     ResultSnapshot,
     StatusLog,
 )
@@ -18,6 +19,7 @@ from envergo.petitions.tests.factories import (
     InvitationTokenFactory,
     PetitionProjectFactory,
     SimulationFactory,
+    StatusLogFactory,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -85,6 +87,41 @@ def test_petition_project_permissions_for_anonymous_user():
 
     assert not project.has_view_permission(anonymous)
     assert not project.has_change_permission(anonymous)
+
+
+@pytest.mark.parametrize(
+    "category, stage, expected",
+    [
+        ("ru", STAGES.to_be_processed, True),
+        ("ru", STAGES.instruction_d, True),
+        ("ru", STAGES.instruction_a, False),
+        ("ru", STAGES.instruction_h, False),
+        ("ru", STAGES.preparing_decision, False),
+        ("hru", STAGES.instruction_d, False),
+        ("l350_3", STAGES.instruction_d, False),
+    ],
+)
+def test_can_switch_to_authorization(category, stage, expected):
+    project = PetitionProjectFactory.build(underscore_category=category, stage=stage)
+
+    assert project.can_switch_to_authorization is expected
+
+
+def test_refusal_deadline_comes_from_the_latest_switch():
+    """A later stage change without a deadline keeps the switch's deadline in force."""
+    project = PetitionProjectFactory()
+    StatusLogFactory(petition_project=project, refusal_deadline=date(2099, 1, 1))
+    StatusLogFactory(petition_project=project, refusal_deadline=date(2099, 9, 21))
+    StatusLogFactory(petition_project=project, stage=STAGES.preparing_decision)
+
+    assert project.refusal_deadline == date(2099, 9, 21)
+
+
+def test_refusal_deadline_is_none_without_a_switch():
+    """A dossier that never switched to authorisation has no refusal deadline."""
+    project = PetitionProjectFactory()
+
+    assert project.refusal_deadline is None
 
 
 def test_form_url_adds_alternative_param():

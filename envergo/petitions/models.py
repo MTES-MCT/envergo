@@ -302,6 +302,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return self.stage == STAGES.closed
 
     @property
+    def can_switch_to_authorization(self):
+        """An RU dossier still in its declaration phase can switch to authorisation."""
+        return self.is_regime_unique() and self.stage in (
+            STAGES.to_be_processed,
+            STAGES.instruction_d,
+        )
+
+    @property
     def prefectural_order_log(self):
         """Get the latest status log carrying a prefectural order, if any.
 
@@ -311,6 +319,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return (
             self.status_history.exclude(prefectural_order="")
             .order_by("-created_at")
+            .first()
+        )
+
+    @property
+    def refusal_deadline(self):
+        """Date after which silence means refusal, set by the latest switch to authorisation.
+
+        None when the dossier never switched.
+        """
+        return (
+            self.status_history.filter(refusal_deadline__isnull=False)
+            .order_by("-created_at")
+            .values_list("refusal_deadline", flat=True)
             .first()
         )
 
@@ -933,6 +954,13 @@ class StatusLog(models.Model):
     )
     due_date = models.DateField(
         "Date de prochaine échéance",
+        null=True,
+        blank=True,
+    )
+    refusal_deadline = models.DateField(
+        "Date limite au-delà de laquelle le silence vaut refus",
+        help_text="Passé cette date, le silence gardé par l’administration vaudra refus.<br>"
+        "La présence de cette date est obligatoire dans la notification de bascule en autorisation.",
         null=True,
         blank=True,
     )

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -51,6 +52,23 @@ class DepartmentFilter(admin.SimpleListFilter):
         # Filter the queryset based on the selected department
         if self.value():
             return queryset.filter(department__department=self.value())
+        return queryset
+
+
+class AuthorizationSwitchFilter(admin.SimpleListFilter):
+    title = "Bascule en autorisation"
+    parameter_name = "authorization_switch"
+
+    def lookups(self, request, model_admin):
+        return [("yes", "Oui"), ("no", "Non")]
+
+    def queryset(self, request, queryset):
+        # Only a switch to authorisation sets a refusal deadline.
+        switched = Q(status_history__refusal_deadline__isnull=False)
+        if self.value() == "yes":
+            return queryset.filter(switched).distinct()
+        if self.value() == "no":
+            return queryset.exclude(switched)
         return queryset
 
 
@@ -118,8 +136,9 @@ class PetitionProjectAdmin(admin.ModelAdmin):
     list_filter = [
         "demarche_numerique_state",
         DepartmentFilter,
+        AuthorizationSwitchFilter,
     ]
-    readonly_fields = ["last_result_snapshot"]
+    readonly_fields = ["last_result_snapshot", "refusal_deadline"]
     search_fields = ["reference"]
 
     def get_queryset(self, request):
@@ -190,6 +209,10 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         return round(obj.hedge_data.length_to_remove())
 
     length_to_remove.short_description = "Linéaire à détruire"
+
+    @admin.display(description="Date limite au-delà de laquelle le silence vaut refus")
+    def refusal_deadline(self, obj):
+        return obj.refusal_deadline
 
     @admin.display(description="Dernier résultat de simulation")
     def last_result_snapshot(self, obj):

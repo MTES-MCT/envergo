@@ -6,7 +6,7 @@ from django.test import override_settings
 
 from envergo.moulinette.tests.factories import RUConfigHaieFactory
 from envergo.petitions.tasks import (
-    send_closing_message_async,
+    send_applicant_message_async,
     send_declaration_receipt_async,
 )
 from envergo.petitions.tests.factories import (
@@ -43,7 +43,7 @@ def test_send_closing_message_without_attachment(mock_ds_msg):
     mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
     log = closing_log()
 
-    send_closing_message_async(log.pk)
+    send_applicant_message_async(log.pk)
 
     assert mock_ds_msg.call_count == 1
     args = mock_ds_msg.call_args[0]
@@ -60,7 +60,7 @@ def test_send_closing_message_with_attachment(mock_ds_msg):
         prefectural_order=SimpleUploadedFile("arrete.pdf", b"%PDF-1.4 fake")
     )
 
-    send_closing_message_async(log.pk)
+    send_applicant_message_async(log.pk)
 
     attachment = mock_ds_msg.call_args[0][2]
     assert attachment is not None
@@ -73,7 +73,7 @@ def test_send_closing_message_with_ds_disabled(mock_ds_msg):
     """When the DN API is disabled (dev), the task does nothing."""
     log = closing_log()
 
-    send_closing_message_async(log.pk)
+    send_applicant_message_async(log.pk)
 
     assert not mock_ds_msg.called
 
@@ -85,7 +85,7 @@ def test_send_closing_message_failure_raises_for_retry(mock_ds_msg):
     log = closing_log()
 
     with pytest.raises(RuntimeError):
-        send_closing_message_async(log.pk)
+        send_applicant_message_async(log.pk)
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
