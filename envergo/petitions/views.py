@@ -73,7 +73,6 @@ from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
     AUTHORIZATION_REASON_PLACEHOLDER,
     REFUSAL_DEADLINE_PLACEHOLDER,
-    REFUSAL_DEADLINE_SENTENCE,
     HruInvitationForm,
     PetitionProjectForm,
     PetitionProjectInstructorMessageForm,
@@ -1966,9 +1965,6 @@ class PetitionProjectInstructorProcedureView(
                 AUTHORIZATION_REASON_PLACEHOLDER
             )
             context["refusal_deadline_placeholder"] = REFUSAL_DEADLINE_PLACEHOLDER
-            context["refusal_deadline_sentence_preview"] = (
-                REFUSAL_DEADLINE_SENTENCE.format(deadline="[date limite saisie]")
-            )
 
         # Request info / resume forms are only relevant during instruction phases.
         if self.object.has_change_permission(

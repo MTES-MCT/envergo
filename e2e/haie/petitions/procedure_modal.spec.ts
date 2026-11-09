@@ -141,7 +141,7 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toBeVisible();
     await expect(message).toHaveValue(/Requalification de votre projet/);
     await expect(message).toHaveValue(/\[DATE LIMITE – NE PAS MODIFIER/);
-    await expect(hint).toContainText('sera remplacée par');
+    await expect(hint).toContainText('automatiquement insérée');
 
     // The message follows the deadline it states, and comes before the decision.
     await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-applicant_message');
@@ -159,7 +159,7 @@ test.describe('Procedure modal — dynamic form', () => {
 
     await stage.selectOption('instruction_a');
     await expect(message).toHaveValue(/Requalification de votre projet/);
-    await expect(hint).toContainText('sera remplacée par');
+    await expect(hint).toContainText('automatiquement insérée');
 
     await stage.selectOption('closed');
     await expect(message).toHaveValue(/classé sans suite/i);
