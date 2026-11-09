@@ -5,7 +5,6 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.urls import set_urlconf
-from django.utils import timezone
 
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarche_numerique.client import (
@@ -52,11 +51,9 @@ class Command(BaseCommand):
 
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
-        configs_with_ds = (
-            ConfigHaie.objects.filter(demarche_numerique_config__isnull=False)
-            .select_related("demarche_numerique_config")
-            .valid_at(timezone.now().date())
-        )
+        configs_with_ds = ConfigHaie.objects.filter(
+            demarche_numerique_config__isnull=False
+        ).select_related("demarche_numerique_config")
         for config in configs_with_ds:
             demarche_number = config.demarche_numerique_config.demarche_numerique_number
             project_url_id = config.demarche_numerique_config.display_fields.get(

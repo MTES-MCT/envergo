@@ -369,8 +369,8 @@ class PisteCyclable(SelfDeclarationMixin, CriterionEvaluator):
 
 PUISSANCE_CHOICES = (
     ("lt_300kWc", "Moins de 300 kWc"),
-    ("300_1000kWc", "Entre 300 et 1 000 kWc"),
-    ("gte_1000kWc", "1 000 kWc ou plus"),
+    ("300_3000kWc", "Entre 300 et 3 000 kWc"),
+    ("gte_3000kWc", "3 000 kWc ou plus"),
 )
 
 
@@ -424,18 +424,18 @@ class Photovoltaique(SelfDeclarationMixin, CriterionEvaluator):
         ("lt_300kWc", "batiment_clos"): "non_soumis",
         ("lt_300kWc", "batiment_ouvert"): "non_soumis",
         ("lt_300kWc", "aucun"): "non_soumis",
-        ("300_1000kWc", "sol"): "cas_par_cas_sol",
-        ("300_1000kWc", "aire_arti"): "non_soumis_ombriere",
-        ("300_1000kWc", "aire_non_arti"): "cas_par_cas_ombriere",
-        ("300_1000kWc", "batiment_clos"): "non_soumis_toiture",
-        ("300_1000kWc", "batiment_ouvert"): "cas_par_cas_toiture",
-        ("300_1000kWc", "aucun"): "non_soumis",
-        ("gte_1000kWc", "sol"): "systematique_sol",
-        ("gte_1000kWc", "aire_arti"): "non_soumis_ombriere",
-        ("gte_1000kWc", "aire_non_arti"): "cas_par_cas_ombriere",
-        ("gte_1000kWc", "batiment_clos"): "non_soumis_toiture",
-        ("gte_1000kWc", "batiment_ouvert"): "systematique_toiture",
-        ("gte_1000kWc", "aucun"): "non_soumis",
+        ("300_3000kWc", "sol"): "cas_par_cas_sol",
+        ("300_3000kWc", "aire_arti"): "non_soumis_ombriere",
+        ("300_3000kWc", "aire_non_arti"): "cas_par_cas_ombriere",
+        ("300_3000kWc", "batiment_clos"): "non_soumis_toiture",
+        ("300_3000kWc", "batiment_ouvert"): "cas_par_cas_toiture",
+        ("300_3000kWc", "aucun"): "non_soumis",
+        ("gte_3000kWc", "sol"): "systematique_sol",
+        ("gte_3000kWc", "aire_arti"): "non_soumis_ombriere",
+        ("gte_3000kWc", "aire_non_arti"): "cas_par_cas_ombriere",
+        ("gte_3000kWc", "batiment_clos"): "non_soumis_toiture",
+        ("gte_3000kWc", "batiment_ouvert"): "systematique_toiture",
+        ("gte_3000kWc", "aucun"): "non_soumis",
     }
     RESULT_MATRIX = {
         "non_soumis_ombriere": "non_soumis",
@@ -447,14 +447,11 @@ class Photovoltaique(SelfDeclarationMixin, CriterionEvaluator):
         "systematique_toiture": "systematique",
     }
 
-    def get_catalog_data(self, **kwargs):
-        catalog = super().get_catalog_data(**kwargs)
-        # We have to add a custom key to the template, because
-        # django cannot access template values with a dash in the key
-        if "evalenv_rubrique_30-puissance" in catalog:
-            catalog["photovoltaic_power_over_1000kw"] = (
-                catalog["evalenv_rubrique_30-puissance"] == "gte_1000kWc"
-            )
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        # Django templates cannot read keys containing a dash
+        puissance = self.catalog.get("evalenv_rubrique_30-puissance")
+        catalog["photovoltaic_power_over_3000kw"] = puissance == "gte_3000kWc"
         return catalog
 
     def get_result_data(self):

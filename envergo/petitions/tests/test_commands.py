@@ -153,23 +153,47 @@ def test_dossier_submission_admin_alert(
 @patch("envergo.petitions.tasks.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_dossier_submission_admin_alert_ignores_expired_config(
+def test_dossier_submission_admin_alert_processes_expired_config(
     mock_post, mock_notify_command, mock_notify_team
 ):
-    """The command should not process expired configs."""
+    """The command should also process expired configs."""
     today = date.today()
     one_year_ago = today - timedelta(days=365)
 
-    # Expired config — should be ignored by the command
+    mock_post.return_value = {
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {"hasNextPage": False, "endCursor": None},
+                "nodes": [
+                    {
+                        "number": 21059675,
+                        "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+                        "state": "en_instruction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
+                    },
+                ],
+            },
+        }
+    }
+
+    # Expired config — dossiers submitted under it must still be synchronized
     DCConfigHaieFactory(
         validity_range=DateRange(one_year_ago, today, "[)"),
     )
 
-    PetitionProjectFactory()
+    project = PetitionProjectFactory()
     call_command("dossier_submission_admin_alert")
 
-    # The « Démarche numérique » API should never be called since no valid config exists
-    mock_post.assert_not_called()
+    mock_post.assert_called_once()
+    project.refresh_from_db()
+    assert project.demarche_numerique_state == DossierState.en_instruction.value
+    assert project.demarche_numerique_last_sync is not None
 
 
 @pytest.mark.haie
