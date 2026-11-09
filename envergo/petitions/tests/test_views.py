@@ -1754,7 +1754,26 @@ def test_petition_project_list_htmx_response(haie_coordinator_44, client, site):
     assert "table-dossier-list" in content
 
 
-def test_petition_project_dl_geopkg(client, haie_user, site):
+def test_petition_project_geopkg_requires_view_permission(client, haie_user, site):
+    """The export holds personal data, so only users who can view the project get it."""
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    geopkg_url = reverse(
+        "petition_project_hedge_data_export",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.get(geopkg_url)
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+
+    client.force_login(haie_user)
+    response = client.get(geopkg_url)
+    assert response.status_code == 403
+
+
+def test_petition_project_dl_geopkg(client, haie_user_44, site):
     """Test Geopkg download"""
 
     DCConfigHaieFactory()
@@ -1763,7 +1782,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         "petition_project_hedge_data_export",
         kwargs={"reference": project.reference},
     )
-    client.force_login(haie_user)
+    client.force_login(haie_user_44)
     response = client.get(geopkg_url)
     response.get("Content-Disposition")
     assert (
@@ -1773,7 +1792,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
 
 
 def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
-    client, haie_user, site, tmp_path
+    client, haie_user_44, site, tmp_path
 ):
     DCConfigHaieFactory(
         demarche_numerique_config__display_fields={
@@ -1795,7 +1814,7 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
         "petition_project_hedge_data_export",
         kwargs={"reference": project.reference},
     )
-    client.force_login(haie_user)
+    client.force_login(haie_user_44)
     response = client.get(geopkg_url)
     export_path = tmp_path / "export.gpkg"
     export_path.write_bytes(response.content)
