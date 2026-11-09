@@ -124,19 +124,15 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toHaveValue(typed);
   });
 
-  test('switching to authorisation prefills the refusal deadline and the message', async ({ page }) => {
+  test('switching to authorisation asks for the refusal deadline and prefills the message', async ({ page }) => {
     const refusalDeadline = page.locator('#id_refusal_deadline');
     const message = page.locator('#id_applicant_message');
     const hint = page.locator('#form-group-applicant_message .fr-hint-text');
 
     await page.locator('#id_stage').selectOption('instruction_a');
 
-    // The server computes the default deadline, the script only copies it.
-    const defaultRefusalDeadline = await page
-      .locator('#state-change-modal form')
-      .getAttribute('data-default-refusal-deadline');
-    expect(defaultRefusalDeadline).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
-    await expect(refusalDeadline).toHaveValue(defaultRefusalDeadline!);
+    await expect(refusalDeadline).toBeVisible();
+    await expect(refusalDeadline).toHaveValue('');
     await expect(page.locator('#form-group-refusal_deadline > label')).toContainText(
       'Date limite au-delà de laquelle le silence vaut refus'
     );

@@ -84,7 +84,6 @@ from envergo.petitions.forms import (
     SimulationForm,
     StateChangeForm,
     list_moulinette_errors,
-    two_months_from_today,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1963,7 +1962,6 @@ class PetitionProjectInstructorProcedureView(
             ),
         )
         if self.object.can_switch_to_authorization:
-            context["default_refusal_deadline"] = two_months_from_today()
             context["authorization_reason_placeholder"] = (
                 AUTHORIZATION_REASON_PLACEHOLDER
             )

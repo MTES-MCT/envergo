@@ -5199,18 +5199,17 @@ def test_authorization_switch_message_omits_blank_guh_contact_lines(
     ) in message
 
 
-def test_state_change_modal_exposes_the_default_refusal_deadline_to_the_script(
+def test_state_change_modal_tells_the_script_the_project_can_switch(
     client, haie_coordinator_44, site
 ):
-    """The script prefills the refusal deadline in the format the text input expects."""
+    """The script shows the switch fields only for a project that can switch."""
     RUConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     content = client.get(procedure_url(project)).content.decode()
 
-    refusal_deadline = two_months_from_today().strftime("%d/%m/%Y")
-    assert f'data-default-refusal-deadline="{refusal_deadline}"' in content
+    assert "data-can-switch-to-authorization" in content
 
 
 def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch(

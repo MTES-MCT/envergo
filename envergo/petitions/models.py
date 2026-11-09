@@ -949,7 +949,8 @@ class StatusLog(models.Model):
     refusal_deadline = models.DateField(
         "Date limite au-delà de laquelle le silence vaut refus",
         help_text="Passé cette date, le silence gardé par l’administration vaudra refus.<br>"
-        "La présence de cette date est obligatoire dans la notification de bascule en autorisation.",
+        "La présence de cette date est obligatoire dans la notification de bascule en autorisation.<br>"
+        "Elle doit être au moins deux mois après aujourd'hui.",
         null=True,
         blank=True,
     )

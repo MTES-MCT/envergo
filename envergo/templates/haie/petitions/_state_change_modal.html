@@ -18,7 +18,7 @@
                   novalidate
                   enctype="multipart/form-data"
                   class="fr-mb-3w"
-                  {% if petition_project.can_switch_to_authorization %}data-default-refusal-deadline="{{ default_refusal_deadline|date:'d/m/Y' }}"{% endif %}>
+                  {% if petition_project.can_switch_to_authorization %}data-can-switch-to-authorization{% endif %}>
               {% csrf_token %}
               <input type="hidden" name="action" value="state_change">
               {% include '_form_snippet.html' with form=state_change_form %}
