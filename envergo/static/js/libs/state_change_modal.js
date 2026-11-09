@@ -7,8 +7,8 @@
  *    message) plus the message template pre-filled from the decision,
  *  - the due dates: the stage due date, or the refusal deadline during a
  *    switch,
- *  - the switch of an RU dossier to authorisation. It pre-fills the refusal
- *    deadline, groups it with the applicant message and relabels the message.
+ *  - the switch of an RU dossier to authorisation. It groups the refusal
+ *    deadline with the applicant message and relabels the message.
  *
  * This is purely an instructor convenience: StateChangeForm re-enforces every
  * rule server-side, so nothing here is load-bearing for data integrity.
@@ -68,7 +68,6 @@
       this.stageInput = form.querySelector("#id_stage");
       this.decisionInput = form.querySelector("#id_decision");
       this.dueDateInput = form.querySelector("#id_due_date");
-      this.refusalDeadlineInput = form.querySelector("#id_refusal_deadline");
       this.applicantMessageInput = form.querySelector("#id_applicant_message");
       this.dueDateGroup = document.getElementById("form-group-due_date");
       this.refusalDeadlineGroup = document.getElementById("form-group-refusal_deadline");
@@ -76,8 +75,7 @@
       this.applicantMessageGroup = document.getElementById("form-group-applicant_message");
       this.submitButton = form.querySelector("button[type='submit']");
 
-      // Undefined when the dossier cannot switch to authorisation.
-      this.defaultRefusalDeadline = form.dataset.defaultRefusalDeadline;
+      this.canSwitchToAuthorization = "canSwitchToAuthorization" in form.dataset;
 
       // Each label keeps its server-rendered content, restored after a switch.
       this.switchLabels = SWITCH_LABELED_FIELDS.map((name) => {
@@ -99,10 +97,7 @@
     init() {
       this.relocateSupersedeNotice();
 
-      this.stageInput.addEventListener("change", () => {
-        this.prefillRefusalDeadline();
-        this.refresh();
-      });
+      this.stageInput.addEventListener("change", () => this.refresh());
       this.decisionInput.addEventListener("change", () => this.refresh());
 
       // Keep a message the server rendered, e.g. after a validation error.
@@ -118,9 +113,6 @@
     }
     get isClosing() {
       return this.stage === STAGE_CLOSED;
-    }
-    get canSwitchToAuthorization() {
-      return this.defaultRefusalDeadline !== undefined;
     }
     get isAuthorizationSwitch() {
       return this.canSwitchToAuthorization && this.stage === STAGE_AUTHORIZATION;
@@ -206,14 +198,14 @@
     }
 
     /**
-     * During a switch, put the refusal deadline and the message stating it
-     * right under the decision. Otherwise, restore the server order.
+     * During a switch, put the message between the refusal deadline it states
+     * and the decision, rarely known at that point. Otherwise, restore the
+     * server order.
      */
     syncFieldOrder() {
       if (this.isAuthorizationSwitch) {
-        this.decisionGroup.after(this.refusalDeadlineGroup, this.applicantMessageGroup);
+        this.decisionGroup.before(this.applicantMessageGroup);
       } else {
-        this.decisionGroup.before(this.dueDateGroup, this.refusalDeadlineGroup);
         this.submitButton.before(this.applicantMessageGroup);
       }
     }
@@ -249,14 +241,6 @@
       let text = draft;
       if (isBlank(draft)) text = templateText(templateId);
       return text;
-    }
-
-    /** On a switch, pre-fill an empty refusal deadline with the default one. */
-    prefillRefusalDeadline() {
-      if (!this.isAuthorizationSwitch) return;
-      if (this.refusalDeadlineInput.value !== "") return;
-
-      this.refusalDeadlineInput.value = this.defaultRefusalDeadline;
     }
 
     /**

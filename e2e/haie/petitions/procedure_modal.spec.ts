@@ -124,19 +124,15 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toHaveValue(typed);
   });
 
-  test('switching to authorisation prefills the refusal deadline and the message', async ({ page }) => {
+  test('switching to authorisation asks for the refusal deadline and prefills the message', async ({ page }) => {
     const refusalDeadline = page.locator('#id_refusal_deadline');
     const message = page.locator('#id_applicant_message');
     const hint = page.locator('#form-group-applicant_message .fr-hint-text');
 
     await page.locator('#id_stage').selectOption('instruction_a');
 
-    // The server computes the default deadline, the script only copies it.
-    const defaultRefusalDeadline = await page
-      .locator('#state-change-modal form')
-      .getAttribute('data-default-refusal-deadline');
-    expect(defaultRefusalDeadline).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
-    await expect(refusalDeadline).toHaveValue(defaultRefusalDeadline!);
+    await expect(refusalDeadline).toBeVisible();
+    await expect(refusalDeadline).toHaveValue('');
     await expect(page.locator('#form-group-refusal_deadline > label')).toContainText(
       'Date limite au-delà de laquelle le silence vaut refus'
     );
@@ -145,11 +141,11 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toBeVisible();
     await expect(message).toHaveValue(/Requalification de votre projet/);
     await expect(message).toHaveValue(/\[DATE LIMITE – NE PAS MODIFIER/);
-    await expect(hint).toContainText('sera remplacée par');
+    await expect(hint).toContainText('automatiquement insérée');
 
-    // Under the decision come the deadline, then the message stating it.
-    await expect(page.locator('#form-group-decision + *')).toHaveId('form-group-refusal_deadline');
+    // The message follows the deadline it states, and comes before the decision.
     await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-applicant_message');
+    await expect(page.locator('#form-group-applicant_message + *')).toHaveId('form-group-decision');
   });
 
   test('closing and switching each bring their own message and hint', async ({ page }) => {
@@ -163,7 +159,7 @@ test.describe('Procedure modal — dynamic form', () => {
 
     await stage.selectOption('instruction_a');
     await expect(message).toHaveValue(/Requalification de votre projet/);
-    await expect(hint).toContainText('sera remplacée par');
+    await expect(hint).toContainText('automatiquement insérée');
 
     await stage.selectOption('closed');
     await expect(message).toHaveValue(/classé sans suite/i);

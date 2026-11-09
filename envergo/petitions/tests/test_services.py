@@ -34,7 +34,7 @@ from envergo.moulinette.tests.utils import (
     make_moulinette_haie_data,
 )
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
-from envergo.petitions.models import SESSION_KEY
+from envergo.petitions.models import PetitionProject
 from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
@@ -52,11 +52,13 @@ from envergo.petitions.regulations.loi_sur_leau_haie import (
     loi_sur_leau_haie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
+    UNTRACKED_SUBMISSION_SESSION_KEY,
     compute_instructor_informations_ds,
     declaration_receipt_message,
     get_context_from_dn,
     get_demarche_numerique_dossier,
     get_messages_and_senders_from_ds,
+    keep_line_breaks_on_demarche_numerique,
     send_message_dossier_ds,
     update_demarche_numerique_status,
 )
@@ -100,7 +102,9 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     dossier = get_demarche_numerique_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
-    assert Event.objects.get(category="demande", event="depot", session_key=SESSION_KEY)
+    assert Event.objects.get(
+        category="demande", event="depot", session_key=UNTRACKED_SUBMISSION_SESSION_KEY
+    )
 
     # AND the project details are correctly populated
     project_details = get_context_from_dn(petition_project)
@@ -1132,6 +1136,50 @@ def test_update_demarches_numerique_state():
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
 
 
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
+@patch("envergo.petitions.tasks.notify")
+def test_update_demarches_numerique_state_sends_no_outside_change_alert(
+    mock_notify, django_capture_on_commit_callbacks
+):
+    """A status change made from the guichet is not reported as made outside it."""
+    petition_project = PetitionProjectFactory(
+        demarche_numerique_state="en_construction"
+    )
+
+    with django_capture_on_commit_callbacks(execute=True):
+        update_demarche_numerique_status(
+            petition_project, DossierState.en_instruction.value
+        )
+
+    assert not mock_notify.called
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.services.DemarcheNumeriqueClient.pass_dossier_to_instruction")
+def test_status_change_keeps_a_message_date_saved_meanwhile(mock_mutation):
+    """A status change does not overwrite data another sync committed after the page loaded."""
+    petition_project = PetitionProjectFactory(
+        demarche_numerique_state="en_construction",
+        demarche_numerique_dossier_id="RG9zc2llci0yMzE3ODQ0Mw==",
+    )
+    # State-change mutations return the dossier without its messages
+    mock_mutation.return_value = {
+        "dossier": {"id": "RG9zc2llci0yMzE3ODQ0Mw==", "state": "en_instruction"}
+    }
+    newer_message_date = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    PetitionProject.objects.filter(pk=petition_project.pk).update(
+        latest_petitioner_msg=newer_message_date
+    )
+
+    update_demarche_numerique_status(
+        petition_project, DossierState.en_instruction.value
+    )
+
+    petition_project.refresh_from_db()
+    assert petition_project.latest_petitioner_msg == newer_message_date
+    assert petition_project.demarche_numerique_state == "en_instruction"
+
+
 def test_bcae8_get_instructor_view_context():  # noqa
     """bcae8_get_instructor_view_context (Ru/Hru/L3503) only reads petition_project.hedge_data,
     dispatching hedges into three category buckets (régime unique, alignements
@@ -1399,3 +1447,19 @@ class TestDeclarationReceiptMessage:
             "02011 LAON\n"
             "Tel. : 03 23 24 64 00"
         )
+
+
+@pytest.mark.parametrize(
+    "message, expected",
+    [
+        ("Guichet\nDDTM\nLAON", "Guichet<br>DDTM<br>LAON"),
+        ("Guichet\r\nDDTM\r\nLAON", "Guichet<br>DDTM<br>LAON"),
+        ("Un.\n\nDeux.", "Un.\n\nDeux."),
+        ("Motif :\n- un\n- deux", "Motif :\n- un\n- deux"),
+        ("Motif :\n\n1. un\n2. deux", "Motif :\n\n1. un\n2. deux"),
+    ],
+    ids=["lines", "browser line endings", "paragraphs", "bullets", "numbers"],
+)
+def test_keep_line_breaks_on_demarche_numerique(message, expected):
+    """Lines stay in one paragraph, while paragraphs and lists keep their line breaks."""
+    assert keep_line_breaks_on_demarche_numerique(message) == expected

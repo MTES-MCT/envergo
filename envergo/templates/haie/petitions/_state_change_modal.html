@@ -18,7 +18,7 @@
                   novalidate
                   enctype="multipart/form-data"
                   class="fr-mb-3w"
-                  {% if petition_project.can_switch_to_authorization %}data-default-refusal-deadline="{{ default_refusal_deadline|date:'d/m/Y' }}"{% endif %}>
+                  {% if petition_project.can_switch_to_authorization %}data-can-switch-to-authorization{% endif %}>
               {% csrf_token %}
               <input type="hidden" name="action" value="state_change">
               {% include '_form_snippet.html' with form=state_change_form %}
@@ -47,7 +47,7 @@
               {# Label contents shown during a switch, matching django/forms/fields/label.html #}
               <script type="text/template" id="authorization-switch-label--applicant_message">
                 <span class="label-content fr-text--bold">Message au demandeur</span>
-                <span class="fr-hint-text">Ce message sera envoyé au demandeur. À l’envoi, la ligne<br />{{ refusal_deadline_placeholder }}<br />sera remplacée par :<br />{{ refusal_deadline_sentence_preview }}</span>
+                <span class="fr-hint-text">Ce message sera envoyé au demandeur. À l’envoi, la date saisie ci-dessus sera automatiquement insérée à l’emplacement prévu.</span>
               </script>
             {% endif %}
           </div>

@@ -111,7 +111,7 @@ def test_save_model_survives_sync_failure(
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.tasks.notify")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_save_model_synchronizes_project_with_dn(
     mock_post, mock_notify, project_admin, admin_request, site

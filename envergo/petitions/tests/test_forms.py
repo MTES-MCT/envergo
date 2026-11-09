@@ -256,11 +256,14 @@ def test_valid_switch_writes_the_refusal_deadline_into_the_message():
     assert form.is_valid(), form.errors
     assert form.is_authorization_switch
     assert form.cleaned_data["refusal_deadline"] == date(2099, 9, 21)
-    assert form.cleaned_data["applicant_message"] == (
-        "Votre projet relève de l'autorisation.\n"
+    message = form.cleaned_data["applicant_message"]
+    assert message.startswith(
+        "Votre projet relève de l'autorisation.<br>"
         "Compte-tenu des avis qui doivent être recueillis, "
-        "cette décision interviendra au plus tard le 21 septembre 2099."
+        "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
+        "<small>Toute décision relative"
     )
+    assert message.endswith("en premier et dernier ressort.</small>")
 
 
 def test_switch_accepts_a_placeholder_line_with_stray_spaces():
