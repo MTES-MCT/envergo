@@ -1,36 +1,36 @@
+import inspect
 import logging
 import secrets
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from os.path import splitext
 from urllib.parse import urlparse
 
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.db.models import Q
 from django.http import QueryDict
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices, FieldTracker
 
-from envergo.analytics.models import Event
-from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
-from envergo.geodata.models import DEPARTMENT_CHOICES, Department
+from envergo.geodata.models import Department
 from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
-from envergo.users.models import User
+from envergo.petitions.services import (
+    dossier_state_changed_outside_guh_alert,
+    dossier_submission_alert,
+    log_dossier_submission_event,
+)
 from envergo.utils.models import ResultSnapshotBase
-from envergo.utils.tchap import notify
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -49,6 +49,8 @@ DOSSIER_STATES = Choices(
     ("refuse", _("Refused")),
     ("sans_suite", _("No follow-up")),
 )
+
+UNSUBMITTED_DOSSIER_STATES = (DOSSIER_STATES.draft, DOSSIER_STATES.prefilled)
 
 STAGES = Choices(
     ("to_be_processed", "À instruire"),
@@ -85,9 +87,6 @@ LOG_TYPES = Choices(
     ("resumption", "Compléments reçus"),
 )
 
-# This session key is used when we are not able to find the real user session key.
-SESSION_KEY = "untracked_dossier_submission"
-
 
 def dn_archive_file_format(instance, filename):
     _, extension = splitext(filename)
@@ -105,6 +104,31 @@ def prefectural_order_file_format(instance, filename):
     secret = secrets.token_urlsafe(16)
     reference = instance.petition_project.reference
     return f"arrete_prefectoral/{reference}_{secret}{extension}"
+
+
+def read_submission_date(fetched_dossier: dict) -> date:
+    """The dossier's dépôt date, or today when « Démarche numérique » gives none."""
+    raw_date_depot = fetched_dossier.get("dateDepot")
+    if raw_date_depot:
+        submission_date = parser.isoparse(raw_date_depot).date()
+    else:
+        submission_date = timezone.localdate()
+    return submission_date
+
+
+def read_last_modification(dossier: dict | None) -> datetime | None:
+    """When « Démarche numérique » last modified the dossier, or None when unknown."""
+    raw_last_modification = (dossier or {}).get("dateDerniereModification")
+    if raw_last_modification:
+        last_modification = parser.isoparse(raw_last_modification)
+    else:
+        last_modification = None
+    return last_modification
+
+
+def declaration_due_date(submission_date: date) -> date:
+    """End of the two-month tacit agreement delay of a déclaration."""
+    return submission_date + relativedelta(months=2)
 
 
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
@@ -297,6 +321,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 lambda: ResultSnapshot.create_for_project(project=self)
             )
 
+    def refresh_from_db(self, *args, **kwargs):
+        super().refresh_from_db(*args, **kwargs)
+        self.clear_cached_properties()
+
+    def clear_cached_properties(self):
+        """Forget every cached property, so each one is recomputed from the current fields."""
+        for name, attribute in inspect.getmembers(type(self)):
+            if isinstance(attribute, cached_property):
+                self.__dict__.pop(name, None)
+
     @property
     def is_closed(self):
         return self.stage == STAGES.closed
@@ -336,196 +370,149 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @property
     def is_dossier_submitted(self):
-        return (
-            self.demarche_numerique_state != DOSSIER_STATES.draft
-            and self.demarche_numerique_state != DOSSIER_STATES.prefilled
-        )
+        return self.demarche_numerique_state not in UNSUBMITTED_DOSSIER_STATES
 
-    def synchronize_with_demarche_numerique(self, dossier: dict):
-        """Update the petition project with the latest data from Démarche numérique
+    def synchronize_with_demarche_numerique(self, fetched_dossier: dict):
+        """Refresh the project's cached « Démarche numérique » data and react to the dossier's state change.
 
-        a notification is sent to the mattermost channel when the dossier is submitted for the first time
+        Discards unsaved changes on the instance. Alerts and emails go out once the transaction commits.
         """
-
-        def get_admin_url():
-            return reverse(
-                "admin:petitions_petitionproject_change",
-                args=[self.pk],
-            )
-
-        def get_instructor_url():
-            return reverse(
-                "petition_project_summary", kwargs={"reference": self.reference}
-            )
-
-        def get_ds_url():
-            demarche_number = (
-                dossier["demarche"]["number"]
-                if "demarche" in dossier and "number" in dossier["demarche"]
-                else "Numéro inconnu"
-            )
-
-            return self.get_demarche_numerique_instructor_url(demarche_number)
-
-        def get_latest_petitioner_msg():
-            parsed_dossier = Dossier.from_dict(dossier)
-            dates = sorted(
-                [
-                    msg.createdAt
-                    for msg in parsed_dossier.messages
-                    if msg.email == parsed_dossier.usager.email
-                ],
-                reverse=True,
-            )
-            return dates[0] if len(dates) else None
-
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
-        declaration_filed_on = None
-        declaration_due_date = None
-        is_first_submission = not self.is_dossier_submitted
-
-        if is_first_submission:
-            department = extract_param_from_url(self.moulinette_url, "department")
-            if "dateDepot" in dossier and dossier["dateDepot"]:
-                date_depot = parser.isoparse(dossier["dateDepot"]).date()
-            else:
-                date_depot = timezone.localdate()
-            # add date in the url or overwrite it if there is already one
-            self.moulinette_url = update_qs(
-                self.moulinette_url, {"date": date_depot.isoformat()}
-            )
-
-            simulations = list(self.simulations.all())
-            for simulation in simulations:
-                simulation.moulinette_url = update_qs(
-                    simulation.moulinette_url, {"date": date_depot.isoformat()}
+        with transaction.atomic():
+            # Prevents overlapping syncs from acting on a stale copy.
+            self.reload_with_lock()
+            if self.has_newer_cached_dossier(fetched_dossier):
+                logger.info(
+                    f"Skipping a stale « Démarche numérique » copy of {self.reference}"
                 )
+                return
 
-            Simulation.objects.bulk_update(simulations, ["moulinette_url"])
+            if not self.is_dossier_submitted:
+                self.record_submission(fetched_dossier)
+            elif fetched_dossier["state"] != self.demarche_numerique_state:
+                self.schedule_outside_change_alert(fetched_dossier)
 
-            # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
-            if self.category == HedgeCategory.ru:
-                declaration_filed_on = date_depot
-                declaration_due_date = date_depot + relativedelta(months=2)
+            self.update_demarche_numerique_cache(fetched_dossier)
+            self.save()
 
-            # For some ConfigHaie, « Démarche numérique » is configured to set dossier "en_instruction" on creation.
-            # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
-            if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
-                stage = STAGES.instruction_h
-                if self.category == HedgeCategory.ru:
-                    stage = STAGES.instruction_d
+    def reload_with_lock(self):
+        """Reload the project from its row, locked until the transaction ends."""
+        self.refresh_from_db(from_queryset=PetitionProject.objects.select_for_update())
 
-                StatusLog.objects.create(
-                    petition_project=self,
-                    type=LOG_TYPES.status_change,
-                    stage=stage,
-                    update_comment="Dépôt du dossier : passage automatique en instruction.",
-                    due_date=declaration_due_date,
-                )
+    def has_newer_cached_dossier(self, fetched_dossier: dict) -> bool:
+        """Whether the cached dossier was modified after the fetched one."""
+        cached_at = read_last_modification(self.demarche_numerique_raw_dossier)
+        fetched_at = read_last_modification(fetched_dossier)
+        return bool(cached_at and fetched_at and cached_at > fetched_at)
 
-            usager_email = (
-                dossier["usager"]["email"]
-                if "usager" in dossier and "email" in dossier["usager"]
-                else "non renseigné"
-            )
-            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+    def update_cache_after_guichet_state_change(self, fetched_dossier: dict):
+        """Cache the dossier « Démarche numérique » returned for a state change made from the guichet."""
+        with transaction.atomic():
+            self.reload_with_lock()
+            self.update_demarche_numerique_cache(fetched_dossier)
+            self.save()
 
-            message_body = render_to_string(
-                "haie/petitions/mattermost_dossier_submission_notif.txt",
-                context={
-                    "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "dossier_number": self.demarche_numerique_dossier_number,
-                    "created_at": self.created_at.date(),
-                    "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
-                    "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
-                    "usager_email": usager_email,
-                    "length_to_remove": self.hedge_data.length_to_remove(),
-                },
-            )
-            notify(message_body, "haie")
+    def record_submission(self, fetched_dossier: dict):
+        """Apply the dépôt of the dossier to the project."""
+        submission_date = read_submission_date(fetched_dossier)
+        self.pin_simulation_date(submission_date)
 
-            creation_event = (
-                Event.objects.order_by("-date_created")
-                .filter(
-                    metadata__reference=self.reference,
-                    category="demande",
-                    event="creation",
-                )
-                .first()
-            )
-            if not creation_event:
-                logger.warning(
-                    f"Unable to find creation event for project {self.reference}. "
-                    f"The submission event will be logged with a mocked session key.",
-                    extra={
-                        "project": self,
-                        "session_key": SESSION_KEY,
-                    },
-                )
-
-            visitor_id = creation_event.session_key if creation_event else SESSION_KEY
-
-            user = User(is_staff=False)
-
-            log_event_raw(
-                "demande",
-                "depot",
-                visitor_id,
-                user,
-                haie_site,
-                **self.get_log_event_data(),
-            )
-
-        elif (
-            self.demarche_numerique_state
-            and dossier["state"] != self.demarche_numerique_state
+        # Some démarches open a dossier straight into instruction on dépôt.
+        if (
+            fetched_dossier["state"] == DOSSIER_STATES.en_instruction
+            and self.stage == STAGES.to_be_processed
         ):
-            # « Démarche numérique » state have been changed outside of GUH. We are trying to prevent this. Notify admin
-            department = extract_param_from_url(self.moulinette_url, "department")
-            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            self.start_instruction_on_submission(submission_date)
 
-            message_body = render_to_string(
-                "haie/petitions/mattermost_dossier_state_updated_outside_of_guh.txt",
-                context={
-                    "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
-                    "ds_url": get_ds_url(),
-                    "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
-                },
+        log_dossier_submission_event(self)
+        self.schedule_submission_alert(fetched_dossier)
+        self.schedule_submission_messages(submission_date)
+
+    def schedule_submission_messages(self, submission_date: date):
+        """Queue the GUH mailbox email and, for a déclaration, the applicant's receipt."""
+        self.schedule_new_dossier_email()
+
+        # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
+        if self.is_regime_unique():
+            self.schedule_declaration_receipt(
+                submission_date, declaration_due_date(submission_date)
             )
-            notify(message_body, "haie")
 
-        self.demarche_numerique_dossier_id = dossier["id"]
-        self.demarche_numerique_state = dossier["state"]
+    def update_demarche_numerique_cache(self, fetched_dossier: dict):
+        """Copy the fetched « Démarche numérique » dossier into the project's cached fields.
 
-        if "dateDepot" in dossier and dossier["dateDepot"]:
-            self.demarche_numerique_date_depot = parser.isoparse(dossier["dateDepot"])
+        The cached dossier may lack messages, so reading messages requires a forced fetch.
+        """
+        self.demarche_numerique_dossier_id = fetched_dossier["id"]
+        self.demarche_numerique_state = fetched_dossier["state"]
+        if fetched_dossier.get("dateDepot"):
+            self.demarche_numerique_date_depot = parser.isoparse(
+                fetched_dossier["dateDepot"]
+            )
 
-        self.demarche_numerique_raw_dossier = dossier
-        if hasattr(self, "prefetched_dossier"):
-            del self.prefetched_dossier
+        self.demarche_numerique_raw_dossier = fetched_dossier
+        self.clear_cached_properties()
 
-        if "messages" in dossier:
-            self.latest_petitioner_msg = get_latest_petitioner_msg()
+        # Dossiers fetched without messages keep the previous date.
+        if "messages" in fetched_dossier:
+            dossier = Dossier.from_dict(fetched_dossier)
+            self.latest_petitioner_msg = dossier.latest_applicant_message_date
 
         self.demarche_numerique_last_sync = timezone.now()
-        self.save()
 
-        # Scheduled after the save, so the tasks read the project as the dépôt left it.
-        if is_first_submission:
-            self.schedule_new_dossier_email()
-        if declaration_filed_on:
-            self.schedule_declaration_receipt(
-                declaration_filed_on, declaration_due_date
-            )
+    def pin_simulation_date(self, submission_date: date):
+        """Evaluate the project and its simulations with the rules in force on `submission_date`."""
+        date_param = {"date": submission_date.isoformat()}
+        self.moulinette_url = update_qs(self.moulinette_url, date_param)
+        self.clear_cached_properties()
+
+        simulations = list(self.simulations.all())
+        for simulation in simulations:
+            simulation.moulinette_url = update_qs(simulation.moulinette_url, date_param)
+        Simulation.objects.bulk_update(simulations, ["moulinette_url"])
+
+    def start_instruction_on_submission(self, submission_date: date):
+        """Move the project into instruction, as « Démarche numérique » did on dépôt."""
+        if self.is_regime_unique():
+            instruction_stage = STAGES.instruction_d
+            due_date = declaration_due_date(submission_date)
+        else:
+            instruction_stage = STAGES.instruction_h
+            due_date = None
+
+        StatusLog.objects.create(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=instruction_stage,
+            update_comment="Dépôt du dossier : passage automatique en instruction.",
+            due_date=due_date,
+        )
+
+    def schedule_submission_alert(self, fetched_dossier: dict):
+        """Queue the team alert announcing the dépôt, for after commit."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_team_alert_async
+
+        alert = dossier_submission_alert(self, fetched_dossier)
+        transaction.on_commit(lambda: send_team_alert_async.delay(alert), robust=True)
+
+    def schedule_outside_change_alert(self, fetched_dossier: dict):
+        """Queue the team alert reporting a state change made outside the guichet, for after commit."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_team_alert_async
+
+        alert = dossier_state_changed_outside_guh_alert(self, fetched_dossier)
+        transaction.on_commit(lambda: send_team_alert_async.delay(alert), robust=True)
 
     def schedule_new_dossier_email(self):
         """Queue the GUH mailbox email for after commit, so a mail failure blocks nothing."""
         # Imported here: the tasks module imports this one.
         from envergo.petitions.tasks import send_new_dossier_email_async
 
-        transaction.on_commit(lambda: send_new_dossier_email_async.delay(self.pk))
+        transaction.on_commit(
+            lambda: send_new_dossier_email_async.delay(self.pk), robust=True
+        )
 
     def schedule_declaration_receipt(self, received_on, due_date):
         """Queue the déclaration receipt for after commit, so a DN failure blocks nothing."""
@@ -538,17 +525,20 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         transaction.on_commit(
             lambda: send_declaration_receipt_async.delay(
                 self.pk, received_on_iso, due_date_iso
-            )
+            ),
+            robust=True,
         )
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
-        if not hasattr(self, "_moulinette"):
-            moulinette_data = self._parse_moulinette_data()
-            moulinette_data["haies"] = self.hedge_data
-            form_data = {"initial": moulinette_data, "data": moulinette_data}
-            self._moulinette = MoulinetteHaie(form_data)
-        return self._moulinette
+        return self.moulinette
+
+    @cached_property
+    def moulinette(self):
+        moulinette_data = self._parse_moulinette_data()
+        moulinette_data["haies"] = self.hedge_data
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        return MoulinetteHaie(form_data)
 
     def get_triage_form(self):
         """Recreate triage form from moulinette url"""
