@@ -5263,7 +5263,7 @@ def test_authorization_switch_sends_the_applicant_message(
     assert log.refusal_deadline == date(2099, 9, 21)
     assert log.due_date == date(2099, 9, 21)
     assert log.applicant_message.startswith(
-        "Votre projet relève d'une autorisation.\n"
+        "Votre projet relève d'une autorisation.<br>"
         "Compte-tenu des avis qui doivent être recueillis, "
         "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
         "<small>Toute décision relative"

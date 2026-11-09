@@ -23,6 +23,7 @@ from envergo.petitions.models import (
     Simulation,
     StatusLog,
 )
+from envergo.petitions.services import keep_line_breaks_on_demarche_numerique
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import EnrichedChoices, ProjectStageField
@@ -206,11 +207,12 @@ def build_authorization_switch_message(message, refusal_deadline):
     deadline = date_format(refusal_deadline, "DATE_FORMAT")
     sentence = REFUSAL_DEADLINE_SENTENCE.format(deadline=deadline)
     message_with_deadline = REFUSAL_DEADLINE_PLACEHOLDER_LINE.sub(sentence, message)
+    formatted_message = keep_line_breaks_on_demarche_numerique(message_with_deadline)
 
     appeal_notice = render_to_string(
         "haie/petitions/authorization_switch_appeal_notice.txt"
     ).strip()
-    return f"{message_with_deadline}\n\n{appeal_notice}"
+    return f"{formatted_message}\n\n{appeal_notice}"
 
 
 class SimulationCheckWidget(forms.CheckboxInput):

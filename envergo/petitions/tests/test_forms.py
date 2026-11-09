@@ -258,7 +258,7 @@ def test_valid_switch_writes_the_refusal_deadline_into_the_message():
     assert form.cleaned_data["refusal_deadline"] == date(2099, 9, 21)
     message = form.cleaned_data["applicant_message"]
     assert message.startswith(
-        "Votre projet relève de l'autorisation.\n"
+        "Votre projet relève de l'autorisation.<br>"
         "Compte-tenu des avis qui doivent être recueillis, "
         "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
         "<small>Toute décision relative"

@@ -58,6 +58,7 @@ from envergo.petitions.services import (
     get_context_from_dn,
     get_demarche_numerique_dossier,
     get_messages_and_senders_from_ds,
+    keep_line_breaks_on_demarche_numerique,
     send_message_dossier_ds,
     update_demarche_numerique_status,
 )
@@ -1446,3 +1447,19 @@ class TestDeclarationReceiptMessage:
             "02011 LAON\n"
             "Tel. : 03 23 24 64 00"
         )
+
+
+@pytest.mark.parametrize(
+    "message, expected",
+    [
+        ("Guichet\nDDTM\nLAON", "Guichet<br>DDTM<br>LAON"),
+        ("Guichet\r\nDDTM\r\nLAON", "Guichet<br>DDTM<br>LAON"),
+        ("Un.\n\nDeux.", "Un.\n\nDeux."),
+        ("Motif :\n- un\n- deux", "Motif :\n- un\n- deux"),
+        ("Motif :\n\n1. un\n2. deux", "Motif :\n\n1. un\n2. deux"),
+    ],
+    ids=["lines", "browser line endings", "paragraphs", "bullets", "numbers"],
+)
+def test_keep_line_breaks_on_demarche_numerique(message, expected):
+    """Lines stay in one paragraph, while paragraphs and lists keep their line breaks."""
+    assert keep_line_breaks_on_demarche_numerique(message) == expected

@@ -1,4 +1,5 @@
 import logging
+import re
 from dataclasses import dataclass
 from textwrap import dedent
 from typing import Any, List
@@ -315,6 +316,40 @@ def get_messages_and_senders_from_ds(
         reverse=True,
     )
     return messages, instructor_emails, petitioner_email
+
+
+_PARAGRAPH_LINE_BREAK_RE = re.compile(
+    r"""
+        (?<!\n)         # not the end of a blank line
+        \n              # the line break
+        (?!             # not followed by
+            [ \t]*      # optional indentation, then
+            (?:
+                \n      # a blank line
+                |
+                [-*+]\s # a bullet item
+                |
+                \d+\.   # a numbered item
+            )
+        )
+    """,
+    re.VERBOSE,
+)
+
+
+def keep_line_breaks_on_demarche_numerique(message_body):
+    """Replace the line breaks inside a paragraph with <br>, for the « Démarche numérique » messagerie.
+
+    « Démarche numérique » displays each line of a message as a separate
+    paragraph, with a gap between them. A signature written on four lines would
+    look like four paragraphs. Joining its lines with <br> displays them as one
+    block.
+
+    Blank lines and list items keep their line breaks, because « Démarche
+    numérique » needs them to display paragraphs and lists.
+    """
+    unix_message_body = message_body.replace("\r\n", "\n")
+    return _PARAGRAPH_LINE_BREAK_RE.sub("<br>", unix_message_body)
 
 
 def send_message_dossier_ds(petition_project, message_body, attachment_file=None):
