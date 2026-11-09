@@ -972,8 +972,8 @@ div.leaflet-container {
   }
 
   .leaflet-controls-full-screen-toggle {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border: 2px solid rgb(0 0 0 / 20%);
     background-clip: padding-box;
     background-color: #fff;
@@ -1022,8 +1022,7 @@ body:has(.leaflet-container.full-screen) {
 
   .header-sticky,
   .fr-enlarge-link,
-  .fr-select-group,
-  .fr-input-group,
+  #newsletter-optin-form,
   .fr-footer__bottom {
     // elements with position:relative; creating z-index mess.
     // Hide them with visibility:hidden instead of display:none;
