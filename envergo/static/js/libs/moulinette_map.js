@@ -10,9 +10,6 @@
     }
   };
 
-
-
-
   /**
    * Settings and behavior for the moulinette form map widget.
    */
