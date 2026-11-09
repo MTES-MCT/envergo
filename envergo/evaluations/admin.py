@@ -109,6 +109,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         "urbanism_department_emails",
         "nb_emails_sent",
         "nb_versions",
+        "published_at",
     ]
     form = EvaluationAdminForm
     autocomplete_fields = ["request"]
@@ -227,6 +228,8 @@ class EvaluationAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request):
+        # The rendered content is heavy and admin views rarely need it.
+        versions = EvaluationVersion.objects.order_by("-created_at").defer("content")
         qs = (
             super()
             .get_queryset(request)
@@ -235,18 +238,18 @@ class EvaluationAdmin(admin.ModelAdmin):
                 nb_versions=Count("versions", distinct=True),
                 nb_emails_sent=Count("regulatory_notice_logs", distinct=True),
             )
-            .prefetch_related(
-                Prefetch(
-                    "versions",
-                    queryset=EvaluationVersion.objects.order_by("-created_at"),
-                )
-            )
+            .prefetch_related(Prefetch("versions", queryset=versions))
         )
         return qs
 
     @admin.display(description="Nb. avis publiés", ordering="nb_versions")
     def nb_versions(self, obj):
         return obj.nb_versions
+
+    @admin.display(description="Date de publication")
+    def published_at(self, obj):
+        published_version = obj.published_version
+        return published_version.created_at if published_version else None
 
     def get_urls(self):
         urls = super().get_urls()
@@ -356,6 +359,17 @@ class EvaluationAdmin(admin.ModelAdmin):
         html_mail_template = f"evaluations/admin/rr_email_{moulinette.result}.html"
 
         if request.method == "POST":
+            if not evaluation.published_version:
+                self.message_user(
+                    request,
+                    "Aucune version de cet avis n'est publiée. Publiez l'avis avant de l'envoyer par email.",
+                    messages.ERROR,
+                )
+                url = reverse(
+                    "admin:evaluations_evaluation_email_avis", args=[object_id]
+                )
+                return HttpResponseRedirect(url)
+
             # Let's make sure the user doesn't send the same email twice
             latest_log = (
                 RegulatoryNoticeLog.objects.filter(evaluation=evaluation)

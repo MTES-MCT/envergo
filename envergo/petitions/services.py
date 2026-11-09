@@ -9,7 +9,10 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
+from envergo.analytics.models import Event
+from envergo.analytics.utils import log_event_raw
 from envergo.demarchenumerique.models import DemarcheConfig
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
 from envergo.petitions.demarche_numerique.client import (
@@ -25,10 +28,14 @@ from envergo.petitions.demarche_numerique.models import (
     PieceJustificativeChamp,
     YesNoChamp,
 )
+from envergo.users.models import User
 from envergo.utils.tchap import notify
 from envergo.utils.tools import display_form_details, get_base_url
 
 logger = logging.getLogger(__name__)
+
+# Stands in for the applicant's visitor id when their project creation was not tracked.
+UNTRACKED_SUBMISSION_SESSION_KEY = "untracked_dossier_submission"
 
 
 DEMARCHE_NUMERIQUE_STATUS_MAPPING = {
@@ -441,6 +448,114 @@ def get_header_explanation_from_ds_demarche(demarche):
     return header_sections, explication_champs
 
 
+def dossier_submission_alert(petition_project, dossier: dict) -> str:
+    """The team alert announcing that the applicant just submitted the dossier."""
+    usager_email = (
+        dossier["usager"]["email"]
+        if "usager" in dossier and "email" in dossier["usager"]
+        else "non renseigné"
+    )
+
+    return render_to_string(
+        "haie/petitions/mattermost_dossier_submission_notif.txt",
+        context={
+            "department": project_department_name(petition_project),
+            "dossier_number": petition_project.demarche_numerique_dossier_number,
+            "created_at": petition_project.created_at.date(),
+            "instructor_url": project_instructor_url(petition_project),
+            "admin_url": project_admin_url(petition_project),
+            "usager_email": usager_email,
+            "length_to_remove": petition_project.hedge_data.length_to_remove(),
+        },
+    )
+
+
+def dossier_state_changed_outside_guh_alert(petition_project, dossier: dict) -> str:
+    """The team alert reporting a state change made on « Démarche numérique », bypassing the guichet."""
+    demarche_number = (
+        dossier["demarche"]["number"]
+        if "demarche" in dossier and "number" in dossier["demarche"]
+        else "Numéro inconnu"
+    )
+    demarche_numerique_url = petition_project.get_demarche_numerique_instructor_url(
+        demarche_number
+    )
+
+    return render_to_string(
+        "haie/petitions/mattermost_dossier_state_updated_outside_of_guh.txt",
+        context={
+            "department": project_department_name(petition_project),
+            "instructor_url": project_instructor_url(petition_project),
+            "ds_url": demarche_numerique_url,
+            "admin_url": project_admin_url(petition_project),
+        },
+    )
+
+
+def log_dossier_submission_event(petition_project):
+    """Log the dépôt analytics event under the visitor who created the project."""
+    creation_event = (
+        Event.objects.order_by("-date_created")
+        .filter(
+            metadata__reference=petition_project.reference,
+            category="demande",
+            event="creation",
+        )
+        .first()
+    )
+    if not creation_event:
+        logger.warning(
+            f"Unable to find creation event for project {petition_project.reference}. "
+            f"The submission event will be logged with a mocked session key.",
+            extra={
+                "project": petition_project,
+                "session_key": UNTRACKED_SUBMISSION_SESSION_KEY,
+            },
+        )
+    visitor_id = (
+        creation_event.session_key
+        if creation_event
+        else UNTRACKED_SUBMISSION_SESSION_KEY
+    )
+
+    haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+    applicant = User(is_staff=False)
+    log_event_raw(
+        "demande",
+        "depot",
+        visitor_id,
+        applicant,
+        haie_site,
+        **petition_project.get_log_event_data(),
+    )
+
+
+def project_department_name(petition_project):
+    """The project's department name, or its code when the code is unknown."""
+    department_code = petition_project.get_department_code()
+    return dict(DEPARTMENT_CHOICES).get(department_code, department_code)
+
+
+def project_instructor_url(petition_project):
+    """Absolute URL of the project's instruction page."""
+    path = reverse(
+        "petition_project_summary",
+        kwargs={"reference": petition_project.reference},
+        urlconf="config.urls_haie",
+    )
+    return f"{get_base_url(settings.ENVERGO_HAIE_DOMAIN)}{path}"
+
+
+def project_admin_url(petition_project):
+    """Absolute URL of the project's admin page."""
+    path = reverse(
+        "admin:petitions_petitionproject_change",
+        args=[petition_project.pk],
+        urlconf="config.urls_haie",
+    )
+    return f"{get_base_url(settings.ENVERGO_HAIE_DOMAIN)}{path}"
+
+
 def get_demarche_numerique_dossier(
     petition_project,
     force_update: bool = False,
@@ -536,9 +651,8 @@ def update_demarche_numerique_status(petition_project, new_status):
         raise ValueError(f"Unknown status {new_status}")
 
     if response:
-        # the status change was successful, we update the petition project
-        petition_project.demarche_numerique_state = response["dossier"]["state"]
-        petition_project.synchronize_with_demarche_numerique(response["dossier"])
+        # The guichet made this change. A full sync has nothing to detect.
+        petition_project.update_cache_after_guichet_state_change(response["dossier"])
     else:
         # update failed, notification should have been sent by the « Démarche numérique » client
         raise DemarcheNumeriqueError(

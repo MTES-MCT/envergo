@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 
@@ -8,6 +9,8 @@ from envergo.moulinette.tests.factories import RUConfigHaieFactory
 from envergo.petitions.tasks import (
     send_applicant_message_async,
     send_declaration_receipt_async,
+    send_new_dossier_email_async,
+    send_team_alert_async,
 )
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -123,3 +126,40 @@ def test_send_declaration_receipt_failure_raises_for_retry(mock_ds_msg):
 
     with pytest.raises(RuntimeError):
         send_declaration_receipt_async(project.pk, "2026-10-05", "2026-12-05")
+
+
+@override_settings(ENVERGO_HAIE_DOMAIN="haie.example.org")
+def test_send_new_dossier_email(mailoutbox):
+    """A new dossier is announced to the department's GUH mailbox."""
+    RUConfigHaieFactory(guh_email="guh@example.org")
+    project = PetitionProjectFactory(demarche_numerique_dossier_number=12345678)
+
+    send_new_dossier_email_async(project.pk)
+
+    assert len(mailoutbox) == 1
+    mail = mailoutbox[0]
+    assert mail.to == ["guh@example.org"]
+    assert mail.from_email == settings.FROM_EMAIL["haie"]["default"]
+    assert mail.subject == "Guichet unique haie − Nouveau dossier déposé − n°1234-5678"
+    instruction_url = (
+        f"https://haie.example.org/projet/{project.reference}/instruction/"
+    )
+    assert instruction_url in mail.body
+
+
+def test_send_new_dossier_email_without_guh_email(mailoutbox):
+    """A department without a GUH email gets no new dossier email."""
+    RUConfigHaieFactory(guh_email="")
+    project = PetitionProjectFactory()
+
+    send_new_dossier_email_async(project.pk)
+
+    assert len(mailoutbox) == 0
+
+
+@patch("envergo.petitions.tasks.notify")
+def test_send_team_alert(mock_notify):
+    """A team alert is posted to the haie channels."""
+    send_team_alert_async("### Nouveau dossier")
+
+    mock_notify.assert_called_once_with("### Nouveau dossier", "haie")
