@@ -19,20 +19,17 @@
 
         {% include '_form_header.html' with form=form %}
 
-        <div id="form-section-coords" class="form-section">
-
-          {{ form.lng.as_hidden }}
-          {{ form.lat.as_hidden }}
-
-          {% render_field form.address %}
-        </div>
+        {{ form.lng.as_hidden }}
+        {{ form.lat.as_hidden }}
 
         <div id="form-section-map" class="form-section">
           <div class="fr-input-group fr-input-group-map">
             <div class="fr-mb-3w">
               <label class="step">
-                Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-                l'emplacement du projet.
+                Localisation du projet
+                <span class="fr-hint-text">
+                  Double-cliquez ou déplacez le marqueur sur la carte pour ajuster l'emplacement du projet.
+                </span>
               </label>
             </div>
             <figure class="fr-content-media">
@@ -40,6 +37,19 @@
                    class="ratio-16x9 ratio-sm-4x5 fr-mt-1w fr-raw-link">
                 <div class="ratio-content">
                   <div class="leaflet-container">
+                    <div class="fr-search-bar" id="address-search-bar" role="search">
+                      <label class="fr-label for-autocomplete-field" for="id_address">
+                        Rechercher une commune ou une
+                        adresse
+                      </label>
+                      <input class="fr-input"
+                             aria-describedby="id_address-messages"
+                             placeholder="Rechercher une commune ou une adresse"
+                             id="id_address"
+                             type="search"
+                             name="address">
+                      <button title="Rechercher" type="button" class="fr-btn">Rechercher</button>
+                    </div>
                     <div id="map"></div>
                   </div>
                 </div>

@@ -287,7 +287,6 @@ nav#evaluation-summary {
 #triage-form {
   counter-reset: steps;
 
-  #form-group-address label,
   label.step {
     &::before {
       counter-increment: steps;
@@ -776,8 +775,8 @@ form#request-evaluation-form {
 /**
  * Autocomplete fields
  */
-.fr-label + div > .autocomplete__wrapper {
-  margin-top: 0.5rem;
+.fr-label.for-autocomplete-field + div {
+  flex-grow: 1;
 }
 
 .autocomplete__wrapper .autocomplete__input {
@@ -787,8 +786,8 @@ form#request-evaluation-form {
 
   --blend: var(--background-contrast-grey-blend);
 
-  background-color: var(--background-contrast-grey);
-  box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
+  background-color: #fff;
+  box-shadow: inset 0 -2px 0 0 var(--border-action-high-blue-france);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -796,6 +795,12 @@ form#request-evaluation-form {
   appearance: none;
   outline-offset: 2px;
   outline-width: 2px;
+}
+
+.autocomplete__wrapper .autocomplete__input::placeholder {
+  opacity: 1;
+  font-style: italic;
+  color: var(--text-mention-grey);
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
@@ -2083,8 +2088,7 @@ main.geometricians {
 }
 
 .moulinette {
-  .fr-input,
-  .autocomplete__input {
+  .fr-input {
     --background-contrast-grey: var(--grey-975-100);
   }
 
