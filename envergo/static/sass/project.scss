@@ -148,6 +148,12 @@ article {
   }
 }
 
+// Only "Interdit" has a solid fill. No DSFR badge variant offers one.
+.fr-badge.result-badge--forbidden {
+  color: var(--text-inverted-grey);
+  background-color: var(--background-flat-red-marianne);
+}
+
 #probability-gauge {
   margin-bottom: 1.5rem;
 
@@ -230,11 +236,13 @@ nav#evaluation-summary {
     }
 
     span.regulation-result,
-    span.regulation-result span.fr-tag {
+    span.regulation-result span.fr-tag,
+    span.regulation-result .result-badge {
       flex-direction: column;
     }
 
-    span.regulation-result span.fr-tag {
+    span.regulation-result span.fr-tag,
+    span.regulation-result .result-badge {
       margin-top: 0.5rem;
       margin-bottom: 0.5rem;
     }
@@ -272,11 +280,13 @@ nav#evaluation-summary {
 
     li {
       span.regulation-result,
-      span.regulation-result span.fr-tag {
+      span.regulation-result span.fr-tag,
+      span.regulation-result .result-badge {
         flex-direction: row;
       }
 
-      span.regulation-result span.fr-tag {
+      span.regulation-result span.fr-tag,
+      span.regulation-result .result-badge {
         margin-top: unset;
       }
     }
@@ -466,9 +476,10 @@ nav#evaluation-summary {
 }
 
 section.regulation {
-  h2 {
+  h2,
+  h4.regulation-title {
     display: flex;
-    align-items: end;
+    align-items: center;
     flex-wrap: wrap;
 
     span.content {
@@ -483,6 +494,10 @@ section.regulation {
     span.fr-tag {
       white-space: nowrap;
       margin-bottom: -0.125rem;
+    }
+
+    .result-badge {
+      white-space: nowrap;
     }
   }
 
@@ -606,7 +621,8 @@ section.regulation {
       margin-bottom: 0;
     }
 
-    .fr-tag.probability-non_disponible {
+    .fr-tag.probability-non_disponible,
+    .result-badge[data-result="non_disponible"] {
       visibility: hidden;
     }
   }
@@ -1048,7 +1064,8 @@ button .img-icon {
       flex-direction: row-reverse;
     }
 
-    .fr-accordion__btn span.fr-tag {
+    .fr-accordion__btn span.fr-tag,
+    .fr-accordion__btn .result-badge {
       white-space: nowrap;
     }
 
@@ -1623,7 +1640,8 @@ footer {
   }
 
   // Enforce background color for tags
-  .fr-tag {
+  .fr-tag,
+  .result-badge {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
