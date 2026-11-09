@@ -5168,14 +5168,14 @@ def test_state_change_modal_embeds_the_authorization_switch_message(
     assert AUTHORIZATION_REASON_PLACEHOLDER in message
     # Inside a <script> block, the browser does not decode &#x27;
     assert "l'obtention d'une autorisation" in message
-    assert (
+    assert message.endswith(
         f"Le guichet unique de la haie – {project.department}\n"
         "Direction départementale des territoires\n"
         "Service Eau et Environnement\n"
-        "50, Bd de Lyon\n02011 LAON\n"
-        "\n"
-        "Toute décision relative"
-    ) in message
+        "50, Bd de Lyon\n02011 LAON"
+    )
+    # The form adds the appeal notice on submission.
+    assert "Toute décision relative" not in message
 
 
 def test_authorization_switch_message_omits_blank_guh_contact_lines(
@@ -5191,12 +5191,10 @@ def test_authorization_switch_message_omits_blank_guh_contact_lines(
 
     message = get_authorization_switch_message(client, project)
 
-    assert (
+    assert message.endswith(
         f"Le guichet unique de la haie – {project.department}\n"
-        "Direction départementale des territoires\n"
-        "\n"
-        "Toute décision relative"
-    ) in message
+        "Direction départementale des territoires"
+    )
 
 
 def test_state_change_modal_tells_the_script_the_project_can_switch(
@@ -5264,10 +5262,11 @@ def test_authorization_switch_sends_the_applicant_message(
     log = project.status_history.order_by("-created_at").first()
     assert log.refusal_deadline == date(2099, 9, 21)
     assert log.due_date == date(2099, 9, 21)
-    assert log.applicant_message == (
+    assert log.applicant_message.startswith(
         "Votre projet relève d'une autorisation.\n"
         "Compte-tenu des avis qui doivent être recueillis, "
-        "cette décision interviendra au plus tard le 21 septembre 2099."
+        "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
+        "<small>Toute décision relative"
     )
     assert (
         log.update_comment == "Haie en site Natura 2000.\nMessage envoyé au demandeur."

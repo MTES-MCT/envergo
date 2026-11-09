@@ -7,6 +7,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
@@ -200,6 +201,18 @@ REFUSAL_DEADLINE_PLACEHOLDER_LINE = re.compile(
 )
 
 
+def build_authorization_switch_message(message, refusal_deadline):
+    """The message the applicant receives, from the text the instructor validated."""
+    deadline = date_format(refusal_deadline, "DATE_FORMAT")
+    sentence = REFUSAL_DEADLINE_SENTENCE.format(deadline=deadline)
+    message_with_deadline = REFUSAL_DEADLINE_PLACEHOLDER_LINE.sub(sentence, message)
+
+    appeal_notice = render_to_string(
+        "haie/petitions/authorization_switch_appeal_notice.txt"
+    ).strip()
+    return f"{message_with_deadline}\n\n{appeal_notice}"
+
+
 class SimulationCheckWidget(forms.CheckboxInput):
     """Checkbox rendered inside a richer "verify the simulation" block."""
 
@@ -221,7 +234,8 @@ class StateChangeForm(forms.ModelForm):
     date after which silence means refusal. It is mandatory, at least two
     months away, and becomes the stage due date. The applicant message is
     mandatory and must be fully completed. Its deadline placeholder line must
-    be intact, and the form swaps it for the deadline sentence.
+    be intact. The form swaps it for the deadline sentence and appends the
+    appeal notice.
     """
 
     simulation_check = forms.BooleanField(
@@ -438,10 +452,8 @@ class StateChangeForm(forms.ModelForm):
                 ),
             )
         elif not self.has_error("refusal_deadline"):
-            deadline = date_format(refusal_deadline, "DATE_FORMAT")
-            sentence = REFUSAL_DEADLINE_SENTENCE.format(deadline=deadline)
-            cleaned_data["applicant_message"] = REFUSAL_DEADLINE_PLACEHOLDER_LINE.sub(
-                sentence, message
+            cleaned_data["applicant_message"] = build_authorization_switch_message(
+                message, refusal_deadline
             )
 
     def reset_hidden_closing_fields(self, cleaned_data):
