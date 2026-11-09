@@ -476,7 +476,8 @@ nav#evaluation-summary {
 }
 
 section.regulation {
-  h2 {
+  h2,
+  h4.regulation-title {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
