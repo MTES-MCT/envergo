@@ -4,21 +4,21 @@ from unittest.mock import patch
 import pytest
 from django.core.management import call_command
 
-from envergo.security import osv
 from envergo.security.inventory import Component
 from envergo.security.models import Vulnerability
+from envergo.security.osv import Finding
 
 pytestmark = pytest.mark.django_db
 
 COMPONENT = Component("some-package", "1.0.0", "PyPI")
-KNOWN_FLAW = osv.Vulnerability("GHSA-known", "Known flaw", "high", [])
-NEW_FLAW = osv.Vulnerability("GHSA-new", "New flaw", "low", ["1.0.1"])
-CLOSED_FLAW = osv.Vulnerability("GHSA-closed", "Closed flaw", "low", [])
+KNOWN_FLAW = Finding("GHSA-known", "Known flaw", "high", [])
+NEW_FLAW = Finding("GHSA-new", "New flaw", "low", ["1.0.1"])
+CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", "low", [])
 
 
-def run_scan(vulnerabilities):
-    """Run the command with OSV reporting these vulnerabilities on `COMPONENT`."""
-    vulnerabilities_by_component = {COMPONENT: vulnerabilities}
+def run_scan(findings):
+    """Run the command with OSV reporting these findings on `COMPONENT`."""
+    findings_by_component = {COMPONENT: findings}
     with (
         patch(
             "envergo.security.management.commands.security_scan.read_components",
@@ -26,7 +26,7 @@ def run_scan(vulnerabilities):
         ),
         patch(
             "envergo.security.management.commands.security_scan.find_vulnerabilities",
-            return_value=vulnerabilities_by_component,
+            return_value=findings_by_component,
         ),
     ):
         call_command("security_scan")

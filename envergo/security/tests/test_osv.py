@@ -22,10 +22,10 @@ def test_aliased_records_give_one_vulnerability(monkeypatch):
     }
     mock_osv(monkeypatch, [pysec_record, ghsa_record])
 
-    vulnerabilities = osv.find_vulnerabilities([COMPONENT])[COMPONENT]
+    findings = osv.find_vulnerabilities([COMPONENT])[COMPONENT]
 
-    assert [v.id for v in vulnerabilities] == ["GHSA-1"]
-    assert vulnerabilities[0].severity == "high"
+    assert [finding.id for finding in findings] == ["GHSA-1"]
+    assert findings[0].severity == "high"
 
 
 def test_fixed_versions_come_from_our_package_only(monkeypatch):
@@ -47,6 +47,6 @@ def test_fixed_versions_come_from_our_package_only(monkeypatch):
     }
     mock_osv(monkeypatch, [record])
 
-    vulnerabilities = osv.find_vulnerabilities([COMPONENT])[COMPONENT]
+    findings = osv.find_vulnerabilities([COMPONENT])[COMPONENT]
 
-    assert vulnerabilities[0].fixed_versions == ["1.0.1"]
+    assert findings[0].fixed_versions == ["1.0.1"]

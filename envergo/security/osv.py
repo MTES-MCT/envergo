@@ -13,7 +13,7 @@ MALICIOUS_PREFIX = "MAL-"
 
 
 @dataclass(frozen=True)
-class Vulnerability:
+class Finding:
     """One known flaw affecting a component."""
 
     id: str
@@ -23,21 +23,21 @@ class Vulnerability:
 
 
 def find_vulnerabilities(components):
-    """Map each vulnerable component to its vulnerabilities. Others are absent.
+    """Map each vulnerable component to its findings. Others are absent.
 
     Raises on any OSV failure: a partial result would make libraries look clean.
     """
     record_ids_by_component = query_record_ids(components)
     records_by_id = fetch_records(record_ids_by_component)
 
-    vulnerabilities_by_component = {}
+    findings_by_component = {}
     for component, record_ids in record_ids_by_component.items():
         records = [records_by_id[record_id] for record_id in record_ids]
         distinct_records = drop_aliases(records)
-        vulnerabilities_by_component[component] = [
-            to_vulnerability(component, record) for record in distinct_records
+        findings_by_component[component] = [
+            to_finding(component, record) for record in distinct_records
         ]
-    return vulnerabilities_by_component
+    return findings_by_component
 
 
 def query_record_ids(components):
@@ -116,9 +116,9 @@ def read_known_ids(record):
     return {record["id"], *record.get("aliases", [])}
 
 
-def to_vulnerability(component, record):
-    """Build a vulnerability from the parts of an OSV record the dashboard shows."""
-    return Vulnerability(
+def to_finding(component, record):
+    """Build a finding from the parts of an OSV record the dashboard shows."""
+    return Finding(
         id=record["id"],
         summary=record.get("summary", ""),
         severity=read_severity(record),
