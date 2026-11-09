@@ -198,14 +198,14 @@
     }
 
     /**
-     * During a switch, put the refusal deadline and the message stating it
-     * right under the decision. Otherwise, restore the server order.
+     * During a switch, put the message between the refusal deadline it states
+     * and the decision, rarely known at that point. Otherwise, restore the
+     * server order.
      */
     syncFieldOrder() {
       if (this.isAuthorizationSwitch) {
-        this.decisionGroup.after(this.refusalDeadlineGroup, this.applicantMessageGroup);
+        this.decisionGroup.before(this.applicantMessageGroup);
       } else {
-        this.decisionGroup.before(this.dueDateGroup, this.refusalDeadlineGroup);
         this.submitButton.before(this.applicantMessageGroup);
       }
     }

@@ -143,9 +143,9 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toHaveValue(/\[DATE LIMITE – NE PAS MODIFIER/);
     await expect(hint).toContainText('sera remplacée par');
 
-    // Under the decision come the deadline, then the message stating it.
-    await expect(page.locator('#form-group-decision + *')).toHaveId('form-group-refusal_deadline');
+    // The message follows the deadline it states, and comes before the decision.
     await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-applicant_message');
+    await expect(page.locator('#form-group-applicant_message + *')).toHaveId('form-group-decision');
   });
 
   test('closing and switching each bring their own message and hint', async ({ page }) => {
