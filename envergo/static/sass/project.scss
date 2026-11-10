@@ -963,6 +963,12 @@ div.leaflet-container {
     .leaflet-top.leaflet-left {
       top: 4.5em;
     }
+
+    &:has(.full-screen) {
+      position: fixed;
+      inset: 2vh;
+      z-index: 2500;
+    }
   }
 
   div.search-control {

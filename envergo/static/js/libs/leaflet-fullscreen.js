@@ -1,4 +1,10 @@
 class FullScreenControl extends L.Control {
+  /*
+  To yield full screen, adds a class .full-screen on map container.
+  Deals with button text (in French) and a basic focus trap.
+  If you need some element to stay focusable with keyboard while full screen is activated,
+  add class focusable-during-map-full-screen on itself or any of its ancestors.
+   */
   toggleFullScreen = function(map, fs_button, forced_toggle_value) {
     const resulting_fullscreen_state = map.getContainer().classList.toggle("full-screen", forced_toggle_value);
     setTimeout(() => {map.invalidateSize()}, 70);
@@ -31,7 +37,11 @@ class FullScreenControl extends L.Control {
         // full screen disabled: no need for focus trap
         return;
       }
-      if (!container.contains(e.relatedTarget)) {
+      if (!e.relatedTarget) {
+        // user has clicked somewhere outside the window
+        return;
+      }
+      if (!container.contains(e.relatedTarget) && !e.relatedTarget.closest(".focusable-during-map-full-screen")) {
         // losing focus: force it back on first focusable element in container
         container.querySelector("a, button").focus({focusVisible:true})
       }
