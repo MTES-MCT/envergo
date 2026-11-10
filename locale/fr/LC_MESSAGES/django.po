@@ -1238,3 +1238,43 @@ msgstr "Départements"
 #: envergo/users/models.py:80
 msgid "User"
 msgstr "Utilisateur"
+
+#: envergo/security/apps.py
+msgid "Security"
+msgstr "Sécurité"
+
+#: envergo/security/models.py
+msgid "Component"
+msgstr "Composant"
+
+#: envergo/security/models.py
+msgid "Ecosystem"
+msgstr "Écosystème"
+
+#: envergo/security/models.py
+msgid "Identifier"
+msgstr "Identifiant"
+
+#: envergo/security/models.py
+msgid "Summary"
+msgstr "Résumé"
+
+#: envergo/security/models.py
+msgid "Severity"
+msgstr "Sévérité"
+
+#: envergo/security/models.py
+msgid "Fixed in"
+msgstr "Corrigée en"
+
+#: envergo/security/models.py
+msgid "Detected at"
+msgstr "Détectée le"
+
+#: envergo/security/models.py
+msgid "Vulnerability"
+msgstr "Vulnérabilité"
+
+#: envergo/security/models.py
+msgid "Vulnerabilities"
+msgstr "Vulnérabilités"

@@ -25,6 +25,12 @@ def notify(msg, site: Literal["haie", "amenagement"]):
         if site == "haie"
         else settings.TCHAP_ROOM_ID_AMENAGEMENT
     )
+    send(room_id, msg)
+    mattermost.notify(msg, site)
+
+
+def send(room_id, msg):
+    """Send a message to a Tchap room, best-effort: failures are logged, never raised."""
     if (
         not room_id
         or not settings.TCHAP_HOMESERVER_URL
@@ -51,5 +57,3 @@ def notify(msg, site: Literal["haie", "amenagement"]):
             r.raise_for_status()
         except requests.exceptions.RequestException:
             logger.exception("Could not send the Tchap notification")
-
-    mattermost.notify(msg, site)

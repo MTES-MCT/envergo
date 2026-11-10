@@ -145,3 +145,48 @@ a#add_id_departments {
     background-color: var(--object-tools-hover-bg);
   }
 }
+
+.security-tag {
+  background: #e0e0e0;
+  border-radius: 4px;
+  color: #1e1e1e;
+  display: inline-block;
+  font-weight: bold;
+  padding: 0.1rem 0.5rem;
+}
+
+.severity-malicious {
+  background: #4a148c;
+  color: #fff;
+}
+
+.severity-critical {
+  background: #b00020;
+  color: #fff;
+}
+
+.severity-high {
+  background: #c43e00;
+  color: #fff;
+}
+
+.severity-moderate {
+  background: #f9c74f;
+}
+
+.severity-low {
+  background: #bbdefb;
+}
+
+.open-age-recent {
+  background: #c8e6c9;
+}
+
+.open-age-aging {
+  background: #f9c74f;
+}
+
+.open-age-overdue {
+  background: #b00020;
+  color: #fff;
+}
