@@ -7,7 +7,10 @@ from django.template.loader import render_to_string
 from django.urls import set_urlconf
 
 from envergo.moulinette.models import ConfigHaie
-from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueClient
+from envergo.petitions.demarche_numerique.client import (
+    DemarcheNumeriqueClient,
+    DemarcheNumeriqueError,
+)
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.models import PetitionProject
 from envergo.utils.tchap import notify
@@ -18,18 +21,23 @@ DOMAIN_BLACK_LIST = settings.DEMARCHE_NUMERIQUE["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
-    help = (
-        "Fetch freshly submitted dossier on « Démarche numérique » and notify admins."
-    )
+    help = "Sync the dossiers recently updated on « Démarche numérique »."
 
     def handle(self, *args, **options):
-        """get all the dossier updated in the last hour"""
+        """Sync the dossiers recently updated on « Démarche numérique »."""
 
         if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning("« Démarche numérique » is not enabled. Doing nothing.")
             return None
-        set_urlconf("config.urls_haie")
 
+        set_urlconf("config.urls_haie")
+        try:
+            self.synchronize_recent_dossiers()
+        finally:
+            set_urlconf(None)
+
+    def synchronize_recent_dossiers(self):
+        """Sync the recently updated dossiers of every démarche."""
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
         # The cron job is run every hour.
@@ -60,38 +68,49 @@ class Command(BaseCommand):
             if demarche_number in handled_demarches:
                 continue
 
-            ds_client = DemarcheNumeriqueClient()
-
-            demarche = ds_client.get_dossiers_for_demarche(
-                demarche_number, two_hours_ago_utc
-            )
-
-            if not demarche:
-                continue
-
-            for dossier_as_dict in demarche.dossiers:
-                dossier = Dossier.from_dict(dossier_as_dict)
-                dossier_number = dossier.number
-                project = (
-                    PetitionProject.objects.filter(
-                        demarche_numerique_dossier_number=dossier_number
-                    )
-                    .prefetch_related("simulations")
-                    .first()
+            try:
+                self.synchronize_demarche(
+                    demarche_number, project_url_id, two_hours_ago_utc
                 )
-                if project is None:
-                    self.handle_unlinked_dossier(
-                        dossier,
-                        demarche,
-                        project_url_id,
-                    )
-                    continue
-
-                project.synchronize_with_demarche_numerique(dossier_as_dict)
-
+            except DemarcheNumeriqueError:
+                # The client has already alerted the team.
+                logger.warning(
+                    "Could not fetch the dossiers of a « Démarche numérique » démarche",
+                    extra={"demarche_number": demarche_number},
+                )
             handled_demarches.append(demarche_number)
 
-        set_urlconf(None)
+    def synchronize_demarche(self, demarche_number, project_url_id, updated_since):
+        """Sync the démarche's dossiers updated since `updated_since`."""
+        ds_client = DemarcheNumeriqueClient()
+        demarche = ds_client.get_dossiers_for_demarche(demarche_number, updated_since)
+        if not demarche:
+            return
+
+        for dossier_as_dict in demarche.dossiers:
+            try:
+                self.handle_dossier(dossier_as_dict, demarche, project_url_id)
+            # Any failure: one dossier must not cost the others their sync.
+            except Exception:
+                logger.exception(
+                    "Could not sync a « Démarche numérique » dossier",
+                    extra={"dossier_number": dossier_as_dict.get("number")},
+                )
+
+    def handle_dossier(self, dossier_as_dict, demarche, project_url_id):
+        """Sync the dossier's project, or report the dossier when no project matches."""
+        dossier = Dossier.from_dict(dossier_as_dict)
+        project = (
+            PetitionProject.objects.filter(
+                demarche_numerique_dossier_number=dossier.number
+            )
+            .prefetch_related("simulations")
+            .first()
+        )
+        if project is None:
+            self.handle_unlinked_dossier(dossier, demarche, project_url_id)
+        else:
+            project.synchronize_with_demarche_numerique(dossier_as_dict)
 
     def handle_unlinked_dossier(self, dossier, demarche, project_url_id):
         """Handle a dossier that is not linked to any project in the database

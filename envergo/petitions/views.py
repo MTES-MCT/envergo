@@ -1995,10 +1995,8 @@ class PetitionProjectInstructorProcedureView(
                 self.update_ds_status(log)
         except DemarcheNumeriqueError as e:
             logger.error(e)
-            # The rollback restored the DB, but the in-memory project was
-            # already mutated by the status log post_save signal. Reload it,
-            # otherwise the re-render (which syncs and saves the project)
-            # would persist the aborted stage.
+            # The status log signal changed the in-memory project before the rollback.
+            # The page must show the restored stage.
             self.object.refresh_from_db()
             form.add_error(
                 None,
@@ -2301,12 +2299,8 @@ class PetitionProjectInstructorProcedureView(
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
 
 
-class PetitionProjectHedgeDataExport(DetailView):
-    """Export Hedge data in geopackage"""
-
-    model = PetitionProject
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
+class PetitionProjectHedgeDataExport(BasePetitionProjectInstructorView, DetailView):
+    """Export Hedge data in geopackage."""
 
     # Reporting codes, kept stable whatever the internal codes and display labels.
     exported_categories = {
@@ -2343,8 +2337,14 @@ class PetitionProjectHedgeDataExport(DetailView):
         },
     }
 
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
+    def get_context_data(self, **kwargs):
+        """Skip the instructor page context, which the file does not use.
+
+        It reads the dossier, runs the moulinette and may queue a flash message.
+        """
+        return kwargs
+
+    def render_to_response(self, context):
         project = self.object
 
         with tempfile.TemporaryDirectory() as tmpdirname:

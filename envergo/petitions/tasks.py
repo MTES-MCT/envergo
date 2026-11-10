@@ -1,6 +1,9 @@
 from datetime import date
 
 from django.conf import settings
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 from config.celery_app import app
 from envergo.petitions.models import PetitionProject, StatusLog
@@ -8,6 +11,15 @@ from envergo.petitions.services import (
     declaration_receipt_message,
     send_message_dossier_ds,
 )
+from envergo.petitions.templatetags.petitions import format_ds_number
+from envergo.utils.tchap import notify
+from envergo.utils.tools import get_base_url
+
+
+@app.task
+def send_team_alert_async(alert):
+    """Post the alert to the haie team channels."""
+    notify(alert, "haie")
 
 
 @app.task
@@ -51,3 +63,39 @@ def send_declaration_receipt_async(project_id, received_on_iso, due_date_iso):
         raise RuntimeError(
             f"DN declaration receipt failed for project {project.reference}"
         )
+
+
+@app.task
+def send_new_dossier_email_async(project_id):
+    """Tell the department's GUH mailbox about a new dossier, if it has one."""
+    project = (
+        PetitionProject.objects.select_related("department")
+        .defer("department__geometry")
+        .get(pk=project_id)
+    )
+    config = project.config
+    if not config or not config.guh_email:
+        return
+
+    dossier_number = format_ds_number(project.demarche_numerique_dossier_number)
+    base_url = get_base_url(settings.ENVERGO_HAIE_DOMAIN)
+    instruction_path = reverse(
+        "petition_project_summary",
+        kwargs={"reference": project.reference},
+        urlconf="config.urls_haie",
+    )
+    context = {
+        "dossier_number": dossier_number,
+        "instruction_url": f"{base_url}{instruction_path}",
+    }
+
+    txt_body = render_to_string("haie/emails/new_dossier.txt", context)
+    html_body = render_to_string("haie/emails/new_dossier.html", context)
+    send_mail(
+        f"Guichet unique haie − Nouveau dossier déposé − n°{dossier_number}",
+        txt_body,
+        html_message=html_body,
+        recipient_list=[config.guh_email],
+        from_email=settings.FROM_EMAIL["haie"]["default"],
+        fail_silently=False,
+    )
