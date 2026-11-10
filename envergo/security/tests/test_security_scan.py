@@ -16,6 +16,12 @@ NEW_FLAW = Finding("GHSA-new", "New flaw", "low", ["1.0.1"])
 CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", "low", [])
 
 
+@pytest.fixture(autouse=True)
+def scan_enabled(settings):
+    """Turn on the scan, which is off by default."""
+    settings.SECURITY_SCAN_ENABLED = True
+
+
 def run_scan(findings):
     """Run the command with OSV reporting these findings on `COMPONENT`."""
     findings_by_component = {COMPONENT: findings}

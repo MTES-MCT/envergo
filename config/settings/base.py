@@ -463,6 +463,9 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
 
 HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
+# cron.json runs on every app built from this repository: only production scans.
+SECURITY_SCAN_ENABLED = env.bool("SECURITY_SCAN_ENABLED", default=False)
+
 # Kill switch for the « Éviter / réduire » gate on the haie simulation form
 HAIE_EVITER_REDUIRE_ENABLED = env.bool(
     "DJANGO_HAIE_EVITER_REDUIRE_ENABLED", default=True

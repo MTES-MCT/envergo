@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import transaction
 
@@ -11,6 +12,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Scan the inventory. An OSV failure raises before the table is touched."""
+        if not settings.SECURITY_SCAN_ENABLED:
+            return
+
         components = read_components()
         findings_by_component = find_vulnerabilities(components)
         sync_open_vulnerabilities(findings_by_component)
