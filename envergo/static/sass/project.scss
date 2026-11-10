@@ -943,6 +943,28 @@ div.leaflet-container {
     }
   }
 
+  &.with-address-search-bar {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+
+    .fr-search-bar {
+      grid-area: 1 / 1 / 2 / 2; // 1st column and 1st row only
+      z-index: 2;
+      padding: 1em;
+      height: 5em;
+      overflow: visible;
+    }
+
+    #map {
+      grid-area: 1 / 1 / -1 / -1; // from top left to bottom right
+      z-index: 1;
+    }
+
+    .leaflet-top.leaflet-left {
+      top: 4.5em;
+    }
+  }
+
   div.search-control {
     position: absolute;
     top: 0;
