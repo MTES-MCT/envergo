@@ -9,7 +9,7 @@
   "dependencies": {
     "@gouvfr/dsfr": "^1.14.3",
     "accessible-autocomplete": "^3.0.1",
-    "dropzone": "^6.0.0-beta.2",
+    "dropzone": "^6.3.5",
     "geodesy": "^2.4.0",
     "htmx.org": "^2.0.10",
     "leaflet": "^1.9.4",
