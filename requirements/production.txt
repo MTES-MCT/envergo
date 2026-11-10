@@ -90,7 +90,7 @@ cligj==0.7.2
     #   fiona
 dacite==1.9.2
     # via -r base.txt
-django==5.2.18
+django==6.1.1
     # via
     #   -r base.txt
     #   django-allauth

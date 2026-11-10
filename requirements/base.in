@@ -1,4 +1,4 @@
-django<6
+django<7
 psycopg[binary]
 urllib3
 django-environ
