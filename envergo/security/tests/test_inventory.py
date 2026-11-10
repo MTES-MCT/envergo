@@ -1,10 +1,12 @@
-from envergo.security.inventory import read_components
+from envergo.security.inventory import Ecosystem, read_components
 
 
 def test_inventory_lists_locked_npm_packages():
     """npm packages include development ones, named without their install path."""
     npm_components = [
-        component for component in read_components() if component.ecosystem == "npm"
+        component
+        for component in read_components()
+        if component.ecosystem == Ecosystem.NPM
     ]
     names = {component.name for component in npm_components}
     development_package = "sass"

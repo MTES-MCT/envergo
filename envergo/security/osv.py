@@ -4,12 +4,23 @@ from dataclasses import dataclass
 from itertools import chain
 
 import requests
+from cvss import CVSS3, CVSS4
 from django.conf import settings
 from packaging.utils import canonicalize_name
 
 OSV_API_URL = "https://api.osv.dev/v1"
 GHSA_PREFIX = "GHSA-"
 MALICIOUS_PREFIX = "MAL-"
+SHORT_COMMIT_LENGTH = 12  # Long enough to stay unique in large repositories.
+
+# CVSS ratings in the dashboard's words. A zero score has the rating "None".
+CVSS_RATINGS = {
+    "Critical": "critical",
+    "High": "high",
+    "Medium": "moderate",
+    "Low": "low",
+    "None": "low",
+}
 
 
 @dataclass(frozen=True)
@@ -20,6 +31,59 @@ class Finding:
     summary: str
     severity: str  # An OSV rating in lowercase, "malicious" or "unknown".
     fixed_versions: list[str]
+
+
+class OsvRecord:
+    """One OSV vulnerability record. The only code that knows OSV's JSON layout."""
+
+    def __init__(self, data):
+        self.data = data
+
+    @property
+    def id(self):
+        """Return the record's own identifier, such as "GHSA-…" or "CVE-…"."""
+        return self.data["id"]
+
+    @property
+    def summary(self):
+        """Return the record's one-line summary, or an empty string."""
+        return self.data.get("summary", "")
+
+    @property
+    def identifiers(self):
+        """Return every name of the flaw: the record's own id and its aliases."""
+        return {self.id, *self.data.get("aliases", [])}
+
+    @property
+    def is_ghsa(self):
+        """Tell whether GitHub published the record. Such records carry a rating."""
+        return self.id.startswith(GHSA_PREFIX)
+
+    @property
+    def is_malicious(self):
+        """Tell whether the record reports a malicious release."""
+        return any(name.startswith(MALICIOUS_PREFIX) for name in self.identifiers)
+
+    @property
+    def github_rating(self):
+        """Return GitHub's rating word, such as "HIGH", or None."""
+        return self.data.get("database_specific", {}).get("severity")
+
+    @property
+    def cvss_vectors(self):
+        """Return the CVSS vectors by CVSS version, such as {"CVSS_V3": "CVSS:3.1/…"}."""
+        # OSV names this list "severity". It holds vectors, not ratings.
+        return {
+            score["type"]: score["score"] for score in self.data.get("severity", [])
+        }
+
+    def fixed_versions(self, component):
+        """Return the versions, or short commits, that fix this flaw for `component`."""
+        all_entries = self.data.get("affected", [])
+        our_entries = [entry for entry in all_entries if describes(entry, component)]
+        ranges = chain.from_iterable(entry.get("ranges", []) for entry in our_entries)
+        fixes = chain.from_iterable(read_range_fixes(r) for r in ranges)
+        return list(fixes)
 
 
 def find_vulnerabilities(components):
@@ -76,7 +140,8 @@ def fetch_records(record_ids_by_component):
 
 def fetch_record(record_id):
     """Return the full OSV record of a vulnerability."""
-    return call_osv("GET", f"vulns/{record_id}")
+    data = call_osv("GET", f"vulns/{record_id}")
+    return OsvRecord(data)
 
 
 def call_osv(method, path, payload=None):
@@ -93,58 +158,73 @@ def drop_aliases(records):
 
     GHSA records come first because they carry a severity rating.
     """
-    ghsa_records = [
-        record for record in records if record["id"].startswith(GHSA_PREFIX)
-    ]
-    other_records = [
-        record for record in records if not record["id"].startswith(GHSA_PREFIX)
-    ]
+    ghsa_records = [record for record in records if record.is_ghsa]
+    other_records = [record for record in records if not record.is_ghsa]
 
     kept_records = []
-    seen_ids = set()
+    seen_identifiers = set()
     for record in ghsa_records + other_records:
-        known_ids = read_known_ids(record)
-        if known_ids & seen_ids:
+        if record.identifiers & seen_identifiers:
             continue
-        seen_ids |= known_ids
+        seen_identifiers |= record.identifiers
         kept_records.append(record)
     return kept_records
-
-
-def read_known_ids(record):
-    """Return every identifier of a flaw: the record's own id and its aliases."""
-    return {record["id"], *record.get("aliases", [])}
 
 
 def to_finding(component, record):
     """Build a finding from the parts of an OSV record the dashboard shows."""
     return Finding(
-        id=record["id"],
-        summary=record.get("summary", ""),
-        severity=read_severity(record),
-        fixed_versions=read_fixed_versions(component, record),
+        id=record.id,
+        summary=record.summary,
+        severity=rate(record),
+        fixed_versions=record.fixed_versions(component),
     )
 
 
-def read_severity(record):
-    """Return the record's rating. Malicious releases have none, so they get their own."""
-    known_ids = read_known_ids(record)
-    if any(known_id.startswith(MALICIOUS_PREFIX) for known_id in known_ids):
+def rate(record):
+    """Return the dashboard's severity word for a record."""
+    if record.is_malicious:
         return "malicious"
 
-    rating = record.get("database_specific", {}).get("severity")
-    return rating.lower() if rating else "unknown"
+    if record.github_rating:
+        severity = record.github_rating.lower()
+    else:
+        severity = rate_cvss(record.cvss_vectors) or "unknown"
+    return severity
 
 
-def read_fixed_versions(component, record):
-    """Return the versions of `component` that fix the flaw described by `record`."""
-    all_entries = record.get("affected", [])
-    our_entries = [
-        entry for entry in all_entries if is_same_package(component, entry["package"])
-    ]
-    ranges = chain.from_iterable(entry.get("ranges", []) for entry in our_entries)
-    events = chain.from_iterable(version_range["events"] for version_range in ranges)
-    return [event["fixed"] for event in events if "fixed" in event]
+def rate_cvss(cvss_vectors):
+    """Turn the newest CVSS vector into a dashboard word, or return None."""
+    rating = None
+    if "CVSS_V4" in cvss_vectors:
+        rating = CVSS4(cvss_vectors["CVSS_V4"]).severity
+    elif "CVSS_V3" in cvss_vectors:
+        base_rating, _, _ = CVSS3(cvss_vectors["CVSS_V3"]).severities()
+        rating = base_rating
+    return CVSS_RATINGS.get(rating)
+
+
+def describes(affected_entry, component):
+    """Tell whether one `affected` entry of a record is about the scanned library.
+
+    Entries for C libraries name no package, only the repository of each commit range.
+    """
+    if "package" in affected_entry:
+        is_about_component = is_same_package(component, affected_entry["package"])
+    else:
+        ranges = affected_entry["ranges"]
+        repositories = [version_range.get("repo") for version_range in ranges]
+        is_about_component = component.name in repositories
+    return is_about_component
+
+
+def read_range_fixes(version_range):
+    """Return the versions fixing one range. Git ranges give short commits instead."""
+    events = version_range["events"]
+    fixes = [event["fixed"] for event in events if "fixed" in event]
+    if version_range["type"] == "GIT":
+        fixes = [commit[:SHORT_COMMIT_LENGTH] for commit in fixes]
+    return fixes
 
 
 def is_same_package(component, osv_package):

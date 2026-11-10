@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from envergo.security.inventory import Component
+from envergo.security.inventory import Component, Ecosystem
 
 # An unrated flaw ranks above moderate ones: having no rating does not make it minor.
 SEVERITY_RANKS = {
@@ -84,7 +84,8 @@ class Vulnerability(models.Model):
     @property
     def component(self):
         """Return the library this vulnerability affects."""
-        return Component(self.component_name, self.component_version, self.ecosystem)
+        ecosystem = Ecosystem(self.ecosystem)
+        return Component(self.component_name, self.component_version, ecosystem)
 
     def __str__(self):
         return (

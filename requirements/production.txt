@@ -88,6 +88,8 @@ cligj==0.7.2
     # via
     #   -r base.txt
     #   fiona
+cvss==3.6
+    # via -r base.txt
 dacite==1.9.2
     # via -r base.txt
 django==5.2.18

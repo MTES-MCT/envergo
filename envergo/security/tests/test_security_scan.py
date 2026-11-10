@@ -4,13 +4,13 @@ from unittest.mock import patch
 import pytest
 from django.core.management import call_command
 
-from envergo.security.inventory import Component
+from envergo.security.inventory import Component, Ecosystem
 from envergo.security.models import Vulnerability
 from envergo.security.osv import Finding
 
 pytestmark = pytest.mark.django_db
 
-COMPONENT = Component("some-package", "1.0.0", "PyPI")
+COMPONENT = Component("some-package", "1.0.0", Ecosystem.PYPI)
 KNOWN_FLAW = Finding("GHSA-known", "Known flaw", "high", [])
 NEW_FLAW = Finding("GHSA-new", "New flaw", "low", ["1.0.1"])
 CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", "low", [])

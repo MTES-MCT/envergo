@@ -3,12 +3,12 @@ from unittest.mock import patch
 import pytest
 from django.urls import reverse
 
-from envergo.security.inventory import Component
+from envergo.security.inventory import Component, Ecosystem
 from envergo.security.tests.factories import VulnerabilityFactory
 
 pytestmark = pytest.mark.django_db
 
-OTHER_COMPONENT = Component("other-package", "2.0.0", "npm")
+OTHER_COMPONENT = Component("other-package", "2.0.0", Ecosystem.NPM)
 
 
 def test_dashboard_sorts_by_severity_and_lists_other_components(admin_client, site):
