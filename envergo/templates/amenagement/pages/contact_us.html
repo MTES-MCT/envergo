@@ -1,5 +1,17 @@
 {% extends 'pages/contact_us.html' %}
 
-{% block contact-means %}
-  {% include 'amenagement/_contact_means.html' %}
+{% block article %}
+  <h1>Contactez-nous</h1>
+  <p>
+    Pour une question, une remarque, une suggestion, vous pouvez joindre l'équipe Envergo par mail :
+    <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
+  </p>
+  <p class="fr-text--bold fr-mt-4w">Vous avez une question sur un avis réglementaire ?</p>
+  <p>Vous pouvez réserver un créneau de 10 minutes pour échanger directement par téléphone.</p>
+
+  <a id="pick-appointment-btn"
+     class="fr-btn fr-btn--icon-left fr-icon-calendar-2-line fr-btn--tertiary fr-btn--sm fr-mt-2v"
+     href="https://calendly.com/envergo/echange-envergo-10min?utm_source=envergo"
+     target="_blank"
+     rel="noopener external">Choisir un créneau</a>
 {% endblock %}
