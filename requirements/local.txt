@@ -266,7 +266,7 @@ multidict==7.1.0
     # via
     #   -r base.txt
     #   yarl
-mypy==2.4.0
+mypy==2.4.1
     # via -r local.in
 mypy-extensions==1.1.0
     # via
