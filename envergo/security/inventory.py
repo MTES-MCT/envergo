@@ -106,6 +106,44 @@ RUNTIME_LIBRARIES = [
 ]
 
 
+@dataclass(frozen=True)
+class UnmonitoredComponent:
+    """A component the application runs but the scan cannot check."""
+
+    name: str
+    reason: str  # In French, as shown on the dashboard.
+
+
+# Components known to run but missing from the inventory, maintained by hand.
+# A component moves to RUNTIME_LIBRARIES once a source can match its version.
+UNMONITORED_COMPONENTS = [
+    UnmonitoredComponent(
+        "PROJ, système et embarqué par pyproj",
+        "aucune source de vulnérabilités ne le couvre",
+    ),
+    UnmonitoredComponent(
+        "libtiff, libwebp, Little CMS, libavif et zlib-ng, embarqués par Pillow",
+        "OSV n'a pas de données sur ces bibliothèques",
+    ),
+    UnmonitoredComponent(
+        "OpenSSL 1.1, curl, SQLite, libtiff, GEOS et PROJ, embarqués par fiona",
+        "fiona ne donne pas leurs versions",
+    ),
+    UnmonitoredComponent(
+        "curl, SQLite et libtiff, embarqués par pyproj",
+        "pyproj ne donne pas leurs versions",
+    ),
+    UnmonitoredComponent(
+        "OpenSSL, Kerberos et LDAP, embarqués par psycopg-binary",
+        "psycopg ne donne pas leurs versions",
+    ),
+    UnmonitoredComponent(
+        "client psql de la synchronisation nocturne des statistiques",
+        "présent uniquement pendant la tâche",
+    ),
+]
+
+
 def read_components():
     """Return every library the application runs on, once each."""
     python_components = read_python_components()

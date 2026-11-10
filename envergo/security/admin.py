@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from envergo.security.inventory import read_components
+from envergo.security.inventory import UNMONITORED_COMPONENTS, read_components
 from envergo.security.models import Vulnerability
 
 
@@ -38,5 +38,6 @@ class VulnerabilityAdmin(admin.ModelAdmin):
             "vulnerabilities": vulnerabilities,
             "vulnerable_components": vulnerable_components,
             "other_components": other_components,
+            "unmonitored_components": UNMONITORED_COMPONENTS,
         }
         return super().changelist_view(request, context)
