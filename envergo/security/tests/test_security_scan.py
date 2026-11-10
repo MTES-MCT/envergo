@@ -14,6 +14,8 @@ COMPONENT = Component("some-package", "1.0.0", "PyPI")
 KNOWN_FLAW = Finding("GHSA-known", "Known flaw", "high", [])
 NEW_FLAW = Finding("GHSA-new", "New flaw", "low", ["1.0.1"])
 CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", "low", [])
+HIGH_FLAW = Finding("GHSA-high", "High flaw", "high", [])
+LOW_FLAW = Finding("GHSA-low", "Low flaw", "low", [])
 
 
 @pytest.fixture(autouse=True)
@@ -52,3 +54,21 @@ def test_scan_syncs_open_vulnerabilities():
     updated_known_row = Vulnerability.objects.get(vulnerability_id=KNOWN_FLAW.id)
     assert updated_known_row.detected_at == known_row.detected_at
     assert updated_known_row.fixed_versions == ["1.0.2"]
+
+
+def test_scan_alerts_only_on_new_important_vulnerabilities(settings):
+    """Only a newly found high flaw posts, listing it alone with the open total."""
+    settings.TCHAP_ROOM_ID_SECURITY = "!security:example.org"
+
+    with patch("envergo.utils.tchap.send") as send:
+        run_scan([LOW_FLAW])
+        assert not send.called
+
+        run_scan([LOW_FLAW, HIGH_FLAW])
+
+    room_id, message = send.call_args.args
+    assert send.call_count == 1
+    assert room_id == "!security:example.org"
+    assert HIGH_FLAW.id in message
+    assert LOW_FLAW.id not in message
+    assert "Vulnérabilités ouvertes au total : 2" in message

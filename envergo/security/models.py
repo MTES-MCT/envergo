@@ -14,6 +14,9 @@ SEVERITY_RANKS = {
     "low": 5,
 }
 
+# A new vulnerability this severe or worse alerts the security Tchap room.
+ALERT_SEVERITY_RANK = SEVERITY_RANKS["high"]
+
 
 # Days a vulnerability can stay open before its age tag escalates.
 OPEN_DAYS_AGING = 3
@@ -51,6 +54,11 @@ class Vulnerability(models.Model):
     def severity_rank(self):
         """Return the position in the dashboard: lower means more urgent."""
         return SEVERITY_RANKS.get(self.severity, SEVERITY_RANKS["unknown"])
+
+    @property
+    def needs_alert(self):
+        """Tell whether this vulnerability, once found, calls for immediate action."""
+        return self.severity_rank <= ALERT_SEVERITY_RANK
 
     @property
     def open_days(self):
