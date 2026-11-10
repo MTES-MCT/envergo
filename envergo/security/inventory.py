@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from importlib.metadata import distributions
 
+import fiona
 from django.conf import settings
 from django.contrib.gis.gdal.libgdal import gdal_version
 from django.contrib.gis.geos.libgeos import geos_version_tuple
@@ -61,7 +62,13 @@ def read_geo_components():
 
     OSV has no entry for these C libraries as such. GDAL's flaws are filed under its
     PyPI package, whose versions follow the library, and GEOS's under its OSS-Fuzz project.
+    fiona bundles its own GDAL, separate from the system one Django loads.
     """
     gdal = gdal_version().decode()
+    fiona_gdal = fiona.__gdal_version__
     geos = ".".join(str(part) for part in geos_version_tuple())
-    return [Component("gdal", gdal, "PyPI"), Component("geos", geos, "OSS-Fuzz")]
+    return [
+        Component("gdal", gdal, "PyPI"),
+        Component("gdal", fiona_gdal, "PyPI"),
+        Component("geos", geos, "OSS-Fuzz"),
+    ]
