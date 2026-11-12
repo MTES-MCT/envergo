@@ -961,13 +961,24 @@ div.leaflet-container {
     }
 
     .leaflet-top.leaflet-left {
-      top: 4.5em;
+      top: 4.5em; // move top-left control under search bar
+    }
+
+    @media (width <= 62em) {
+      .fr-search-bar {
+        grid-column-end: -1; // full-width
+      }
+
+      .leaflet-top.leaflet-right {
+        top: 4.5em; // top-right control must be under search bar too
+      }
     }
 
     &:has(.full-screen) {
       position: fixed;
       inset: 2vh;
       z-index: 2500;
+      width: auto;
     }
   }
 
