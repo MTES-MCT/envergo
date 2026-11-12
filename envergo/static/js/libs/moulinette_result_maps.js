@@ -96,6 +96,11 @@
     const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
 
+    if (L.control.fullscreen !== undefined) {
+      const fullScreenControl = L.control.fullscreen()
+      fullScreenControl.addTo(map);
+    }
+
     // Display the project's coordinates as a maker
     if(!("displayMarkerAtCenter" in mapData ) || mapData["displayMarkerAtCenter"]) { // default to true
       const marker = L.marker(centerCoords);

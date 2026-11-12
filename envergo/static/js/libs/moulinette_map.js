@@ -87,6 +87,11 @@
     const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
 
+    if (L.control.fullscreen !== undefined) {
+      const fullscreenControl = L.control.fullscreen()
+      fullscreenControl.addTo(map);
+    }
+
     return map;
   };
 
