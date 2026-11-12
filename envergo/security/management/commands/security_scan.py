@@ -1,11 +1,13 @@
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import transaction
+from django.urls import reverse
 
 from envergo.security.inventory import read_components
 from envergo.security.models import Vulnerability
 from envergo.security.osv import find_vulnerabilities
 from envergo.utils import tchap
+from envergo.utils.tools import get_base_url
 
 
 class Command(BaseCommand):
@@ -71,5 +73,14 @@ def build_alert_message(urgent_vulnerabilities, open_count):
         f"Nouvelles vulnérabilités importantes : {len(urgent_vulnerabilities)}",
         *vulnerability_lines,
         f"Vulnérabilités ouvertes au total : {open_count}",
+        f"[Tableau de bord]({dashboard_url()})",
     ]
     return "\n".join(lines)
+
+
+def dashboard_url():
+    """Absolute URL of the admin page listing open vulnerabilities."""
+    path = reverse(
+        "admin:security_vulnerability_changelist", urlconf="config.urls_haie"
+    )
+    return f"{get_base_url(settings.ENVERGO_HAIE_DOMAIN)}{path}"

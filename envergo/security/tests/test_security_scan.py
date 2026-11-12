@@ -72,3 +72,15 @@ def test_scan_alerts_only_on_new_important_vulnerabilities(settings):
     assert HIGH_FLAW.id in message
     assert LOW_FLAW.id not in message
     assert "Vulnérabilités ouvertes au total : 2" in message
+
+
+def test_alert_links_to_dashboard(settings):
+    """The alert links to the dashboard on the haie domain."""
+    settings.ENVERGO_HAIE_DOMAIN = "haie.example.org"
+
+    with patch("envergo.utils.tchap.send") as send:
+        run_scan([HIGH_FLAW])
+
+    _room_id, message = send.call_args.args
+    assert "https://haie.example.org/" in message
+    assert "/security/vulnerability/" in message
