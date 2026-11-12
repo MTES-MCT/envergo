@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
-from pytest_django.asserts import assertTemplateUsed
+from pytest_django.asserts import assertTemplateNotUsed, assertTemplateUsed
 
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
@@ -336,7 +336,40 @@ def test_2150_avec_bv_small_but_big_bv(mock_get_catchment_area):
         make_amenagement_data(created_surface=1400, final_surface=1400)
     )
     moulinette.evaluate()
-    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis"
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_petit"
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result == "non_soumis"
+
+
+@patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
+def test_2150_avec_bv_small_and_medium_bv(mock_get_catchment_area):
+    mock_get_catchment_area.return_value = 8000
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1400, final_surface=1400)
+    )
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_petit"
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result == "non_soumis"
+
+
+@patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
+def test_2150_avec_bv_small_and_small_bv(mock_get_catchment_area):
+    mock_get_catchment_area.return_value = 0
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1400, final_surface=1400)
+    )
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_petit"
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result == "non_soumis"
+
+
+@patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
+def test_2150_avec_bv_small_with_pv_sol(mock_get_catchment_area):
+    mock_get_catchment_area.return_value = 12000
+    data = make_amenagement_data(created_surface=1400, final_surface=1400)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_pv_sol"
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
@@ -522,6 +555,20 @@ class TestLSETemplateWithoutICPE:
         assertTemplateUsed(
             res, "moulinette/loi_sur_leau/result_action_requise_sans_icpe.html"
         )
+
+
+@pytest.mark.usefixtures("lse_view_setup")
+@patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
+def test_2150_avec_bv_non_soumis_petit_template(mock_get_catchment_area, client):
+    mock_get_catchment_area.return_value = 12000
+    res = client.get(get_lse_url(surface=1400))
+    assert res.status_code == 200
+    assertTemplateUsed(
+        res, "moulinette/loi_sur_leau/ecoulement_avec_bv_non_soumis_petit.html"
+    )
+    assertTemplateNotUsed(
+        res, "moulinette/loi_sur_leau/ecoulement_avec_bv_non_soumis.html"
+    )
 
 
 @pytest.mark.usefixtures("lse_icpe_setup")
