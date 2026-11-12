@@ -8,18 +8,27 @@ from cvss import CVSS3, CVSS4
 from django.conf import settings
 from packaging.utils import canonicalize_name
 
+from envergo.security.models import Severity
+
 OSV_API_URL = "https://api.osv.dev/v1"
 GHSA_PREFIX = "GHSA-"
 MALICIOUS_PREFIX = "MAL-"
 SHORT_COMMIT_LENGTH = 12  # Long enough to stay unique in large repositories.
 
-# CVSS ratings in the dashboard's words. A zero score has the rating "None".
+GITHUB_RATINGS = {
+    "CRITICAL": Severity.CRITICAL,
+    "HIGH": Severity.HIGH,
+    "MODERATE": Severity.MODERATE,
+    "LOW": Severity.LOW,
+}
+
+# A zero CVSS score has the rating "None".
 CVSS_RATINGS = {
-    "Critical": "critical",
-    "High": "high",
-    "Medium": "moderate",
-    "Low": "low",
-    "None": "low",
+    "Critical": Severity.CRITICAL,
+    "High": Severity.HIGH,
+    "Medium": Severity.MODERATE,
+    "Low": Severity.LOW,
+    "None": Severity.LOW,
 }
 
 
@@ -29,7 +38,7 @@ class Finding:
 
     id: str
     summary: str
-    severity: str  # An OSV rating in lowercase, "malicious" or "unknown".
+    severity: Severity
     fixed_versions: list[str]
 
 
@@ -182,19 +191,18 @@ def to_finding(component, record):
 
 
 def rate(record):
-    """Return the dashboard's severity word for a record."""
+    """Return the severity of a record, preferring GitHub's rating to CVSS."""
     if record.is_malicious:
-        return "malicious"
+        return Severity.MALICIOUS
 
-    if record.github_rating:
-        severity = record.github_rating.lower()
-    else:
-        severity = rate_cvss(record.cvss_vectors) or "unknown"
+    severity = GITHUB_RATINGS.get(record.github_rating)
+    if severity is None:
+        severity = rate_cvss(record.cvss_vectors) or Severity.UNKNOWN
     return severity
 
 
 def rate_cvss(cvss_vectors):
-    """Turn the newest CVSS vector into a dashboard word, or return None."""
+    """Turn the newest CVSS vector into a severity, or return None."""
     rating = None
     if "CVSS_V4" in cvss_vectors:
         rating = CVSS4(cvss_vectors["CVSS_V4"]).severity

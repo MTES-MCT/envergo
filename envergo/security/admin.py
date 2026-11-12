@@ -24,8 +24,9 @@ class VulnerabilityAdmin(admin.ModelAdmin):
 
     def changelist_view(self, request, extra_context=None):
         """Add the dashboard's data to the admin's list page."""
-        rows = Vulnerability.objects.order_by("component_name", "vulnerability_id")
-        vulnerabilities = sorted(rows, key=lambda row: row.severity_rank)
+        vulnerabilities = Vulnerability.objects.order_by(
+            "severity", "component_name", "vulnerability_id"
+        )
         vulnerable_components = {
             vulnerability.component for vulnerability in vulnerabilities
         }

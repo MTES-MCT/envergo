@@ -5,17 +5,17 @@ import pytest
 from django.core.management import call_command
 
 from envergo.security.inventory import Component, Ecosystem
-from envergo.security.models import Vulnerability
+from envergo.security.models import Severity, Vulnerability
 from envergo.security.osv import Finding
 
 pytestmark = pytest.mark.django_db
 
 COMPONENT = Component("some-package", "1.0.0", Ecosystem.PYPI)
-KNOWN_FLAW = Finding("GHSA-known", "Known flaw", "high", [])
-NEW_FLAW = Finding("GHSA-new", "New flaw", "low", ["1.0.1"])
-CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", "low", [])
-HIGH_FLAW = Finding("GHSA-high", "High flaw", "high", [])
-LOW_FLAW = Finding("GHSA-low", "Low flaw", "low", [])
+KNOWN_FLAW = Finding("GHSA-known", "Known flaw", Severity.HIGH, [])
+NEW_FLAW = Finding("GHSA-new", "New flaw", Severity.LOW, ["1.0.1"])
+CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", Severity.LOW, [])
+HIGH_FLAW = Finding("GHSA-high", "High flaw", Severity.HIGH, [])
+LOW_FLAW = Finding("GHSA-low", "Low flaw", Severity.LOW, [])
 
 
 @pytest.fixture(autouse=True)
