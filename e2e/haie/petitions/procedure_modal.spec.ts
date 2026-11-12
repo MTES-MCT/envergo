@@ -37,10 +37,12 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(page.locator('#form-group-due_date')).toBeVisible();
     await expect(page.locator('#form-group-status_date')).toBeVisible();
     await expect(page.locator('#form-group-update_comment')).toBeVisible();
+    await expect(page.locator('#form-group-refusal_deadline')).toBeHidden();
 
     // Closing is immediate: those fields disappear.
     await stage.selectOption('closed');
     await expect(page.locator('#form-group-due_date')).toBeHidden();
+    await expect(page.locator('#form-group-refusal_deadline')).toBeHidden();
     await expect(page.locator('#form-group-status_date')).toBeHidden();
     await expect(page.locator('#form-group-update_comment')).toBeHidden();
   });
@@ -119,6 +121,85 @@ test.describe('Procedure modal — dynamic form', () => {
     // Leaving and re-entering the closing flow must not clobber the message.
     await stage.selectOption('preparing_decision');
     await stage.selectOption('closed');
+    await expect(message).toHaveValue(typed);
+  });
+
+  test('switching to authorisation asks for the refusal deadline and prefills the message', async ({ page }) => {
+    const refusalDeadline = page.locator('#id_refusal_deadline');
+    const message = page.locator('#id_applicant_message');
+    const hint = page.locator('#form-group-applicant_message .fr-hint-text');
+
+    await page.locator('#id_stage').selectOption('instruction_a');
+
+    await expect(refusalDeadline).toBeVisible();
+    await expect(refusalDeadline).toHaveValue('');
+    await expect(page.locator('#form-group-refusal_deadline > label')).toContainText(
+      'Date limite au-delà de laquelle le silence vaut refus'
+    );
+    // The server sets the stage due date from the refusal deadline.
+    await expect(page.locator('#form-group-due_date')).toBeHidden();
+    await expect(message).toBeVisible();
+    await expect(message).toHaveValue(/Requalification de votre projet/);
+    await expect(message).toHaveValue(/\[DATE LIMITE – NE PAS MODIFIER/);
+    await expect(hint).toContainText('automatiquement insérée');
+
+    // The message follows the deadline it states, and comes before the decision.
+    await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-applicant_message');
+    await expect(page.locator('#form-group-applicant_message + *')).toHaveId('form-group-decision');
+  });
+
+  test('closing and switching each bring their own message and hint', async ({ page }) => {
+    const stage = page.locator('#id_stage');
+    const message = page.locator('#id_applicant_message');
+    const hint = page.locator('#form-group-applicant_message .fr-hint-text');
+
+    await stage.selectOption('closed');
+    await page.locator('#id_decision').selectOption('dropped');
+    await expect(message).toHaveValue(/classé sans suite/i);
+
+    await stage.selectOption('instruction_a');
+    await expect(message).toHaveValue(/Requalification de votre projet/);
+    await expect(hint).toContainText('automatiquement insérée');
+
+    await stage.selectOption('closed');
+    await expect(message).toHaveValue(/classé sans suite/i);
+    await expect(hint).toContainText('Précisez les motifs de la décision');
+  });
+
+  test('a switch message edited by the instructor survives a stage change', async ({ page }) => {
+    const stage = page.locator('#id_stage');
+    const message = page.locator('#id_applicant_message');
+    const typed = 'Motif de la bascule rédigé par l’instructeur.';
+
+    await stage.selectOption('instruction_a');
+    await message.fill(typed);
+
+    // Leaving the switch restores the stage due date and the server order.
+    await stage.selectOption('preparing_decision');
+    await expect(page.locator('#form-group-due_date')).toBeVisible();
+    await expect(page.locator('#form-group-refusal_deadline')).toBeHidden();
+    await expect(page.locator('#form-group-due_date + *')).toHaveId('form-group-refusal_deadline');
+    await expect(page.locator('#form-group-refusal_deadline + *')).toHaveId('form-group-decision');
+    await expect(page.locator('#form-group-applicant_message + button[type="submit"]')).toHaveCount(1);
+
+    await stage.selectOption('instruction_a');
+    await expect(message).toHaveValue(typed);
+  });
+
+  test('a switch message survives a detour through closing', async ({ page }) => {
+    const stage = page.locator('#id_stage');
+    const message = page.locator('#id_applicant_message');
+    const typed = 'Motif de la bascule rédigé par l’instructeur.';
+
+    await stage.selectOption('instruction_a');
+    await message.fill(typed);
+
+    // The closing template takes over, then the switch draft comes back.
+    await stage.selectOption('closed');
+    await page.locator('#id_decision').selectOption('dropped');
+    await expect(message).toHaveValue(/classé sans suite/i);
+
+    await stage.selectOption('instruction_a');
     await expect(message).toHaveValue(typed);
   });
 });
