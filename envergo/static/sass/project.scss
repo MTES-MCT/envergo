@@ -287,7 +287,6 @@ nav#evaluation-summary {
 #triage-form {
   counter-reset: steps;
 
-  #form-group-address label,
   label.step {
     &::before {
       counter-increment: steps;
@@ -776,8 +775,8 @@ form#request-evaluation-form {
 /**
  * Autocomplete fields
  */
-.fr-label + div > .autocomplete__wrapper {
-  margin-top: 0.5rem;
+.fr-label.for-autocomplete-field + div {
+  flex-grow: 1;
 }
 
 .autocomplete__wrapper .autocomplete__input {
@@ -787,8 +786,8 @@ form#request-evaluation-form {
 
   --blend: var(--background-contrast-grey-blend);
 
-  background-color: var(--background-contrast-grey);
-  box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
+  background-color: #fff;
+  box-shadow: inset 0 -2px 0 0 var(--border-action-high-blue-france);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -796,6 +795,12 @@ form#request-evaluation-form {
   appearance: none;
   outline-offset: 2px;
   outline-width: 2px;
+}
+
+.autocomplete__wrapper .autocomplete__input::placeholder {
+  opacity: 1;
+  font-style: italic;
+  color: var(--text-mention-grey);
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
@@ -935,6 +940,45 @@ div.leaflet-container {
 
     .leaflet-controls-full-screen-toggle {
       background-image: url("/static/icons/fullscreen-exit.svg");
+    }
+  }
+
+  &.with-address-search-bar {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+
+    .fr-search-bar {
+      grid-area: 1 / 1 / 2 / 2; // 1st column and 1st row only
+      z-index: 2;
+      padding: 1em;
+      height: 5em;
+      overflow: visible;
+    }
+
+    #map {
+      grid-area: 1 / 1 / -1 / -1; // from top left to bottom right
+      z-index: 1;
+    }
+
+    .leaflet-top.leaflet-left {
+      top: 4.5em; // move top-left control under search bar
+    }
+
+    @media (width <= 62em) {
+      .fr-search-bar {
+        grid-column-end: -1; // full-width
+      }
+
+      .leaflet-top.leaflet-right {
+        top: 4.5em; // top-right control must be under search bar too
+      }
+    }
+
+    &:has(.full-screen) {
+      position: fixed;
+      inset: 2vh;
+      z-index: 2500;
+      width: auto;
     }
   }
 
@@ -2083,8 +2127,7 @@ main.geometricians {
 }
 
 .moulinette {
-  .fr-input,
-  .autocomplete__input {
+  .fr-input {
     --background-contrast-grey: var(--grey-975-100);
   }
 
