@@ -12,6 +12,7 @@ from envergo.moulinette.regulations import (
     MapPolygon,
     SelfDeclarationMixin,
 )
+from envergo.moulinette.regulations.evalenv import PhotovoltaiqueForm
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "#0000FF"
@@ -285,6 +286,13 @@ class ZoneInondable(
         return criterion_map
 
 
+def has_pv_sol(moulinette):
+    """Has pv panel on the ground and rubrique 30 is activated"""
+    form = PhotovoltaiqueForm(**moulinette.form_kwargs)
+    form.is_valid()
+    return form.is_activated() and form.cleaned_data.get("localisation") == "sol"
+
+
 class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP sans BV"
     slug = "ecoulement_sans_bv"
@@ -343,9 +351,7 @@ class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         else:
             final_surface = "lt_8000"
 
-        is_pv_sol = "non_pv_sol"
-        if self.moulinette.data.get("evalenv_rubrique_30-localisation") == "sol":
-            is_pv_sol = "pv_sol"
+        is_pv_sol = "pv_sol" if has_pv_sol(self.moulinette) else "non_pv_sol"
 
         return final_surface, is_pv_sol
 
@@ -368,6 +374,7 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         "non_soumis",
         "action_requise_pv_sol",
         "non_soumis_pv_sol",
+        "non_soumis_petit",
     ]
 
     CODE_MATRIX = {
@@ -405,17 +412,17 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
             "non_pv_sol",
         ): "action_requise_probable_1ha",
         ("existing_gte_10000", "gt_11000", "gt_1500", "non_pv_sol"): "action_requise",
-        ("existing_gte_10000", "gt_11000", "lt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "gt_11000", "lt_1500", "non_pv_sol"): "non_soumis_petit",
         ("existing_gte_10000", "gt_9000", "gt_1ha", "non_pv_sol"): "soumis_ou_pac",
         ("existing_gte_10000", "gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
         ("existing_gte_10000", "gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
         ("existing_gte_10000", "gt_9000", "gt_1500", "non_pv_sol"): "action_requise",
-        ("existing_gte_10000", "gt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "gt_9000", "lt_1500", "non_pv_sol"): "non_soumis_petit",
         ("existing_gte_10000", "lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
         ("existing_gte_10000", "lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
         ("existing_gte_10000", "lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
         ("existing_gte_10000", "lt_9000", "gt_1500", "non_pv_sol"): "non_soumis",
-        ("existing_gte_10000", "lt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_gte_10000", "lt_9000", "lt_1500", "non_pv_sol"): "non_soumis_petit",
         ("existing_lt_10000", "gt_11000", "gt_1ha", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "gt_11000", "gt_9000", "pv_sol"): "action_requise_pv_sol",
         ("existing_lt_10000", "gt_11000", "gt_7000", "pv_sol"): "non_soumis_pv_sol",
@@ -445,17 +452,17 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
             "non_pv_sol",
         ): "action_requise_probable_1ha",
         ("existing_lt_10000", "gt_11000", "gt_1500", "non_pv_sol"): "action_requise",
-        ("existing_lt_10000", "gt_11000", "lt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "gt_11000", "lt_1500", "non_pv_sol"): "non_soumis_petit",
         ("existing_lt_10000", "gt_9000", "gt_1ha", "non_pv_sol"): "soumis",
         ("existing_lt_10000", "gt_9000", "gt_9000", "non_pv_sol"): "action_requise",
         ("existing_lt_10000", "gt_9000", "gt_7000", "non_pv_sol"): "action_requise",
         ("existing_lt_10000", "gt_9000", "gt_1500", "non_pv_sol"): "action_requise",
-        ("existing_lt_10000", "gt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "gt_9000", "lt_1500", "non_pv_sol"): "non_soumis_petit",
         ("existing_lt_10000", "lt_9000", "gt_1ha", "non_pv_sol"): "soumis",
         ("existing_lt_10000", "lt_9000", "gt_9000", "non_pv_sol"): "non_soumis",
         ("existing_lt_10000", "lt_9000", "gt_7000", "non_pv_sol"): "non_soumis",
         ("existing_lt_10000", "lt_9000", "gt_1500", "non_pv_sol"): "non_soumis",
-        ("existing_lt_10000", "lt_9000", "lt_1500", "non_pv_sol"): "non_soumis",
+        ("existing_lt_10000", "lt_9000", "lt_1500", "non_pv_sol"): "non_soumis_petit",
     }
 
     RESULT_MATRIX = {
@@ -465,6 +472,7 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         "action_requise_pv_sol": RESULTS.action_requise,
         "action_requise": RESULTS.action_requise,
         "non_soumis_pv_sol": RESULTS.non_soumis,
+        "non_soumis_petit": RESULTS.non_soumis,
         "non_soumis": RESULTS.non_soumis,
     }
 
@@ -511,9 +519,7 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         else:
             catchment_surface = "lt_9000"
 
-        is_pv_sol = "non_pv_sol"
-        if self.moulinette.data.get("evalenv_rubrique_30-localisation") == "sol":
-            is_pv_sol = "pv_sol"
+        is_pv_sol = "pv_sol" if has_pv_sol(self.moulinette) else "non_pv_sol"
 
         existing_surface = "existing_lt_10000"
         if self.catalog["existing_surface"] >= 10000:
