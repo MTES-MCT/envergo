@@ -27,6 +27,10 @@
     {
       "command": "0 4 * * * bash bin/sync_stats_db.sh",
       "size": "M"
+    },
+    {
+      "command": "0 5 * * * python manage.py security_scan",
+      "size": "M"
     }
   ]
 }

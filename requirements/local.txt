@@ -105,6 +105,8 @@ coverage==7.16.2
     #   django-coverage-plugin
 cssbeautifier==2.0.3
     # via djlint
+cvss==3.6
+    # via -r base.txt
 dacite==1.9.2
     # via -r base.txt
 decorator==5.3.1
