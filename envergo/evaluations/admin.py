@@ -185,6 +185,11 @@ class EvaluationAdmin(admin.ModelAdmin):
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
     ):
+        # The add form has no object, hence no versions to check
+        if obj is None:
+            return super().render_change_form(
+                request, context, add, change, form_url, obj
+            )
 
         # Add warning message if the published version is outdated
         latest_version = obj.versions.first()
