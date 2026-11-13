@@ -13,13 +13,11 @@ from django.utils.formats import date_format
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 
-from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.forms import DisplayChoiceField
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
-    STAGES,
     PetitionProject,
     Simulation,
     StatusLog,
@@ -662,12 +660,12 @@ class ResumeProcessingForm(forms.Form):
     )
 
     def __init__(
-        self, *args, category=None, stage=None, original_due_date=None, **kwargs
+        self, *args, is_declaration_instruction=False, original_due_date=None, **kwargs
     ):
         """Drop the due date field when the suspension has no original due date."""
         super().__init__(*args, **kwargs)
 
-        if category == HedgeCategory.ru and stage == STAGES.instruction_d:
+        if is_declaration_instruction:
             self.fields["due_date"].widget.attrs["readonly"] = True
             self.fields["due_date"].label = mark_safe(
                 f"{self.fields['due_date'].label}"

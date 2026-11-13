@@ -1919,8 +1919,7 @@ class PetitionProjectInstructorProcedureView(
                 original_due_date=(
                     suspension.original_due_date if suspension else None
                 ),
-                category=self.object.category,
-                stage=self.object.stage,
+                is_declaration_instruction=self.object.is_declaration_instruction(),
             )
         return None
 
@@ -1984,8 +1983,7 @@ class PetitionProjectInstructorProcedureView(
                     original_due_date=(
                         suspension.original_due_date if suspension else None
                     ),
-                    category=self.object.category,
-                    stage=self.object.stage,
+                    is_declaration_instruction=self.object.is_declaration_instruction(),
                 ),
             )
         return context
@@ -2270,9 +2268,7 @@ class PetitionProjectInstructorProcedureView(
 
         # Receiving the documents restarts the delay, so a new receipt goes out.
         # ResumeProcessingForm requires the due date here, so it is never None.
-        sends_receipt = (
-            project.is_regime_unique() and project.stage == STAGES.instruction_d
-        )
+        sends_receipt = project.is_declaration_instruction()
         if sends_receipt:
             project.schedule_declaration_receipt(info_receipt_date, new_due_date)
 
