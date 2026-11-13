@@ -283,6 +283,7 @@ def test_2150_small():
 
 def test_2150_with_pv_sol_big():
     data = make_amenagement_data(created_surface=10000, final_surface=10000)
+    data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
     moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
@@ -294,10 +295,20 @@ def test_2150_with_pv_sol_big():
 
 def test_2150_with_pv_sol_small():
     data = make_amenagement_data(created_surface=8000, final_surface=8000)
+    data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
     moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "non_soumis_pv_sol"
+
+
+def test_2150_with_pv_sol_not_activated():
+    """The PV localisation is ignored when the rubrique 30 form is not activated."""
+    data = make_amenagement_data(created_surface=10000, final_surface=10000)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis"
 
 
 # ---------------------------------------------------------------------------
@@ -366,6 +377,7 @@ def test_2150_avec_bv_small_and_small_bv(mock_get_catchment_area):
 def test_2150_avec_bv_small_with_pv_sol(mock_get_catchment_area):
     mock_get_catchment_area.return_value = 12000
     data = make_amenagement_data(created_surface=1400, final_surface=1400)
+    data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
     moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
@@ -384,6 +396,7 @@ def test_2150_avec_bv_medium_but_big_bv(mock_get_catchment_area):
 
 def test_2150_avec_bv_with_pv_sol_big():
     data = make_amenagement_data(created_surface=10000, final_surface=10000)
+    data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
     moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
@@ -395,10 +408,20 @@ def test_2150_avec_bv_with_pv_sol_big():
 
 def test_2150_avec_bv_with_pv_sol_small():
     data = make_amenagement_data(created_surface=8000, final_surface=8000)
+    data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
     moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_pv_sol"
+
+
+def test_2150_avec_bv_with_pv_sol_not_activated():
+    """The PV localisation is ignored when the rubrique 30 form is not activated."""
+    data = make_amenagement_data(created_surface=10000, final_surface=10000)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "soumis"
 
 
 # ---------------------------------------------------------------------------
