@@ -1909,7 +1909,9 @@ class PetitionProjectInstructorProcedureView(
                 can_switch_to_authorization=self.object.can_switch_to_authorization,
             )
         if action == "request_info":
-            return RequestAdditionalInfoForm(self.request.POST)
+            return RequestAdditionalInfoForm(
+                self.request.POST, petition_project=self.object
+            )
         if action == "resume_processing":
             suspension = self.object.latest_suspension
             return ResumeProcessingForm(
