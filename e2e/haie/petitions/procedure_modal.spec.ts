@@ -124,7 +124,7 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(message).toHaveValue(typed);
   });
 
-  test('switching to authorisation asks for the refusal deadline and prefills the message', async ({ page }) => {
+  test('switching to authorization asks for the refusal deadline and prefills the message', async ({ page }) => {
     const refusalDeadline = page.locator('#id_refusal_deadline');
     const message = page.locator('#id_applicant_message');
     const hint = page.locator('#form-group-applicant_message .fr-hint-text');
