@@ -377,6 +377,7 @@ class TestDemarcheNumeriqueSync:
         assert status_log is not None
         # Due date is the deposit date + 2 months (instruction period)
         assert status_log.due_date == date(2025, 3, 29)
+        assert status_log.agreement_deadline == date(2025, 3, 29)
 
         project.refresh_from_db()
         assert project.stage == "instruction_d"
@@ -406,6 +407,7 @@ class TestDemarcheNumeriqueSync:
         ).first()
         assert status_log is not None
         assert status_log.due_date is None
+        assert status_log.agreement_deadline is None
 
         project.refresh_from_db()
         assert project.stage == "instruction_h"

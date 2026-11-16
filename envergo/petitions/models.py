@@ -497,17 +497,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """Move the project into instruction, as « Démarche numérique » did on dépôt."""
         if self.is_regime_unique():
             instruction_stage = STAGES.instruction_d
-            due_date = declaration_due_date(submission_date)
+            agreement_deadline = declaration_due_date(submission_date)
         else:
             instruction_stage = STAGES.instruction_h
-            due_date = None
+            agreement_deadline = None
 
         StatusLog.objects.create(
             petition_project=self,
             type=LOG_TYPES.status_change,
             stage=instruction_stage,
             update_comment="Dépôt du dossier : passage automatique en instruction.",
-            due_date=due_date,
+            agreement_deadline=agreement_deadline,
+            # The instruction is due when silence turns into an agreement.
+            due_date=agreement_deadline,
         )
 
     def schedule_submission_alert(self, fetched_dossier: dict):
@@ -943,6 +945,12 @@ class StatusLog(models.Model):
     )
     due_date = models.DateField(
         "Date de prochaine échéance",
+        null=True,
+        blank=True,
+    )
+    agreement_deadline = models.DateField(
+        "Date à laquelle le silence vaut accord",
+        help_text="Sans réponse de l’administration à cette date, l’accord tacite est acquis.",
         null=True,
         blank=True,
     )
