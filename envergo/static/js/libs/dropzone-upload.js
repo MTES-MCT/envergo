@@ -1,12 +1,6 @@
 /**
  * Shared setup for the dropzone upload forms.
  *
- * Both the public "demande d'avis" wizard and the admin map import batch page
- * upload one file per request to a django view returning {id} or {error}, and
- * delete with `DELETE ?file_id=`. Everything they have in common lives here;
- * each page only provides what actually differs (field name, accepted types,
- * timeout) plus an optional `onInit` hook for page specific behaviour.
- *
  * Expects in the page: a form, a `#dropzone-previews` container and a
  * `#uploaded-files` json_script holding the already uploaded files.
  */
