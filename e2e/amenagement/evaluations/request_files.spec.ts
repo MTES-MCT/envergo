@@ -82,7 +82,7 @@ test('User can remove an uploaded file', async ({ page }) => {
   await upload;
   await expect(page.locator('.dz-preview')).toHaveCount(1);
 
-  // The delete url must carry file_id alongside the existing ?clef= param
+  // The obfuscation key lives in the session, so it must never leak into the url
   const deletion = page.waitForResponse(
     (res) => res.request().method() === 'DELETE' && res.url().includes('file_id=')
   );
@@ -90,7 +90,7 @@ test('User can remove an uploaded file', async ({ page }) => {
   const response = await deletion;
 
   expect(response.status()).toBe(200);
-  expect(response.url()).toContain('clef=');
+  expect(response.url()).not.toContain('clef=');
   await expect(page.locator('.dz-preview')).toHaveCount(0);
 });
 

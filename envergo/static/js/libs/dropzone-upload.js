@@ -13,11 +13,8 @@ window.initDropzoneUpload = function (options) {
   var csrfInput = form.querySelector('input[name=csrfmiddlewaretoken]');
   var headers = csrfInput ? { 'X-CSRFToken': csrfInput.value } : { 'X-CSRFToken': CSRF_TOKEN };
 
-  // The upload url may already carry a query string (the avis one is
-  // obfuscated with ?clef=<uuid>), so the separator cannot be hardcoded.
   var deleteUrl = function (fileId) {
-    var separator = options.uploadUrl.indexOf('?') === -1 ? '?' : '&';
-    return options.uploadUrl + separator + 'file_id=' + fileId;
+    return options.uploadUrl + '?file_id=' + fileId;
   };
 
   form.classList.add('dropzone');
