@@ -48,6 +48,7 @@ from django.views.generic import (
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.list import MultipleObjectMixin
 from fiona import Feature, Geometry, Properties
+from fiona.crs import CRS
 from pyproj import Transformer
 from shapely.ops import transform
 
@@ -70,6 +71,8 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
+    AUTHORIZATION_REASON_PLACEHOLDER,
+    REFUSAL_DEADLINE_PLACEHOLDER,
     HruInvitationForm,
     PetitionProjectForm,
     PetitionProjectInstructorMessageForm,
@@ -98,6 +101,8 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
+    declared_commune,
+    declared_dn_field,
     get_context_from_dn,
     get_field_data_from_dn_dossier,
     get_messages_and_senders_from_ds,
@@ -105,11 +110,11 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarche_numerique_status,
 )
-from envergo.petitions.tasks import send_closing_message_async
+from envergo.petitions.tasks import send_applicant_message_async
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
-from envergo.utils.tools import generate_key
+from envergo.utils.tools import generate_key, get_base_url
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
@@ -1901,6 +1906,7 @@ class PetitionProjectInstructorProcedureView(
                     self.object.config and self.object.config.single_procedure
                 ),
                 is_paused=self.object.is_additional_information_requested,
+                can_switch_to_authorization=self.object.can_switch_to_authorization,
             )
         if action == "request_info":
             return RequestAdditionalInfoForm(self.request.POST)
@@ -1951,8 +1957,14 @@ class PetitionProjectInstructorProcedureView(
                 single_procedure=bool(
                     self.object.config and self.object.config.single_procedure
                 ),
+                can_switch_to_authorization=self.object.can_switch_to_authorization,
             ),
         )
+        if self.object.can_switch_to_authorization:
+            context["authorization_reason_placeholder"] = (
+                AUTHORIZATION_REASON_PLACEHOLDER
+            )
+            context["refusal_deadline_placeholder"] = REFUSAL_DEADLINE_PLACEHOLDER
 
         # Request info / resume forms are only relevant during instruction phases.
         if self.object.has_change_permission(
@@ -1986,16 +1998,17 @@ class PetitionProjectInstructorProcedureView(
         previous_decision = self.object.decision
         is_closing = log.stage == STAGES.closed
 
+        if form.is_authorization_switch:
+            self.append_applicant_message_notice(log)
+
         try:
             with transaction.atomic():
                 log.save()
                 self.update_ds_status(log)
         except DemarcheNumeriqueError as e:
             logger.error(e)
-            # The rollback restored the DB, but the in-memory project was
-            # already mutated by the status log post_save signal. Reload it,
-            # otherwise the re-render (which syncs and saves the project)
-            # would persist the aborted stage.
+            # The status log signal changed the in-memory project before the rollback.
+            # The page must show the restored stage.
             self.object.refresh_from_db()
             form.add_error(
                 None,
@@ -2011,8 +2024,11 @@ class PetitionProjectInstructorProcedureView(
             )
 
         if is_closing:
-            self.schedule_closing_message(log)
+            self.schedule_applicant_message(log)
             self.notify_closing_succeeded(form)
+        elif form.is_authorization_switch:
+            self.schedule_applicant_message(log)
+            self.notify_authorization_switch_succeeded()
 
         self.schedule_state_change_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
@@ -2029,29 +2045,51 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             update_demarche_numerique_status(self.object, new_ds_status)
 
-    def schedule_closing_message(self, log):
-        """Queue the closing message to the applicant for after commit.
+    def append_applicant_message_notice(self, log):
+        """Append to the log's internal comment that the applicant gets a message."""
+        notice = "Message envoyé au demandeur."
+        if log.update_comment:
+            log.update_comment = f"{log.update_comment}\n{notice}"
+        else:
+            log.update_comment = notice
 
-        Sent asynchronously so a DN messagerie failure never blocks the
-        closing; the task retry policy handles transient errors.
+    def schedule_applicant_message(self, log):
+        """Queue the log's applicant message for after commit.
+
+        Sent asynchronously, so a DN messagerie failure never blocks the state
+        change. The task retry policy handles transient errors.
         """
-        transaction.on_commit(lambda: send_closing_message_async.delay(log.pk))
+        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def notify_closing_succeeded(self, form):
-        """Flash a success message pointing the instructor to the messagerie."""
-        messagerie_url = reverse(
-            "petition_project_instructor_messagerie_view",
-            args=[self.object.reference],
-        )
         attachment_phrase = (
             ", accompagné du document de décision,"
             if form.cleaned_data["prefectural_order"]
             else ""
         )
+        self.notify_applicant_message_scheduled(
+            "Le dossier a été clos.", attachment_phrase
+        )
+
+    def notify_authorization_switch_succeeded(self):
+        self.notify_applicant_message_scheduled(
+            "Le dossier est passé en instruction autorisation."
+        )
+
+    def notify_applicant_message_scheduled(self, outcome, attachment_phrase=""):
+        """Flash the state change outcome and a link to the messagerie.
+
+        `outcome` is a full sentence. `attachment_phrase` is an inserted clause
+        carrying its own commas, or empty.
+        """
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[self.object.reference],
+        )
         messages.success(
             self.request,
             f"""
-            Le dossier a été clos. Le message au demandeur{attachment_phrase} sera envoyé
+            {outcome} Le message au demandeur{attachment_phrase} sera envoyé
             dans quelques instants.
             <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
             """,
@@ -2298,47 +2336,59 @@ class PetitionProjectInstructorProcedureView(
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
 
 
-class PetitionProjectHedgeDataExport(DetailView):
-    """Export Hedge data in geopackage"""
+class PetitionProjectHedgeDataExport(BasePetitionProjectInstructorView, DetailView):
+    """Export Hedge data in geopackage."""
 
-    model = PetitionProject
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
+    # Reporting codes, kept stable whatever the internal codes and display labels.
+    exported_categories = {
+        HedgeCategory.ru: "regime_unique",
+        HedgeCategory.hru: "hors_regime_unique",
+        HedgeCategory.l350_3: "alignement_bord_voie",
+    }
 
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-        data = self.object.hedge_data
+    # Columns of the `haies` table, in file order. Rows must have exactly these keys.
+    hedge_schema = {
+        "geometry": "LineString",
+        "properties": {
+            "id": "str",
+            "type": "str",
+            "type_haie": "str",
+            "sur_parcelle_pac": "str",
+            "category": "str",
+            "longueur_m": "float",
+            "bord_voie": "str",
+            "proximite_mare": "str",
+            "vieil_arbre": "str",
+            "ripisylve": "str",
+            "sous_ligne_electrique": "str",
+            "parc_jardin": "str",
+            "bord_batiment": "str",
+            "place_publique": "str",
+            "mode_destruction": "str",
+            "numero_dossier": "int",
+            "lien_dossier": "str",
+            "numero_pacage": "str",
+            "beneficiaire": "str",
+            "commune": "str",
+            "date_depot_dossier": "date",
+        },
+    }
+
+    def get_context_data(self, **kwargs):
+        """Skip the instructor page context, which the file does not use.
+
+        It reads the dossier, runs the moulinette and may queue a flash message.
+        """
+        return kwargs
+
+    def render_to_response(self, context):
+        project = self.object
 
         with tempfile.TemporaryDirectory() as tmpdirname:
-            template_file = settings.GUH_DATA_EXPORT_TEMPLATE
             export_file = os.path.join(tmpdirname, "output.gpkg")
-            shutil.copy(template_file, export_file)
-
-            # Fiona cannot append to an existing file
-            # By opening a layer in write mode, it will squash the layer data
-            # Luckily for us, that's the behaviour we want
-            with fiona.open(template_file) as src, fiona.open(
-                export_file, "w", layer="haies", **src.meta
-            ) as dst:
-                for hedge in data.hedges():
-                    transformer = Transformer.from_crs(
-                        EPSG_WGS84, EPSG_LAMB93, always_xy=True
-                    )
-                    geometry = Geometry.from_dict(
-                        transform(transformer.transform, hedge.geometry)
-                    )
-                    properties = Properties.from_dict(
-                        {
-                            "id": hedge.id,
-                            "type": (
-                                "A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE"
-                            ),
-                            "type_haie": hedge.hedge_type,
-                            "sur_parcelle_pac": "oui" if hedge.is_on_pac else "non",
-                        }
-                    )
-                    feat = Feature(geometry=geometry, properties=properties)
-                    dst.write(feat)
+            # The template carries the QGIS style of the `haies` table.
+            shutil.copy(settings.GUH_DATA_EXPORT_TEMPLATE, export_file)
+            self.write_hedges(export_file, project)
 
             # Create a response with the GeoPackage file
             export_filename = "haies_dossier.gpkg"
@@ -2352,6 +2402,107 @@ class PetitionProjectHedgeDataExport(DetailView):
                 )
 
         return response
+
+    def write_hedges(self, path, project):
+        """Replace the `haies` table with the project hedges, in Lambert-93.
+
+        The file's other tables stay untouched.
+        """
+        dossier_properties = self.export_dossier_properties(project)
+        hedge_type_labels = self.export_hedge_type_labels(project)
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+
+        with fiona.open(
+            path,
+            "w",
+            driver="GPKG",
+            layer="haies",
+            crs=CRS.from_epsg(EPSG_LAMB93),
+            schema=self.hedge_schema,
+        ) as dst:
+            for hedge in project.hedge_data.hedges():
+                lambert_line = transform(transformer.transform, hedge.geometry)
+                geometry = Geometry.from_dict(lambert_line)
+                hedge_properties = self.export_hedge_properties(
+                    hedge, hedge_type_labels
+                )
+                properties = Properties.from_dict(
+                    {**hedge_properties, **dossier_properties}
+                )
+                dst.write(Feature(geometry=geometry, properties=properties))
+
+    def export_hedge_type_labels(self, project) -> dict[str, str]:
+        """Map hedge type codes to their labels in the project's configuration."""
+        single_procedure = project.config.single_procedure
+        hedge_types = HedgeTypeFactory.build_from_context(
+            single_procedure=single_procedure
+        )
+        return dict(hedge_types.choices)
+
+    def export_hedge_properties(self, hedge, hedge_type_labels: dict[str, str]) -> dict:
+        """Build the hedge columns of one exported row.
+
+        A hedge type code missing from `hedge_type_labels` exports as is.
+        """
+        hedge_type_label = hedge_type_labels.get(hedge.hedge_type, hedge.hedge_type)
+
+        def yesno(val):
+            if val is None:
+                return None
+
+            return "oui" if val else "non"
+
+        # Legacy fields
+        # Only exported fields before the RU was activated
+        props = (
+            ("id", hedge.id),
+            ("type", ("A_PLANTER" if hedge.type == TO_PLANT else "A_DETRUIRE")),
+            ("type_haie", hedge_type_label),
+            ("sur_parcelle_pac", yesno(hedge.is_on_pac)),
+        )
+
+        # Additional hedge fields
+        props += (
+            ("category", self.exported_categories[hedge.category]),
+            ("longueur_m", round(hedge.length, 3)),
+            ("bord_voie", yesno(hedge.prop("bord_voie"))),
+            ("proximite_mare", yesno(hedge.prop("proximite_mare"))),
+            ("vieil_arbre", yesno(hedge.prop("vieil_arbre"))),
+            ("ripisylve", yesno(hedge.prop("ripisylve"))),
+            ("sous_ligne_electrique", yesno(hedge.prop("sous_ligne_electrique"))),
+            ("parc_jardin", yesno(hedge.prop("parc_jardin"))),
+            ("bord_batiment", yesno(hedge.prop("bord_batiment"))),
+            ("place_publique", yesno(hedge.prop("place_publique"))),
+            ("mode_destruction", hedge.prop("mode_destruction")),
+        )
+
+        return dict(props)
+
+    def export_dossier_properties(self, project) -> dict:
+        """Build the dossier columns, identical on every exported row.
+
+        Missing values are None, so they export as NULL rather than "".
+        """
+        summary_path = reverse(
+            "petition_project_summary",
+            args=[project.reference],
+        )
+        base_url = get_base_url(settings.ENVERGO_HAIE_DOMAIN)
+
+        dossier = project.prefetched_dossier
+        applicant = dossier.applicant_name if dossier else None
+
+        date_depot = project.demarche_numerique_date_depot
+        filed_on = timezone.localdate(date_depot) if date_depot else None
+
+        return {
+            "numero_dossier": project.demarche_numerique_dossier_number,
+            "lien_dossier": f"{base_url}{summary_path}",
+            "numero_pacage": declared_dn_field(project, "pacage") or None,
+            "beneficiaire": applicant,
+            "commune": declared_commune(project) or None,
+            "date_depot_dossier": filed_on,
+        }
 
 
 class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):

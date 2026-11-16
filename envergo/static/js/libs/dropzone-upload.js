@@ -17,7 +17,7 @@ window.initDropzoneUpload = function (options) {
 
   // The csrf cookie is httponly, so the token has to be read from the form.
   var csrfInput = form.querySelector('input[name=csrfmiddlewaretoken]');
-  var headers = csrfInput ? { 'X-CSRFToken': csrfInput.value } : null;
+  var headers = csrfInput ? { 'X-CSRFToken': csrfInput.value } : { 'X-CSRFToken': CSRF_TOKEN };
 
   // The upload url may already carry a query string (the avis one is
   // obfuscated with ?clef=<uuid>), so the separator cannot be hardcoded.
@@ -100,7 +100,7 @@ window.initDropzoneUpload = function (options) {
           // Remove the file from the server
           fetch(deleteUrl(file.id), {
             method: 'DELETE',
-            headers: headers || {},
+            headers: headers || { 'X-CSRFToken': CSRF_TOKEN },
           })
             .then(function (response) {
               if (!response.ok) {

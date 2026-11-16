@@ -253,6 +253,15 @@ def test_2150_big():
         make_amenagement_data(created_surface=10000, final_surface=10000)
     )
     moulinette.evaluate()
+    assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis"
+
+
+def test_2150_big_existing():
+    """An existing surface above 1 ha should already have a Loi sur l'eau file."""
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=2000, final_surface=12000)
+    )
+    moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis_ou_pac"
 
 
@@ -393,7 +402,8 @@ def test_moulinette_returns_actions_to_take():
 # ---------------------------------------------------------------------------
 
 LSE_BASE_PARAMS = (
-    "created_surface={surface}&final_surface={surface}&lng=-1.54394&lat=47.21381"
+    "created_surface={created_surface}&final_surface={final_surface}"
+    "&lng=-1.54394&lat=47.21381"
 )
 
 
@@ -483,8 +493,11 @@ class TestLSEActionsWithICPE:
 # ---------------------------------------------------------------------------
 
 
-def _get_lse_url(surface, icpe_projet=None, icpe_regime=None):
-    params = LSE_BASE_PARAMS.format(surface=surface)
+def get_lse_url(surface, icpe_projet=None, icpe_regime=None, existing_surface=0):
+    """Build the result url of a project whose final surface is `surface`."""
+    params = LSE_BASE_PARAMS.format(
+        created_surface=surface - existing_surface, final_surface=surface
+    )
     if icpe_projet and icpe_regime:
         params += (
             f"&evalenv_icpe-activate=on"
@@ -499,12 +512,12 @@ class TestLSETemplateWithoutICPE:
     """When ICPE criterion does not exist, LSE uses the sans_icpe templates."""
 
     def test_soumis_sans_icpe(self, client):
-        res = client.get(_get_lse_url(surface=1500))
+        res = client.get(get_lse_url(surface=1500))
         assert res.status_code == 200
         assertTemplateUsed(res, "moulinette/loi_sur_leau/result_soumis_sans_icpe.html")
 
     def test_action_requise_sans_icpe(self, client):
-        res = client.get(_get_lse_url(surface=800))
+        res = client.get(get_lse_url(surface=800))
         assert res.status_code == 200
         assertTemplateUsed(
             res, "moulinette/loi_sur_leau/result_action_requise_sans_icpe.html"
@@ -517,14 +530,14 @@ class TestLSETemplateWithICPENonSoumis:
 
     def test_soumis_with_icpe_non_soumis(self, client):
         res = client.get(
-            _get_lse_url(surface=1500, icpe_projet="aucun", icpe_regime="aucun")
+            get_lse_url(surface=1500, icpe_projet="aucun", icpe_regime="aucun")
         )
         assert res.status_code == 200
         assertTemplateUsed(res, "moulinette/loi_sur_leau/result_soumis_sans_icpe.html")
 
     def test_action_requise_with_icpe_non_soumis(self, client):
         res = client.get(
-            _get_lse_url(surface=800, icpe_projet="aucun", icpe_regime="aucun")
+            get_lse_url(surface=800, icpe_projet="aucun", icpe_regime="aucun")
         )
         assert res.status_code == 200
         assertTemplateUsed(
@@ -538,7 +551,7 @@ class TestLSETemplateWithICPEActive:
 
     def test_soumis_with_icpe_cas_par_cas(self, client):
         res = client.get(
-            _get_lse_url(
+            get_lse_url(
                 surface=1500, icpe_projet="creation", icpe_regime="enregistrement"
             )
         )
@@ -547,7 +560,7 @@ class TestLSETemplateWithICPEActive:
 
     def test_action_requise_with_icpe_cas_par_cas(self, client):
         res = client.get(
-            _get_lse_url(
+            get_lse_url(
                 surface=800, icpe_projet="creation", icpe_regime="enregistrement"
             )
         )
@@ -563,9 +576,7 @@ class TestLSETemplateWithICPEActive:
         involves an ICPE, so LSE must use the avec_icpe template.
         """
         res = client.get(
-            _get_lse_url(
-                surface=1500, icpe_projet="creation", icpe_regime="declaration"
-            )
+            get_lse_url(surface=1500, icpe_projet="creation", icpe_regime="declaration")
         )
         assert res.status_code == 200
         assertTemplateUsed(res, "moulinette/loi_sur_leau/result_soumis_avec_icpe.html")
@@ -574,12 +585,15 @@ class TestLSETemplateWithICPEActive:
         """ICPE declaration/creation → result_code non_soumis_declaration_creation.
 
         The LSE regulation result is soumis_ou_pac (driven by EcoulementSansBV
-        at surface >= 10000). The project involves an ICPE, so the avec_icpe
-        template must be used.
+        with an existing surface >= 10000). The project involves an ICPE, so the
+        avec_icpe template must be used.
         """
         res = client.get(
-            _get_lse_url(
-                surface=10000, icpe_projet="creation", icpe_regime="declaration"
+            get_lse_url(
+                surface=12000,
+                existing_surface=10000,
+                icpe_projet="creation",
+                icpe_regime="declaration",
             )
         )
         assert res.status_code == 200
@@ -590,7 +604,7 @@ class TestLSETemplateWithICPEActive:
     def test_action_requise_with_icpe_declaration_creation(self, client):
         """ICPE declaration/creation → has_icpe is True for action_requise too."""
         res = client.get(
-            _get_lse_url(surface=800, icpe_projet="creation", icpe_regime="declaration")
+            get_lse_url(surface=800, icpe_projet="creation", icpe_regime="declaration")
         )
         assert res.status_code == 200
         assertTemplateUsed(
@@ -604,7 +618,7 @@ class TestLSETemplateWithICPEActive:
         an ICPE, so has_icpe must be True.
         """
         res = client.get(
-            _get_lse_url(
+            get_lse_url(
                 surface=1500, icpe_projet="modif_avec_pac", icpe_regime="declaration"
             )
         )
@@ -613,7 +627,7 @@ class TestLSETemplateWithICPEActive:
 
     def test_action_requise_with_icpe_a_verifier(self, client):
         res = client.get(
-            _get_lse_url(surface=800, icpe_projet="creation", icpe_regime="inconnu")
+            get_lse_url(surface=800, icpe_projet="creation", icpe_regime="inconnu")
         )
         assert res.status_code == 200
         assertTemplateUsed(

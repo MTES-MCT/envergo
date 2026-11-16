@@ -358,6 +358,11 @@ class Evaluation(models.Model):
             for criterion in all_criteria
         )
 
+    @property
+    def published_version(self):
+        """The published version, or None if the avis is not published."""
+        return next((v for v in self.versions.all() if v.published), None)
+
     def unpublish(self):
         """Unpublish the evaluation."""
 
@@ -511,9 +516,7 @@ def build_regulatory_notice_context(evaluation, moulinette, request):
         "show_transmission_card": show_transmission_card,
         "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
         "required_actions_interdit": list(moulinette.all_required_actions_interdit()),
-        "published_version": next(
-            (v for v in evaluation.versions.all() if v.published), None
-        ),
+        "published_version": evaluation.published_version,
     }
 
 
@@ -668,6 +671,10 @@ def additional_data_file_format(instance, filename):
     return f"requests/{instance.reference}{extension}"
 
 
+# Links already sent by email carry this query parameter. Renaming it breaks them.
+OBFUSCATION_KEY_PARAM = "clef"
+
+
 class Request(models.Model):
     """An evaluation request by a project owner."""
 
@@ -808,16 +815,13 @@ class Request(models.Model):
         return evaluation
 
     @property
-    def upload_files_url(self):
-        """return the obfuscated url to the upload files UI"""
-        url = reverse("request_eval_wizard_step_3", args=[self.reference])
-        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+    def secret_upload_files_url(self):
+        """Return the step 3 url, which grants write access to the request's files.
 
-    @property
-    def upload_files_api_url(self):
-        """return the obfuscated url to the upload files API"""
-        url = reverse("request_eval_wizard_step_3_upload", args=[self.reference])
-        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+        Send it to the requester only.
+        """
+        url = reverse("request_eval_wizard_step_3", args=[self.reference])
+        return f"{url}?{urlencode({OBFUSCATION_KEY_PARAM: self.obfuscation_key})}"
 
 
 def request_file_format(instance, filename):

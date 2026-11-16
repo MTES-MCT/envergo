@@ -63,6 +63,19 @@ def test_request_files(mock_post):
 
 
 @patch("envergo.evaluations.tasks.post")
+def test_request_secret_key_is_not_posted(mock_post):
+    """The secret key granting document edition never reaches make.com."""
+
+    evalreq = RequestFactory()
+    post_evalreq_to_automation(evalreq.id, "envergo.local")
+
+    mock_post.assert_called_once()
+    payload = mock_post.call_args.kwargs["json"]
+    assert "obfuscation_key" not in payload
+    assert str(evalreq.obfuscation_key) not in str(payload)
+
+
+@patch("envergo.evaluations.tasks.post")
 def test_request_history_first_request_several_emails(mock_post):
     """The request history is added for every email."""
 

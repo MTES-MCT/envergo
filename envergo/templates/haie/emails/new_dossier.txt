@@ -1,0 +1,10 @@
+Bonjour,
+
+Un nouveau dossier a été déposé sur le portail du guichet unique de la haie.
+
+Numéro de dossier : {{ dossier_number }}
+
+Pour examiner la demande :
+{{ instruction_url }}
+
+{% include 'haie/emails/_email_signature.txt' %}

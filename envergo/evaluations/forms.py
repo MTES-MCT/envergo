@@ -3,7 +3,9 @@ from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.urls import reverse_lazy
 from django.utils.safestring import mark_safe
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -194,7 +196,8 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         label=_("Send evaluation to project sponsor"),
         initial=True,
         required=False,
-        help_text="""
+        help_text=format_lazy(
+            """
         <span class="if-checked">
             S’il est concerné par une réglementation environnementale, Envergo enverra l'avis réglementaire au porteur
             de projet et l’accompagnera dans la compréhension de ses obligations. Vous serez en copie de l’avis.
@@ -202,8 +205,11 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         <span class="if-unchecked">
             Le porteur de projet ne recevra pas l'avis réglementaire. Il pourrait alors manquer à ses obligations au
             titre de la réglementation environnementale.
+            <a href="{}" target="_blank">Voir des exemples d’avis réglementaires</a>.
         </span>
         """,
+            reverse_lazy("faq_examples"),
+        ),
     )
 
     class Meta:
