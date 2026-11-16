@@ -54,14 +54,14 @@ def make_gpkg(tmp_path, filename):
     return path
 
 
-def make_batch(csv_content, filenames=()):
+def make_batch(csv_content, filenames=()) -> MapImportBatch:
     batch = MapImportBatchFactory(csv_file__data=csv_content.encode())
     for filename in filenames:
         MapImportBatchFileFactory(batch=batch, name=filename, file__filename=filename)
     return batch
 
 
-def make_batch_form(upload):
+def make_batch_form(upload) -> MapImportBatchForm:
     """Build the admin form the way the ModelAdmin does (it injects the model)."""
     form_class = modelform_factory(
         MapImportBatch, form=MapImportBatchForm, fields=["name", "csv_file"]
@@ -218,6 +218,8 @@ def test_parse_batch_row_normalises_values():
 
 def test_batch_with_missing_columns_fails_without_touching_maps(notify_mock):
     batch = make_batch("reference,file\nr1,a.gpkg\n")
+    assert Map.objects.count() == 0
+
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
@@ -272,6 +274,8 @@ def test_batch_updates_existing_map():
     )
     csv_content = f"{CSV_HEADER}\nr1,a.gpkg,Nouveau nom,Nouvelle description,44\n"
     batch = make_batch(csv_content, filenames=["a.gpkg"])
+    assert Map.objects.count() == 1
+
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.success
@@ -340,6 +344,8 @@ def test_batch_metadata_only_update_requires_existing_map():
     """A blank file cell cannot create a map: a file is required for that."""
     csv_content = f"{CSV_HEADER}\nr1,,Nouveau nom,Nouvelle description,44\n"
     batch = make_batch(csv_content)
+    assert Map.objects.count() == 0
+
     queued = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
@@ -434,6 +440,8 @@ def test_batch_with_invalid_csv_imports_nothing():
         "r1,a.gpkg,Carte A bis,Description bis,56,\n"
     )
     batch = make_batch(csv_content, filenames=["a.gpkg"])
+    assert Map.objects.count() == 0
+
     processed = run_task(batch)
 
     assert batch.import_status == STATUSES.failure
@@ -467,6 +475,7 @@ def test_batch_is_failed_when_a_map_processing_crashes(notify_mock, settings):
     )
     batch = make_batch(csv_content, filenames=["a.gpkg", "b.gpkg"])
     settings.CARTO_NOTIFICATION_HANDLERS = ["carto"]
+    assert Map.objects.filter(reference="r2").count() == 0
 
     with (
         patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
@@ -537,6 +546,7 @@ def test_import_batch_row_records_errors_on_its_line_and_skips_the_row():
         "description": "Description A",
         "departments": "44",
     }
+    assert Map.objects.count() == 0
 
     import_batch_row.apply(args=(batch.id, 2, raw_row)).get()
 
@@ -684,6 +694,7 @@ class TestUploadView:
         batch = MapImportBatchFactory()
         fake = tmp_path / "carte.gpkg"
         fake.write_bytes(b"this is definitely not a geopackage")
+        assert MapImportBatchFile.objects.count() == 0
 
         with open(fake, "rb") as f:
             res = admin_client.post(self.upload_url(batch), {"map_files": f})
@@ -697,6 +708,7 @@ class TestUploadView:
         fake = tmp_path / "carte.gpkg"
         with zipfile.ZipFile(fake, "w") as z:
             z.writestr("carte.shp", "x" * 200)
+        assert MapImportBatchFile.objects.count() == 0
 
         with open(fake, "rb") as f:
             res = admin_client.post(self.upload_url(batch), {"map_files": f})
@@ -708,12 +720,14 @@ class TestUploadView:
         batch = MapImportBatchFactory()
         MapImportBatchFileFactory(batch=batch, name="carte.gpkg")
         gpkg = make_gpkg(tmp_path, "carte.gpkg")
+        assert MapImportBatchFile.objects.count() == 1
 
         with open(gpkg, "rb") as f:
             res = admin_client.post(self.upload_url(batch), {"map_files": f})
 
         assert res.status_code == 400
         assert "déjà été téléversé" in res.json()["error"]
+        assert MapImportBatchFile.objects.count() == 1
 
     def test_upload_retry_of_completed_upload_returns_existing_file(
         self, admin_client, tmp_path
@@ -723,6 +737,8 @@ class TestUploadView:
         gpkg = make_gpkg(tmp_path, "carte.gpkg")
         with open(gpkg, "rb") as f:
             first = admin_client.post(self.upload_url(batch), {"map_files": f})
+        assert MapImportBatchFile.objects.filter(batch=batch).count() == 1
+
         with open(gpkg, "rb") as f:
             retry = admin_client.post(self.upload_url(batch), {"map_files": f})
 
@@ -734,6 +750,7 @@ class TestUploadView:
         batch = MapImportBatchFactory()
         bad = tmp_path / "carte.txt"
         bad.write_bytes(b"nope")
+        assert MapImportBatchFile.objects.count() == 0
 
         with open(bad, "rb") as f:
             res = admin_client.post(self.upload_url(batch), {"map_files": f})

@@ -82,7 +82,7 @@ test('User can remove an uploaded file', async ({ page }) => {
   await upload;
   await expect(page.locator('.dz-preview')).toHaveCount(1);
 
-  // The delete url carries file_id, and never the secret clef
+  // The obfuscation key lives in the session, so it must never leak into the url
   const deletion = page.waitForResponse(
     (res) => res.request().method() === 'DELETE' && res.url().includes('file_id=')
   );

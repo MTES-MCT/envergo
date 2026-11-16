@@ -1,12 +1,6 @@
 /**
  * Shared setup for the dropzone upload forms.
  *
- * Both the public "demande d'avis" wizard and the admin map import batch page
- * upload one file per request to a django view returning {id} or {error}, and
- * delete with `DELETE ?file_id=`. Everything they have in common lives here;
- * each page only provides what actually differs (field name, accepted types,
- * timeout) plus an optional `onInit` hook for page specific behaviour.
- *
  * Expects in the page: a form, a `#dropzone-previews` container and a
  * `#uploaded-files` json_script holding the already uploaded files.
  */
@@ -17,12 +11,10 @@ window.initDropzoneUpload = function (options) {
 
   // The csrf cookie is httponly, so the token has to be read from the form.
   var csrfInput = form.querySelector('input[name=csrfmiddlewaretoken]');
-  var headers = csrfInput ? { 'X-CSRFToken': csrfInput.value } : null;
+  var headers = csrfInput ? { 'X-CSRFToken': csrfInput.value } : { 'X-CSRFToken': CSRF_TOKEN };
 
-  // The upload url may carry a query string, so the separator cannot be hardcoded.
   var deleteUrl = function (fileId) {
-    var separator = options.uploadUrl.indexOf('?') === -1 ? '?' : '&';
-    return options.uploadUrl + separator + 'file_id=' + fileId;
+    return options.uploadUrl + '?file_id=' + fileId;
   };
 
   form.classList.add('dropzone');
@@ -99,7 +91,7 @@ window.initDropzoneUpload = function (options) {
           // Remove the file from the server
           fetch(deleteUrl(file.id), {
             method: 'DELETE',
-            headers: headers || {},
+            headers: headers || { 'X-CSRFToken': CSRF_TOKEN },
           })
             .then(function (response) {
               if (!response.ok) {
