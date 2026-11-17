@@ -1,3 +1,4 @@
+from datetime import date
 from unittest.mock import Mock, patch
 
 import pytest
@@ -8,12 +9,13 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory, override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.petitions.admin import PetitionProjectAdmin
+from envergo.petitions.admin import AuthorizationSwitchFilter, PetitionProjectAdmin
 from envergo.petitions.models import PetitionProject
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
     GET_DOSSIER_FAKE_RESPONSE,
     PetitionProjectFactory,
+    StatusLogFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -127,3 +129,26 @@ def test_save_model_synchronizes_project_with_dn(
     assert project.demarche_numerique_last_sync is not None
     assert project.demarche_numerique_raw_dossier is not None
     mock_post.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [("yes", ["switched"]), ("no", ["declaration"])],
+)
+def test_authorization_switch_filter(value, expected, project_admin, admin_request):
+    """Admins find the dossiers that switched to authorisation by their refusal deadline."""
+    projects = {
+        "switched": PetitionProjectFactory(),
+        "declaration": PetitionProjectFactory(),
+    }
+    StatusLogFactory(
+        petition_project=projects["switched"], refusal_deadline=date(2099, 9, 21)
+    )
+    StatusLogFactory(petition_project=projects["switched"])
+    list_filter = AuthorizationSwitchFilter(
+        admin_request, {"authorization_switch": [value]}, PetitionProject, project_admin
+    )
+
+    filtered = list_filter.queryset(admin_request, PetitionProject.objects.all())
+
+    assert set(filtered) == {projects[name] for name in expected}

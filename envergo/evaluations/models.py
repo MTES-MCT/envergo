@@ -131,38 +131,43 @@ EVAL_RESULTS = Choices(
 
 
 class TagStyleEnum(Enum):
-    Green = 1
-    Grey = 2
-    Yellow = 3
-    LightRed = 4
-    Orange = 5
-    StrongRed = 6
+    """Colour of a result badge, named by what the result means for the project.
+
+    Each value is the CSS class that colours the badge.
+    """
+
+    Favorable = "fr-badge--success"
+    Neutral = ""  # The default DSFR badge is grey.
+    ToVerify = "fr-badge--green-tilleul-verveine"
+    Subject = "fr-badge--pink-tuile"
+    Conditional = "fr-badge--yellow-moutarde"
+    Forbidden = "result-badge--forbidden"
 
 
 TAG_STYLES_BY_RESULT = {
-    RESULTS.soumis: TagStyleEnum.LightRed,
-    RESULTS.soumis_ou_pac: TagStyleEnum.LightRed,
-    RESULTS.action_requise: TagStyleEnum.Yellow,
-    RESULTS.non_soumis: TagStyleEnum.Green,
-    RESULTS.non_disponible: TagStyleEnum.Grey,
-    RESULTS.non_applicable: TagStyleEnum.Grey,
-    RESULTS.cas_par_cas: TagStyleEnum.Orange,
-    RESULTS.cas_par_cas_icpe: TagStyleEnum.Orange,
-    RESULTS.systematique: TagStyleEnum.LightRed,
-    RESULTS.non_concerne: TagStyleEnum.Green,
-    RESULTS.a_verifier: TagStyleEnum.Yellow,
-    RESULTS.iota_a_verifier: TagStyleEnum.Yellow,
-    RESULTS.interdit: TagStyleEnum.StrongRed,
-    RESULTS.non_active: TagStyleEnum.Grey,
-    RESULTS.derogation_inventaire: TagStyleEnum.LightRed,
-    RESULTS.derogation_simplifiee: TagStyleEnum.LightRed,
-    RESULTS.dispense: TagStyleEnum.Green,
-    RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
-    RESULTS.soumis_declaration: TagStyleEnum.LightRed,
-    RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
-    "declaration": TagStyleEnum.Green,
-    "autorisation": TagStyleEnum.LightRed,
-    "hors_regime_unique": TagStyleEnum.Grey,
+    RESULTS.soumis: TagStyleEnum.Subject,
+    RESULTS.soumis_ou_pac: TagStyleEnum.Subject,
+    RESULTS.action_requise: TagStyleEnum.ToVerify,
+    RESULTS.non_soumis: TagStyleEnum.Favorable,
+    RESULTS.non_disponible: TagStyleEnum.Neutral,
+    RESULTS.non_applicable: TagStyleEnum.Neutral,
+    RESULTS.cas_par_cas: TagStyleEnum.Conditional,
+    RESULTS.cas_par_cas_icpe: TagStyleEnum.Conditional,
+    RESULTS.systematique: TagStyleEnum.Subject,
+    RESULTS.non_concerne: TagStyleEnum.Favorable,
+    RESULTS.a_verifier: TagStyleEnum.ToVerify,
+    RESULTS.iota_a_verifier: TagStyleEnum.ToVerify,
+    RESULTS.interdit: TagStyleEnum.Forbidden,
+    RESULTS.non_active: TagStyleEnum.Neutral,
+    RESULTS.derogation_inventaire: TagStyleEnum.Subject,
+    RESULTS.derogation_simplifiee: TagStyleEnum.Subject,
+    RESULTS.dispense: TagStyleEnum.Favorable,
+    RESULTS.dispense_sous_condition: TagStyleEnum.Conditional,
+    RESULTS.soumis_declaration: TagStyleEnum.Subject,
+    RESULTS.soumis_autorisation: TagStyleEnum.Subject,
+    "declaration": TagStyleEnum.Favorable,
+    "autorisation": TagStyleEnum.Subject,
+    "hors_regime_unique": TagStyleEnum.Neutral,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
