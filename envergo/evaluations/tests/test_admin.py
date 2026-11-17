@@ -309,6 +309,12 @@ def test_evaluation_email_unpublished_blocks_sending(
     assert "Aucune version de cet avis n'est publiée" in str(message_list[0])
 
 
+def test_evaluation_add_page_renders(admin_client):
+    url = reverse("admin:evaluations_evaluation_add")
+    res = admin_client.get(url)
+    assert res.status_code == 200
+
+
 def test_display_published_version_message(evaluation, admin_client, admin_user):
     # GIVEN an evaluation with a version not published
     url = reverse("admin:evaluations_evaluation_change", args=[evaluation.pk])
