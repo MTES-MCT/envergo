@@ -93,6 +93,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    SilenceRule,
     Simulation,
     StatusLog,
 )
@@ -2251,11 +2252,17 @@ class PetitionProjectInstructorProcedureView(
         info_receipt_date = form.cleaned_data["info_receipt_date"]
         new_due_date = form.cleaned_data.get("due_date")
 
+        # Receiving the documents restarts the déclaration delay.
+        # ResumeProcessingForm requires the due date here, so it is never None.
+        restarts_declaration_delay = project.silence_rule == SilenceRule.AGREEMENT
+        agreement_deadline = new_due_date if restarts_declaration_delay else None
+
         StatusLog.objects.create(
             petition_project=project,
             type=LOG_TYPES.resumption,
             info_receipt_date=info_receipt_date,
             due_date=new_due_date,
+            agreement_deadline=agreement_deadline,
             created_by=self.request.user,
             update_comment=(
                 "Reprise de l’instruction, date d'échéance ajustée."
@@ -2266,12 +2273,8 @@ class PetitionProjectInstructorProcedureView(
             decision=project.decision,
         )
 
-        # Receiving the documents restarts the delay, so a new receipt goes out.
-        # ResumeProcessingForm requires the due date here, so it is never None.
-        sends_receipt = (
-            project.is_regime_unique() and project.stage == STAGES.instruction_d
-        )
-        if sends_receipt:
+        # The applicant gets a new receipt stating the restarted deadline.
+        if restarts_declaration_delay:
             project.schedule_declaration_receipt(info_receipt_date, new_due_date)
 
         self.notify_resume_processing(project)
@@ -2285,7 +2288,7 @@ class PetitionProjectInstructorProcedureView(
             **get_matomo_tags(self.request),
         )
 
-        self.notify_resume_succeeded(sends_receipt)
+        self.notify_resume_succeeded(restarts_declaration_delay)
         return HttpResponseRedirect(self.get_success_url())
 
     def notify_resume_succeeded(self, sends_receipt):

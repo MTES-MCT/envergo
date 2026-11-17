@@ -2734,7 +2734,7 @@ def test_petition_project_resume_instruction(
 def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     mock_receipt_task, client, haie_coordinator_44, site
 ):
-    """Receiving the documents restarts the delay, so a new receipt goes out."""
+    """Receiving the documents restarts the agreement deadline, and a new receipt states it."""
 
     client.force_login(haie_coordinator_44)
 
@@ -2769,6 +2769,7 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     content = res.content.decode()
     assert "L'instruction du dossier a repris." in content
     assert "Le récépissé de déclaration sera envoyé au demandeur" in content
+    assert project.agreement_deadline == new_due_date
 
     assert mock_receipt_task.delay.call_count == 1
     assert mock_receipt_task.delay.call_args[0] == (
@@ -2818,7 +2819,7 @@ def test_resume_instruction_refused_without_a_suspension(
 def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
     mock_receipt_task, client, haie_coordinator_44, site
 ):
-    """The receipt only covers the déclaration stage of the régime unique."""
+    """Only the déclaration stage of the régime unique restarts the agreement deadline."""
 
     client.force_login(haie_coordinator_44)
 
@@ -2852,6 +2853,8 @@ def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
     assert "L'instruction du dossier a repris." in content
     assert "récépissé" not in content
     assert not mock_receipt_task.delay.called
+    resumption = project.status_history.get(type=LOG_TYPES.resumption)
+    assert resumption.agreement_deadline is None
 
 
 @pytest.mark.django_db(transaction=True)
