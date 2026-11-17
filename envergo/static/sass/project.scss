@@ -287,7 +287,6 @@ nav#evaluation-summary {
 #triage-form {
   counter-reset: steps;
 
-  #form-group-address label,
   label.step {
     &::before {
       counter-increment: steps;
@@ -789,8 +788,8 @@ form#request-evaluation-form {
 /**
  * Autocomplete fields
  */
-.fr-label + div > .autocomplete__wrapper {
-  margin-top: 0.5rem;
+.fr-label.for-autocomplete-field + div {
+  flex-grow: 1;
 }
 
 .autocomplete__wrapper .autocomplete__input {
@@ -800,8 +799,8 @@ form#request-evaluation-form {
 
   --blend: var(--background-contrast-grey-blend);
 
-  background-color: var(--background-contrast-grey);
-  box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
+  background-color: #fff;
+  box-shadow: inset 0 -2px 0 0 var(--border-action-high-blue-france);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -809,6 +808,12 @@ form#request-evaluation-form {
   appearance: none;
   outline-offset: 2px;
   outline-width: 2px;
+}
+
+.autocomplete__wrapper .autocomplete__input::placeholder {
+  opacity: 1;
+  font-style: italic;
+  color: var(--text-mention-grey);
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
@@ -929,25 +934,35 @@ div.leaflet-container {
   height: 100%;
   position: relative;
 
-  &.full-screen {
-    position: fixed;
-    inset: 2vh;
-    height: 96vh;
-    width: auto;
-    z-index: 2000; // to go over sticky header
-    border-radius: 0.5em;
-    box-shadow: 0 0 3em #000a;
+  &.with-address-search-bar {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
 
-    &::after {
-      content: " ";
-      display: block;
-      background: #0007;
-      position: fixed;
-      inset: 0;
+    .fr-search-bar {
+      grid-area: 1 / 1 / 2 / 2; // 1st column and 1st row only
+      z-index: 2;
+      padding: 1em;
+      height: 5em;
+      overflow: visible;
     }
 
-    .leaflet-controls-full-screen-toggle {
-      background-image: url("/static/icons/fullscreen-exit.svg");
+    #map {
+      grid-area: 1 / 1 / -1 / -1; // from top left to bottom right
+      z-index: 1;
+    }
+
+    .leaflet-top.leaflet-left {
+      top: 4.5em; // move top-left control under search bar
+    }
+
+    @media (width <= 62em) {
+      .fr-search-bar {
+        grid-column-end: -1; // full-width
+      }
+
+      .leaflet-top.leaflet-right {
+        top: 4.5em; // top-right control must be under search bar too
+      }
     }
   }
 
@@ -1030,24 +1045,32 @@ div.leaflet-container {
   }
 }
 
-body:has(.leaflet-container.full-screen) {
-  overflow: hidden; // prevent scrolling of background while modal is displayed
+dialog.full-screen-map {
+  border: 0;
+  border-radius: 5px;
+  box-shadow: 0 0 3em rgb(0 0 0 / 66.7%);
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
 
-  .header-sticky,
-  .fr-enlarge-link,
-  #newsletter-optin-form,
-  .fr-footer__bottom {
-    // elements with position:relative; creating z-index mess.
-    // Hide them with visibility:hidden instead of display:none;
-    // in order to avoid redrawing the whole page.
-    visibility: hidden;
+  &::backdrop {
+    background: #0007;
   }
-}
 
-.fr-content-media:has(.leaflet-container.full-screen) {
-  position: fixed !important; // original selector is very specific with 2 IDs
-  inset: 0 0 3em;
-  z-index: 1000;
+  & .leaflet-controls-full-screen-toggle {
+    background-image: url("/static/icons/fullscreen-exit.svg");
+  }
+
+  // fix display details on envergo result page
+  & .fr-mt-1w.fr-mb-1w.fr-content-media.full-screen-map-content,
+  & .ratio-4x3.ratio-sm-4x5.fr-mt-1w.fr-mb-2w.fr-raw-link {
+    margin: 0 !important;
+    height: 100%;
+
+    &::before {
+      display: none;
+    }
+  }
 }
 
 .alt {
@@ -1403,26 +1426,6 @@ $content-max-width: 40rem;
     #moulinette-form figure.fr-content-media {
       position: relative;
     }
-
-    #map-refresh-button {
-      transition: opacity 0.4s ease-in-out 0s;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 2000;
-      position: absolute;
-      right: 2em;
-      bottom: 2em;
-      background-color: var(--grey-1000-50);
-    }
-
-    #map-refresh-button.display {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #map-refresh-button:hover:not(:disabled) {
-      background-color: var(--background-default-grey-hover);
-    }
   }
 
   #project-result,
@@ -1445,6 +1448,26 @@ $content-max-width: 40rem;
   a.cc-1m2mf {
     border: 2px solid var(--background-default-grey) !important;
   }
+}
+
+#map-refresh-button {
+  transition: opacity 0.4s ease-in-out 0s;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2000;
+  position: absolute;
+  right: 2em;
+  bottom: 2em;
+  background-color: var(--grey-1000-50);
+}
+
+#map-refresh-button.display {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#map-refresh-button:hover:not(:disabled) {
+  background-color: var(--background-default-grey-hover);
 }
 
 @media only screen and (width > 991px) {
@@ -2096,8 +2119,7 @@ main.geometricians {
 }
 
 .moulinette {
-  .fr-input,
-  .autocomplete__input {
+  .fr-input {
     --background-contrast-grey: var(--grey-975-100);
   }
 
