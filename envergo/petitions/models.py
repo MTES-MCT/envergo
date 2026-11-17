@@ -424,12 +424,10 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         None when no decision is pending under the régime unique.
         """
-        decision_pending = (
-            self.is_regime_unique() and self.stage in PENDING_DECISION_STAGES
-        )
+        decision_pending = self.stage in PENDING_DECISION_STAGES
 
         rule = None
-        if decision_pending:
+        if self.is_regime_unique() and decision_pending:
             rule = SILENCE_RULE_BY_INSTRUCTION_STAGE.get(self.latest_instruction_stage)
         return rule
 
