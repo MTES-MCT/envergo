@@ -72,6 +72,7 @@ THIRD_PARTY_APPS = [
     "localflavor",
     "django_otp",
     "django_otp.plugins.otp_totp",
+    "health_check",
 ]
 
 LOCAL_APPS = [
@@ -335,6 +336,8 @@ CELERY_TASK_TIME_LIMIT = 900
 SENTRY_DSN = env("SENTRY_DSN", default="")
 SENTRY_KEY = env("SENTRY_KEY", default="")
 
+# MONITORING
+HEALTHCHECK_URL = env("HEALTHCHECK_URL", default="ht/")
 
 # Your stuff...
 # ------------------------------------------------------------------------------
