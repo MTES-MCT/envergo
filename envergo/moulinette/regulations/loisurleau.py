@@ -12,7 +12,6 @@ from envergo.moulinette.regulations import (
     MapPolygon,
     SelfDeclarationMixin,
 )
-from envergo.moulinette.regulations.evalenv import PhotovoltaiqueForm
 from envergo.moulinette.regulations.mixins import ZoneHumideMixin, ZoneInondableMixin
 
 BLUE = "#0000FF"
@@ -288,9 +287,7 @@ class ZoneInondable(
 
 def has_pv_sol(moulinette):
     """Has pv panel on the ground and rubrique 30 is activated"""
-    form = PhotovoltaiqueForm(**moulinette.form_kwargs)
-    form.is_valid()
-    return form.is_activated() and form.cleaned_data.get("localisation") == "sol"
+    return moulinette.cleaned_data.get("evalenv_rubrique_30-localisation") == "sol"
 
 
 class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator):
