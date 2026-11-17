@@ -1,11 +1,13 @@
 from django.conf import settings
 from django.core.management import BaseCommand
 from django.db import transaction
+from django.urls import reverse
 
 from envergo.security.inventory import read_components
 from envergo.security.models import Vulnerability
 from envergo.security.osv import find_vulnerabilities
 from envergo.utils import tchap
+from envergo.utils.tools import get_base_url
 
 
 class Command(BaseCommand):
@@ -59,10 +61,10 @@ def sync_open_vulnerabilities(findings_by_component):
 def build_alert_message(urgent_vulnerabilities, open_count):
     """Write the Tchap message announcing urgent new vulnerabilities, worst first."""
     sorted_vulnerabilities = sorted(
-        urgent_vulnerabilities, key=lambda vulnerability: vulnerability.severity_rank
+        urgent_vulnerabilities, key=lambda vulnerability: vulnerability.severity
     )
     vulnerability_lines = [
-        f"- {vulnerability.severity} · {vulnerability.component_name} "
+        f"- {vulnerability.get_severity_display()} · {vulnerability.component_name} "
         f"{vulnerability.component_version} · "
         f"[{vulnerability.vulnerability_id}]({vulnerability.osv_url})"
         for vulnerability in sorted_vulnerabilities
@@ -71,5 +73,14 @@ def build_alert_message(urgent_vulnerabilities, open_count):
         f"Nouvelles vulnérabilités importantes : {len(urgent_vulnerabilities)}",
         *vulnerability_lines,
         f"Vulnérabilités ouvertes au total : {open_count}",
+        f"[Tableau de bord]({dashboard_url()})",
     ]
     return "\n".join(lines)
+
+
+def dashboard_url():
+    """Absolute URL of the admin page listing open vulnerabilities."""
+    path = reverse(
+        "admin:security_vulnerability_changelist", urlconf="config.urls_haie"
+    )
+    return f"{get_base_url(settings.ENVERGO_HAIE_DOMAIN)}{path}"

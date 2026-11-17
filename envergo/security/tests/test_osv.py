@@ -1,5 +1,6 @@
 from envergo.security import osv
 from envergo.security.inventory import Component, Ecosystem
+from envergo.security.models import Severity
 
 COMPONENT = Component("some-package", "1.0.0", Ecosystem.PYPI)
 
@@ -27,7 +28,7 @@ def test_aliased_records_give_one_vulnerability(monkeypatch):
     findings = osv.find_vulnerabilities([COMPONENT])[COMPONENT]
 
     assert [finding.id for finding in findings] == ["GHSA-1"]
-    assert findings[0].severity == "high"
+    assert findings[0].severity == Severity.HIGH
 
 
 def test_fixed_versions_come_from_our_package_only(monkeypatch):
@@ -90,4 +91,4 @@ def test_git_record_gives_commit_fix_and_cvss_rating(monkeypatch):
     findings = osv.find_vulnerabilities([git_component])[git_component]
 
     assert findings[0].fixed_versions == ["f" * 12]
-    assert findings[0].severity == "moderate"
+    assert findings[0].severity == Severity.MODERATE

@@ -5,17 +5,17 @@ import pytest
 from django.core.management import call_command
 
 from envergo.security.inventory import Component, Ecosystem
-from envergo.security.models import Vulnerability
+from envergo.security.models import Severity, Vulnerability
 from envergo.security.osv import Finding
 
 pytestmark = pytest.mark.django_db
 
 COMPONENT = Component("some-package", "1.0.0", Ecosystem.PYPI)
-KNOWN_FLAW = Finding("GHSA-known", "Known flaw", "high", [])
-NEW_FLAW = Finding("GHSA-new", "New flaw", "low", ["1.0.1"])
-CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", "low", [])
-HIGH_FLAW = Finding("GHSA-high", "High flaw", "high", [])
-LOW_FLAW = Finding("GHSA-low", "Low flaw", "low", [])
+KNOWN_FLAW = Finding("GHSA-known", "Known flaw", Severity.HIGH, [])
+NEW_FLAW = Finding("GHSA-new", "New flaw", Severity.LOW, ["1.0.1"])
+CLOSED_FLAW = Finding("GHSA-closed", "Closed flaw", Severity.LOW, [])
+HIGH_FLAW = Finding("GHSA-high", "High flaw", Severity.HIGH, [])
+LOW_FLAW = Finding("GHSA-low", "Low flaw", Severity.LOW, [])
 
 
 @pytest.fixture(autouse=True)
@@ -72,3 +72,15 @@ def test_scan_alerts_only_on_new_important_vulnerabilities(settings):
     assert HIGH_FLAW.id in message
     assert LOW_FLAW.id not in message
     assert "Vulnérabilités ouvertes au total : 2" in message
+
+
+def test_alert_links_to_dashboard(settings):
+    """The alert links to the dashboard on the haie domain."""
+    settings.ENVERGO_HAIE_DOMAIN = "haie.example.org"
+
+    with patch("envergo.utils.tchap.send") as send:
+        run_scan([HIGH_FLAW])
+
+    _room_id, message = send.call_args.args
+    assert "https://haie.example.org/" in message
+    assert "/security/vulnerability/" in message

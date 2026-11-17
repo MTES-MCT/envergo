@@ -2,7 +2,7 @@ from factory import Sequence
 from factory.django import DjangoModelFactory
 
 from envergo.security.inventory import Ecosystem
-from envergo.security.models import Vulnerability
+from envergo.security.models import Severity, Vulnerability
 
 
 class VulnerabilityFactory(DjangoModelFactory):
@@ -12,7 +12,7 @@ class VulnerabilityFactory(DjangoModelFactory):
     component_version = "1.0.0"
     ecosystem = Ecosystem.PYPI
     vulnerability_id = Sequence(lambda n: f"GHSA-{n}")
-    severity = "high"
+    severity = Severity.HIGH
 
     class Meta:
         model = Vulnerability

@@ -4,18 +4,24 @@ from django.utils.translation import gettext_lazy as _
 
 from envergo.security.inventory import Component, Ecosystem
 
-# An unrated flaw ranks above moderate ones: having no rating does not make it minor.
-SEVERITY_RANKS = {
-    "malicious": 0,
-    "critical": 1,
-    "high": 2,
-    "unknown": 3,
-    "moderate": 4,
-    "low": 5,
-}
+
+class Severity(models.IntegerChoices):
+    """How urgent a vulnerability is. Lower values are more urgent.
+
+    An unrated flaw ranks above moderate ones: having no rating does not make it minor.
+    The labels also name the dashboard's CSS classes.
+    """
+
+    MALICIOUS = 0, "malicious"
+    CRITICAL = 1, "critical"
+    HIGH = 2, "high"
+    UNKNOWN = 3, "unknown"
+    MODERATE = 4, "moderate"
+    LOW = 5, "low"
+
 
 # A new vulnerability this severe or worse alerts the security Tchap room.
-ALERT_SEVERITY_RANK = SEVERITY_RANKS["high"]
+ALERT_SEVERITY = Severity.HIGH
 
 
 # Days a vulnerability can stay open before its age tag escalates.
@@ -31,7 +37,7 @@ class Vulnerability(models.Model):
     ecosystem = models.CharField(_("Ecosystem"), max_length=32)
     vulnerability_id = models.CharField(_("Identifier"), max_length=64)
     summary = models.TextField(_("Summary"), blank=True)
-    severity = models.CharField(_("Severity"), max_length=16)
+    severity = models.PositiveSmallIntegerField(_("Severity"), choices=Severity.choices)
     fixed_versions = models.JSONField(_("Fixed in"), default=list, blank=True)
     detected_at = models.DateTimeField(_("Detected at"), default=timezone.now)
 
@@ -51,14 +57,9 @@ class Vulnerability(models.Model):
         ]
 
     @property
-    def severity_rank(self):
-        """Return the position in the dashboard: lower means more urgent."""
-        return SEVERITY_RANKS.get(self.severity, SEVERITY_RANKS["unknown"])
-
-    @property
     def needs_alert(self):
         """Tell whether this vulnerability, once found, calls for immediate action."""
-        return self.severity_rank <= ALERT_SEVERITY_RANK
+        return self.severity <= ALERT_SEVERITY
 
     @property
     def open_days(self):
