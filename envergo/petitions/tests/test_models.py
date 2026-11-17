@@ -15,6 +15,7 @@ from envergo.petitions.models import (
     STAGES,
     PetitionProject,
     ResultSnapshot,
+    SilenceRule,
     StatusLog,
 )
 from envergo.petitions.tests.factories import (
@@ -125,6 +126,79 @@ def test_refusal_deadline_is_none_without_a_switch():
     project = PetitionProjectFactory()
 
     assert project.refusal_deadline is None
+
+
+def test_agreement_deadline_comes_from_the_latest_log_carrying_one():
+    """A later stage change without a deadline keeps the latest deadline in force."""
+    project = PetitionProjectFactory()
+    StatusLogFactory(petition_project=project, agreement_deadline=date(2099, 1, 1))
+    StatusLogFactory(petition_project=project, agreement_deadline=date(2099, 4, 1))
+    StatusLogFactory(petition_project=project, stage=STAGES.preparing_decision)
+
+    assert project.agreement_deadline == date(2099, 4, 1)
+
+
+def test_agreement_deadline_is_none_outside_declaration():
+    """A dossier that never entered déclaration instruction has no agreement deadline."""
+    project = PetitionProjectFactory()
+
+    assert project.agreement_deadline is None
+
+
+@pytest.mark.parametrize(
+    "category, stages, expected",
+    [
+        ("ru", [], None),
+        ("ru", [STAGES.instruction_d], SilenceRule.AGREEMENT),
+        (
+            "ru",
+            [STAGES.instruction_d, STAGES.preparing_decision],
+            SilenceRule.AGREEMENT,
+        ),
+        ("ru", [STAGES.instruction_d, STAGES.notification], SilenceRule.AGREEMENT),
+        ("ru", [STAGES.instruction_d, STAGES.closed], None),
+        ("ru", [STAGES.instruction_a], SilenceRule.REFUSAL),
+        (
+            "ru",
+            [STAGES.instruction_d, STAGES.instruction_a, STAGES.preparing_decision],
+            SilenceRule.REFUSAL,
+        ),
+        (
+            "ru",
+            [STAGES.instruction_d, STAGES.instruction_a, STAGES.instruction_d],
+            SilenceRule.AGREEMENT,
+        ),
+        ("hru", [STAGES.instruction_h], None),
+        ("l350_3", [STAGES.instruction_h], None),
+    ],
+)
+def test_silence_rule_follows_the_latest_instruction_stage(category, stages, expected):
+    """Déclaration means agreement and autorisation refusal, until the dossier closes."""
+    project = PetitionProjectFactory(underscore_category=category)
+    for stage in stages:
+        StatusLogFactory(petition_project=project, stage=stage)
+
+    assert project.silence_rule == expected
+
+
+@pytest.mark.parametrize(
+    "category, stage, expected_queries",
+    [
+        ("hru", STAGES.instruction_h, 0),
+        ("ru", STAGES.closed, 0),
+        ("ru", STAGES.instruction_d, 1),
+    ],
+)
+def test_silence_rule_reads_the_history_only_when_a_rule_can_apply(
+    category, stage, expected_queries, django_assert_num_queries
+):
+    """The silence rule reads the history once at most, and never when the dossier rules it out."""
+    project = PetitionProjectFactory(underscore_category=category)
+    StatusLogFactory(petition_project=project, stage=stage)
+
+    with django_assert_num_queries(expected_queries):
+        project.silence_rule
+        project.silence_rule
 
 
 def test_form_url_adds_alternative_param():

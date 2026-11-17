@@ -11,7 +11,9 @@ from envergo.petitions.demarche_numerique.client import (
     DEMARCHE_NUMERIQUE_FAKE_DATA_PATH,
 )
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
+    STAGES,
     InvitationToken,
     PetitionProject,
     ResultSnapshot,
@@ -132,6 +134,15 @@ class StatusLogFactory(DjangoModelFactory):
         model = StatusLog
 
     petition_project = factory.SubFactory(PetitionProjectFactory)
+    stage = STAGES.to_be_processed
+    # A closed dossier always carries a final decision.
+    decision = factory.LazyAttribute(
+        lambda log: (
+            DECISIONS.express_agreement
+            if log.stage == STAGES.closed
+            else DECISIONS.unset
+        )
+    )
 
 
 class SimulationFactory(DjangoModelFactory):

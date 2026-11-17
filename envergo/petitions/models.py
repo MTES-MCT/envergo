@@ -62,6 +62,18 @@ STAGES = Choices(
     ("closed", "Dossier clos"),
 )
 
+INSTRUCTION_STAGES = (
+    STAGES.instruction_d,
+    STAGES.instruction_a,
+    STAGES.instruction_h,
+)
+
+# Stages where the decision on a deposited dossier is still pending.
+PENDING_DECISION_STAGES = INSTRUCTION_STAGES + (
+    STAGES.preparing_decision,
+    STAGES.notification,
+)
+
 DECISIONS = Choices(
     ("unset", "À déterminer"),
     ("tacit_agreement", "Accord tacite"),
@@ -69,6 +81,20 @@ DECISIONS = Choices(
     ("opposition", "Opposition"),
     ("dropped", "Classé sans suite"),
 )
+
+
+class SilenceRule(models.TextChoices):
+    """What the administration's silence means once the instruction deadline passes."""
+
+    AGREEMENT = "agreement", "Silence vaut accord"
+    REFUSAL = "refusal", "Silence vaut refus"
+
+
+# Instruction stages of the régime unique. Other stages carry no silence rule.
+SILENCE_RULE_BY_INSTRUCTION_STAGE = {
+    STAGES.instruction_d: SilenceRule.AGREEMENT,
+    STAGES.instruction_a: SilenceRule.REFUSAL,
+}
 
 FORBIDDEN_STAGE_TRANSITIONS = {
     (
@@ -356,7 +382,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             .first()
         )
 
-    @property
+    @cached_property
     def refusal_deadline(self):
         """Date after which silence means refusal, set by the latest switch to authorisation.
 
@@ -368,6 +394,44 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             .values_list("refusal_deadline", flat=True)
             .first()
         )
+
+    @cached_property
+    def agreement_deadline(self):
+        """Date at which silence means agreement, or None when the dossier was not deposited in déclaration."""
+        return (
+            self.status_history.filter(agreement_deadline__isnull=False)
+            .order_by("-created_at")
+            .values_list("agreement_deadline", flat=True)
+            .first()
+        )
+
+    @cached_property
+    def latest_instruction_stage(self):
+        """The latest instruction stage the dossier went through.
+
+        None when the dossier never entered instruction.
+        """
+        return (
+            self.status_history.filter(stage__in=INSTRUCTION_STAGES)
+            .order_by("-created_at")
+            .values_list("stage", flat=True)
+            .first()
+        )
+
+    @property
+    def silence_rule(self) -> SilenceRule | None:
+        """What the administration's silence means for this dossier.
+
+        None when no decision is pending under the régime unique.
+        """
+        decision_pending = (
+            self.is_regime_unique() and self.stage in PENDING_DECISION_STAGES
+        )
+
+        rule = None
+        if decision_pending:
+            rule = SILENCE_RULE_BY_INSTRUCTION_STAGE.get(self.latest_instruction_stage)
+        return rule
 
     @cached_property
     def latest_suspension(self):
