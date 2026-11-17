@@ -90,6 +90,7 @@ LOCAL_APPS = [
     "envergo.hedges",
     "envergo.petitions",
     "envergo.demos",
+    "envergo.security",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -381,6 +382,7 @@ TCHAP_HOMESERVER_URL = env("DJANGO_TCHAP_HOMESERVER_URL", default=None)
 TCHAP_ACCESS_TOKEN = env("DJANGO_TCHAP_ACCESS_TOKEN", default=None)
 TCHAP_ROOM_ID_AMENAGEMENT = env("DJANGO_TCHAP_ROOM_ID_AMENAGEMENT", default=None)
 TCHAP_ROOM_ID_HAIE = env("DJANGO_TCHAP_ROOM_ID_HAIE", default=None)
+TCHAP_ROOM_ID_SECURITY = env("DJANGO_TCHAP_ROOM_ID_SECURITY", default=None)
 
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
@@ -461,6 +463,9 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
 )  # meters
 
 HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
+
+# cron.json runs on every app built from this repository: only production scans.
+SECURITY_SCAN_ENABLED = env.bool("SECURITY_SCAN_ENABLED", default=False)
 
 # Kill switch for the « Éviter / réduire » gate on the haie simulation form
 HAIE_EVITER_REDUIRE_ENABLED = env.bool(

@@ -637,6 +637,19 @@ dédié](https://github.com/Scalingo/geo-buildpack), qui est tombé en désuétu
 
 4/ Lancer le déploiement. L'app build sans soucis. Je n'ai pas encore noté de bugs sur les fonctions geo.
 
+### Versions de gdal, geos et proj
+
+Le buildpack lit les versions dans les variables d'environnement `GDAL_VERSION`,
+`GEOS_VERSION` et `PROJ_VERSION`. Sans ces variables, il réutilise la version
+gardée dans son cache de build et ne la met jamais à jour.
+
+Les versions attendues sont déclarées dans le fichier `buildpacks.env`. Après
+chaque modification de ce fichier, appliquer les versions sur Scalingo :
+
+```
+$ scalingo --app envergo env-set $(grep -v '^#' buildpacks.env)
+```
+
 ## Faire un dump de la base de prod
 
 [Se référer à cette documentation.](https://doc.scalingo.com/databases/postgresql/dump-restore)

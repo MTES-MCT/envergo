@@ -9,6 +9,7 @@ from psycopg.types.range import DateRange as PsycopgDateRange
 
 from envergo.geodata.tests.factories import MapFactory
 from envergo.moulinette.admin import (
+    GUH_CONTACT_FIELDS,
     ConfigAmenagementForm,
     ConfigHaieAdminForm,
     CriterionAdminForm,
@@ -39,6 +40,9 @@ ConfigAmenagementTestForm = modelform_factory(
 )
 
 ConfigHaieTestForm = ConfigHaieAdminForm
+
+# guh_structure is required by the model itself, whatever the procedure.
+OPTIONAL_GUH_CONTACT_FIELDS = ["guh_email", "guh_phone", "guh_address"]
 
 
 def instance_to_form_data(instance):
@@ -211,6 +215,34 @@ class TestConfigHaieOverlapValidation:
         error_html = str(form.errors)
         assert "<a href=" in error_html
         assert str(existing.pk) in error_html
+
+
+class TestConfigHaieGuhContactValidation:
+    @pytest.mark.parametrize("field_name", GUH_CONTACT_FIELDS)
+    def test_activated_single_procedure_requires_guh_contact(self, field_name):
+        """An activated single procedure config needs every GUH contact field."""
+        instance = RUConfigHaieFactory()
+        data = instance_to_form_data(instance)
+        data[field_name] = ""
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert not form.is_valid()
+        assert field_name in form.errors
+
+    def test_inactive_single_procedure_allows_missing_guh_contact(self):
+        """An inactive single procedure config may leave GUH contacts blank."""
+        instance = RUConfigHaieFactory(is_activated=False)
+        data = instance_to_form_data(instance)
+        data.update({field_name: "" for field_name in OPTIONAL_GUH_CONTACT_FIELDS})
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
+
+    def test_activated_without_single_procedure_allows_missing_guh_contact(self):
+        """An activated config outside the single procedure may leave GUH contacts blank."""
+        instance = DCConfigHaieFactory()
+        data = instance_to_form_data(instance)
+        data.update({field_name: "" for field_name in OPTIONAL_GUH_CONTACT_FIELDS})
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
 
 
 class TestConfigHaieAaL3503FormValidation:

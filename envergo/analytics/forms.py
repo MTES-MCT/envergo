@@ -101,3 +101,12 @@ class EventForm(forms.Form):
     category = forms.CharField(max_length=64)
     action = forms.CharField(max_length=64)
     metadata = forms.JSONField(required=False)
+
+    def clean_metadata(self):
+        """Metadata is passed as keyword arguments, so it must be a mapping."""
+        metadata = self.cleaned_data.get("metadata")
+        if metadata is None:
+            return {}
+        if not isinstance(metadata, dict):
+            raise forms.ValidationError("Metadata must be a JSON object.")
+        return metadata

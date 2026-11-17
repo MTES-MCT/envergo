@@ -130,6 +130,9 @@ class DCConfigHaieFactory(DjangoModelFactory):
 
 class RUConfigHaieFactory(DCConfigHaieFactory):
     single_procedure = True
+    guh_email = "guh@example.com"
+    guh_phone = "+33323246400"
+    guh_address = "50, Bd de Lyon\n02011 LAON"
     single_procedure_settings = {
         "coeff_compensation": {
             "default": {

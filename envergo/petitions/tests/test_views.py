@@ -39,7 +39,12 @@ from envergo.moulinette.tests.utils import (
     setup_species_near_hedges,
 )
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
-from envergo.petitions.forms import SimulationForm
+from envergo.petitions.forms import (
+    AUTHORIZATION_REASON_PLACEHOLDER,
+    REFUSAL_DEADLINE_PLACEHOLDER,
+    SimulationForm,
+    two_months_from_today,
+)
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
@@ -1754,7 +1759,26 @@ def test_petition_project_list_htmx_response(haie_coordinator_44, client, site):
     assert "table-dossier-list" in content
 
 
-def test_petition_project_dl_geopkg(client, haie_user, site):
+def test_petition_project_geopkg_requires_view_permission(client, haie_user, site):
+    """The export holds personal data, so only users who can view the project get it."""
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    geopkg_url = reverse(
+        "petition_project_hedge_data_export",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.get(geopkg_url)
+    assert response.status_code == 302
+    assert response.url.startswith(reverse("login"))
+
+    client.force_login(haie_user)
+    response = client.get(geopkg_url)
+    assert response.status_code == 403
+
+
+def test_petition_project_dl_geopkg(client, haie_user_44, site):
     """Test Geopkg download"""
 
     DCConfigHaieFactory()
@@ -1763,7 +1787,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         "petition_project_hedge_data_export",
         kwargs={"reference": project.reference},
     )
-    client.force_login(haie_user)
+    client.force_login(haie_user_44)
     response = client.get(geopkg_url)
     response.get("Content-Disposition")
     assert (
@@ -1773,7 +1797,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
 
 
 def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
-    client, haie_user, site, tmp_path
+    client, haie_user_44, site, tmp_path
 ):
     DCConfigHaieFactory(
         demarche_numerique_config__display_fields={
@@ -1795,7 +1819,7 @@ def test_petition_project_geopkg_exports_hedge_and_dossier_columns(
         "petition_project_hedge_data_export",
         kwargs={"reference": project.reference},
     )
-    client.force_login(haie_user)
+    client.force_login(haie_user_44)
     response = client.get(geopkg_url)
     export_path = tmp_path / "export.gpkg"
     export_path.write_bytes(response.content)
@@ -2125,7 +2149,7 @@ def procedure_url(project):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
@@ -2173,7 +2197,7 @@ def test_petition_project_close_with_express_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
@@ -2203,7 +2227,7 @@ def test_petition_project_close_with_tacit_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
@@ -2228,7 +2252,7 @@ def test_petition_project_close_with_dropped(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
@@ -2259,7 +2283,7 @@ def test_petition_project_close_with_missing_fields(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.send_applicant_message_async")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
@@ -5131,6 +5155,192 @@ def test_state_change_modal_hides_to_be_processed_for_single_procedure(
     assert response.status_code == 200
     stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
     assert "to_be_processed" not in stage_choices
+
+
+def get_authorization_switch_message(client, project):
+    """The switch message template embedded in the state change modal, or None."""
+    content = client.get(procedure_url(project)).content.decode()
+    match = re.search(
+        r'<script type="text/template" id="authorization-switch-message">(.*?)</script>',
+        content,
+        re.DOTALL,
+    )
+    return match.group(1).strip() if match else None
+
+
+def test_state_change_modal_embeds_the_authorization_switch_message(
+    client, haie_coordinator_44, site
+):
+    RUConfigHaieFactory(
+        guh_structure="Direction départementale des territoires",
+        guh_service_name="Service Eau et Environnement",
+        guh_address="50, Bd de Lyon\n02011 LAON",
+    )
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    client.force_login(haie_coordinator_44)
+
+    message = get_authorization_switch_message(client, project)
+
+    assert "porte le n° 2105-9675," in message
+    assert f"L. 412-24 et suivants.\n\n{REFUSAL_DEADLINE_PLACEHOLDER}\n\n" in message
+    assert "au plus tard le" not in message
+    assert AUTHORIZATION_REASON_PLACEHOLDER in message
+    # Inside a <script> block, the browser does not decode &#x27;
+    assert "l'obtention d'une autorisation" in message
+    assert message.endswith(
+        f"Le guichet unique de la haie – {project.department}\n"
+        "Direction départementale des territoires\n"
+        "Service Eau et Environnement\n"
+        "50, Bd de Lyon\n02011 LAON"
+    )
+    # The form adds the appeal notice on submission.
+    assert "Toute décision relative" not in message
+
+
+def test_authorization_switch_message_omits_blank_guh_contact_lines(
+    client, haie_coordinator_44, site
+):
+    RUConfigHaieFactory(
+        guh_structure="Direction départementale des territoires",
+        guh_service_name="",
+        guh_address="",
+    )
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    client.force_login(haie_coordinator_44)
+
+    message = get_authorization_switch_message(client, project)
+
+    assert message.endswith(
+        f"Le guichet unique de la haie – {project.department}\n"
+        "Direction départementale des territoires"
+    )
+
+
+def test_state_change_modal_tells_the_script_the_project_can_switch(
+    client, haie_coordinator_44, site
+):
+    """The script shows the switch fields only for a project that can switch."""
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    client.force_login(haie_coordinator_44)
+
+    content = client.get(procedure_url(project)).content.decode()
+
+    assert "data-can-switch-to-authorization" in content
+
+
+def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch(
+    client, haie_coordinator_44, site
+):
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+    client.force_login(haie_coordinator_44)
+
+    assert get_authorization_switch_message(client, project) is None
+
+
+def state_change_form_data(**overrides):
+    """Build the procedure form data for a state change, a switch to authorisation by default."""
+    data = {
+        "action": "state_change",
+        "stage": "instruction_a",
+        "decision": "unset",
+        "refusal_deadline": two_months_from_today().strftime("%d/%m/%Y"),
+        "status_date": date.today().strftime("%d/%m/%Y"),
+        "applicant_message": f"Votre projet relève d'une autorisation.\n{REFUSAL_DEADLINE_PLACEHOLDER}",
+    }
+    data.update(overrides)
+    return data
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_applicant_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_authorization_switch_sends_the_applicant_message(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
+):
+    """A switch saves the message with its deadline sentence, then queues it."""
+    client.force_login(haie_coordinator_44)
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    data = state_change_form_data(
+        refusal_deadline="21/09/2099", update_comment="Haie en site Natura 2000."
+    )
+
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "Le dossier est passé en instruction autorisation." in content
+    assert "Le message au demandeur sera envoyé" in content
+
+    project.refresh_from_db()
+    assert project.stage == "instruction_a"
+
+    log = project.status_history.order_by("-created_at").first()
+    assert log.refusal_deadline == date(2099, 9, 21)
+    assert log.due_date == date(2099, 9, 21)
+    assert log.applicant_message.startswith(
+        "Votre projet relève d'une autorisation.<br>"
+        "Compte-tenu des avis qui doivent être recueillis, "
+        "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
+        "<small>Toute décision relative"
+    )
+    assert (
+        log.update_comment == "Haie en site Natura 2000.\nMessage envoyé au demandeur."
+    )
+    mock_message_task.delay.assert_called_once_with(log.pk)
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_applicant_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_stage_change_without_switch_sends_no_applicant_message(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
+):
+    """Only a closing or a switch writes to the applicant."""
+    client.force_login(haie_coordinator_44)
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+    data = state_change_form_data(stage="preparing_decision")
+
+    client.post(procedure_url(project), data, follow=True)
+
+    project.refresh_from_db()
+    assert project.stage == "preparing_decision"
+
+    log = project.status_history.order_by("-created_at").first()
+    assert log.update_comment == ""
+    mock_message_task.delay.assert_not_called()
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_applicant_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_authorization_switch_status_change_failure(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
+):
+    """If the DN status change fails, the switch rolls back and no message is sent."""
+    client.force_login(haie_coordinator_44)
+    mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+
+    res = client.post(procedure_url(project), state_change_form_data(), follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        "Impossible de mettre à jour le dossier dans « Démarche numérique »" in content
+    )
+
+    project.refresh_from_db()
+    assert project.stage == "instruction_d"
+    assert project.status_history.count() == 1
+    mock_message_task.delay.assert_not_called()
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)

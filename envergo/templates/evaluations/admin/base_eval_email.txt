@@ -13,9 +13,13 @@ Adresse : {{ evaluation.address|default:"Non communiqué" }}
 {% block detail %}{% endblock %}
 
 {{ evaluation_link }}
-
 {% if evaluation.is_eligible_to_self_declaration %}
+
 {% include 'evaluations/admin/_self_declaration_cta.txt' %}
 {% endif %}
+
+Vous pouvez également réserver un créneau pour échanger directement par téléphone :
+https://calendly.com/envergo/echange-envergo-10min?utm_source=envergo&utm_medium=email&a1={{ evaluation.reference }}
+
 {% include 'emails/_email_signature.txt' %}
 {% endblock %}

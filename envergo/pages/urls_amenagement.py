@@ -89,6 +89,13 @@ urlpatterns = [
                     name="faq_eval_env",
                 ),
                 path(
+                    "exemple-avis/",
+                    TemplateView.as_view(
+                        template_name="pages/faq/evaluation_examples.html"
+                    ),
+                    name="faq_examples",
+                ),
+                path(
                     _("envergo-news/"),
                     NewsView.as_view(),
                     name="faq_news",
