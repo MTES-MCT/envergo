@@ -23,6 +23,20 @@ def loisurleau_criteria(france_map):  # noqa
     return setup_loi_sur_leau(france_map)
 
 
+@pytest.fixture
+def photovoltaique_criterion(france_map):
+    """Activate the optional photovoltaic criterion everywhere in France."""
+    ConfigAmenagementFactory(is_activated=True)
+    regulation = RegulationFactory(regulation="eval_env")
+    return CriterionFactory(
+        title="Installation photovoltaïque",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.evalenv.Photovoltaique",
+        activation_map=france_map,
+        is_optional=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Rubrique 3310 — Zone humide
 # ---------------------------------------------------------------------------
@@ -281,7 +295,7 @@ def test_2150_small():
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "non_soumis"
 
 
-def test_2150_with_pv_sol_big():
+def test_2150_with_pv_sol_big(photovoltaique_criterion):
     data = make_amenagement_data(created_surface=10000, final_surface=10000)
     data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
@@ -293,7 +307,7 @@ def test_2150_with_pv_sol_big():
     )
 
 
-def test_2150_with_pv_sol_small():
+def test_2150_with_pv_sol_small(photovoltaique_criterion):
     data = make_amenagement_data(created_surface=8000, final_surface=8000)
     data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
@@ -316,7 +330,7 @@ def test_2150_with_pv_sol_not_activated():
 # ---------------------------------------------------------------------------
 
 
-def test_2150_avec_bv_big():
+def test_2150_avec_bv_big(photovoltaique_criterion):
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=10000, final_surface=10000)
     )
@@ -324,7 +338,7 @@ def test_2150_avec_bv_big():
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "soumis"
 
 
-def test_2150_avec_bv_medium():
+def test_2150_avec_bv_medium(photovoltaique_criterion):
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=9000, final_surface=9000)
     )
@@ -332,7 +346,7 @@ def test_2150_avec_bv_medium():
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "action_requise"
 
 
-def test_2150_avec_bv_small():
+def test_2150_avec_bv_small(photovoltaique_criterion):
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=7000, final_surface=7000)
     )
@@ -341,7 +355,9 @@ def test_2150_avec_bv_small():
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-def test_2150_avec_bv_small_but_big_bv(mock_get_catchment_area):
+def test_2150_avec_bv_small_but_big_bv(
+    mock_get_catchment_area, photovoltaique_criterion
+):
     mock_get_catchment_area.return_value = 12000
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=1400, final_surface=1400)
@@ -352,7 +368,9 @@ def test_2150_avec_bv_small_but_big_bv(mock_get_catchment_area):
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-def test_2150_avec_bv_small_and_medium_bv(mock_get_catchment_area):
+def test_2150_avec_bv_small_and_medium_bv(
+    mock_get_catchment_area, photovoltaique_criterion
+):
     mock_get_catchment_area.return_value = 8000
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=1400, final_surface=1400)
@@ -363,7 +381,9 @@ def test_2150_avec_bv_small_and_medium_bv(mock_get_catchment_area):
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-def test_2150_avec_bv_small_and_small_bv(mock_get_catchment_area):
+def test_2150_avec_bv_small_and_small_bv(
+    mock_get_catchment_area, photovoltaique_criterion
+):
     mock_get_catchment_area.return_value = 0
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=1400, final_surface=1400)
@@ -374,7 +394,9 @@ def test_2150_avec_bv_small_and_small_bv(mock_get_catchment_area):
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-def test_2150_avec_bv_small_with_pv_sol(mock_get_catchment_area):
+def test_2150_avec_bv_small_with_pv_sol(
+    mock_get_catchment_area, photovoltaique_criterion
+):
     mock_get_catchment_area.return_value = 12000
     data = make_amenagement_data(created_surface=1400, final_surface=1400)
     data["data"]["evalenv_rubrique_30-activate"] = "True"
@@ -385,7 +407,9 @@ def test_2150_avec_bv_small_with_pv_sol(mock_get_catchment_area):
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-def test_2150_avec_bv_medium_but_big_bv(mock_get_catchment_area):
+def test_2150_avec_bv_medium_but_big_bv(
+    mock_get_catchment_area, photovoltaique_criterion
+):
     mock_get_catchment_area.return_value = 12000
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=1600, final_surface=1600)
@@ -394,7 +418,7 @@ def test_2150_avec_bv_medium_but_big_bv(mock_get_catchment_area):
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "action_requise"
 
 
-def test_2150_avec_bv_with_pv_sol_big():
+def test_2150_avec_bv_with_pv_sol_big(photovoltaique_criterion):
     data = make_amenagement_data(created_surface=10000, final_surface=10000)
     data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
@@ -406,7 +430,7 @@ def test_2150_avec_bv_with_pv_sol_big():
     )
 
 
-def test_2150_avec_bv_with_pv_sol_small():
+def test_2150_avec_bv_with_pv_sol_small(photovoltaique_criterion):
     data = make_amenagement_data(created_surface=8000, final_surface=8000)
     data["data"]["evalenv_rubrique_30-activate"] = "True"
     data["data"]["evalenv_rubrique_30-localisation"] = "sol"
