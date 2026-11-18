@@ -22,9 +22,11 @@ from envergo.geodata.tasks import (
     complete_batch_row,
     finalize_batch,
     import_batch_row,
+    on_batch_failure,
     on_map_failure,
     process_map,
     process_map_import_batch,
+    process_map_import_batch_signature,
 )
 from envergo.geodata.tests.factories import (
     MapFactory,
@@ -457,6 +459,30 @@ def test_batch_with_invalid_csv_imports_nothing():
     assert processed == []
 
 
+def test_queued_batch_has_its_failure_callback():
+    signature = process_map_import_batch_signature(3, only_failed=True)
+
+    assert signature.args == (3,)
+    assert signature.kwargs == {"only_failed": True}
+    assert signature.options["link_error"] == [on_batch_failure.s(3)]
+
+
+def test_batch_crash_before_import_fails_the_batch(notify_mock):
+    """A batch never stays silently in progress, e.g. once its CSV file is lost."""
+    batch = make_batch(f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n")
+    batch.csv_file.storage.delete(batch.csv_file.name)
+
+    process_map_import_batch_signature(batch.id).apply()
+
+    batch.refresh_from_db()
+    assert batch.import_status == STATUSES.failure
+    line = batch.lines.get()
+    assert line.line_number == 0
+    assert line.status == LINE_STATUSES.failure
+    assert line.message.startswith("erreur inattendue")
+    notify_mock.assert_called_once()
+
+
 def test_batch_blank_rows_are_skipped():
     csv_content = f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n,,,,\n"
     batch = make_batch(csv_content, filenames=["a.gpkg"])
@@ -815,45 +841,48 @@ class TestUploadView:
         MapImportBatchFileFactory(batch=batch)
 
         with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
+            "envergo.geodata.admin.process_map_import_batch_signature"
+        ) as mock_signature:
             res = admin_client.post(self.process_url(batch))
 
         assert res.status_code == 302
-        mock_delay.assert_called_once_with(batch.id, only_failed=False)
+        mock_signature.assert_called_once_with(batch.id, only_failed=False)
+        mock_signature.return_value.delay.assert_called_once_with()
 
     def test_process_queues_file_less_batch(self, admin_client):
         """A batch without files is a legitimate metadata-only update."""
         batch = MapImportBatchFactory()
 
         with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
+            "envergo.geodata.admin.process_map_import_batch_signature"
+        ) as mock_signature:
             admin_client.post(self.process_url(batch))
 
-        mock_delay.assert_called_once_with(batch.id, only_failed=False)
+        mock_signature.assert_called_once_with(batch.id, only_failed=False)
+        mock_signature.return_value.delay.assert_called_once_with()
 
     def test_process_retries_only_failed_lines_of_partial_batch(self, admin_client):
         batch = MapImportBatchFactory(import_status=STATUSES.partial_success)
         batch.lines.create(line_number=2, status=LINE_STATUSES.failure)
 
         with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
+            "envergo.geodata.admin.process_map_import_batch_signature"
+        ) as mock_signature:
             admin_client.post(self.process_url(batch), {"mode": "failed"})
 
-        mock_delay.assert_called_once_with(batch.id, only_failed=True)
+        mock_signature.assert_called_once_with(batch.id, only_failed=True)
+        mock_signature.return_value.delay.assert_called_once_with()
 
     def test_process_refuses_failed_retry_on_unprocessed_batch(self, admin_client):
         batch = MapImportBatchFactory(import_status=None)
 
         with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
+            "envergo.geodata.admin.process_map_import_batch_signature"
+        ) as mock_signature:
             res = admin_client.post(self.process_url(batch), {"mode": "failed"})
 
         assert res.status_code == 302
-        mock_delay.assert_not_called()
+        mock_signature.assert_not_called()
 
     def test_change_page_offers_retry_only_on_partial_batch(self, admin_client):
         batch = MapImportBatchFactory(import_status=STATUSES.partial_success)
@@ -871,9 +900,9 @@ class TestUploadView:
         batch = MapImportBatchFactory()
 
         with patch(
-            "envergo.geodata.admin.process_map_import_batch.delay"
-        ) as mock_delay:
+            "envergo.geodata.admin.process_map_import_batch_signature"
+        ) as mock_signature:
             res = admin_client.get(self.process_url(batch))
 
         assert res.status_code == 302
-        mock_delay.assert_not_called()
+        mock_signature.assert_not_called()

@@ -29,7 +29,7 @@ from envergo.geodata.models import (
 )
 from envergo.geodata.tasks import (
     generate_map_preview,
-    process_map_import_batch,
+    process_map_import_batch_signature,
     process_maps,
 )
 from envergo.geodata.utils import InvalidMapFile, open_map_file
@@ -434,7 +434,7 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
             )
 
-        process_map_import_batch.delay(batch.id, only_failed=only_failed)
+        process_map_import_batch_signature(batch.id, only_failed=only_failed).delay()
         self.message_user(
             request,
             "Lot en cours de traitement. Cela peut prendre plusieurs minutes.",

@@ -124,6 +124,13 @@ def on_maps_chain_failure(request, exc, traceback, map_ids):
 # Batch import
 
 
+def process_map_import_batch_signature(batch_id, only_failed=False):
+    """Signature of `process_map_import_batch`, with the error callback failing its batch."""
+    return process_map_import_batch.si(batch_id, only_failed=only_failed).on_error(
+        on_batch_failure.s(batch_id)
+    )
+
+
 @app.task(max_retries=0)
 def process_map_import_batch(batch_id, only_failed=False):
     """Create or update Map objects described in a batch CSV.
@@ -146,7 +153,7 @@ def process_map_import_batch(batch_id, only_failed=False):
 
     errors = is_file_valid(batch.csv_file, batch.files)
     if errors:
-        fail_invalid_batch(batch, errors)
+        fail_batch_before_import(batch, errors)
         return
 
     reader = csv.DictReader(read_csv_file(batch.csv_file))
@@ -251,6 +258,14 @@ def finalize_batch(batch_id):
 
 
 @app.task
+def on_batch_failure(request, exc, traceback, batch_id):
+    """Error callback of `process_map_import_batch`: a batch never stays silently in progress."""
+    batch = MapImportBatch.objects.filter(pk=batch_id).first()
+    if batch is not None:
+        fail_batch_before_import(batch, [f"erreur inattendue ({exc})"])
+
+
+@app.task
 def on_batch_chain_failure(request, exc, traceback, batch_id):
     """Error callback of the batch chain: record the failure on the batch."""
     batch = MapImportBatch.objects.get(pk=batch_id)
@@ -273,8 +288,8 @@ def on_batch_chain_failure(request, exc, traceback, batch_id):
     notify_batch_failure(batch)
 
 
-def fail_invalid_batch(batch, errors):
-    """Fail a batch whose CSV is invalid, before any import."""
+def fail_batch_before_import(batch, errors):
+    """Fail a batch before any of its rows is imported, recording the errors on line 0."""
     batch.lines.all().delete()
     batch.lines.create(
         line_number=0, status=LINE_STATUSES.failure, message="\n".join(errors)
