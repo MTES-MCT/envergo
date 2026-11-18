@@ -19,10 +19,10 @@ from envergo.geodata.models import (
     MapImportBatchFile,
 )
 from envergo.geodata.tasks import (
-    complete_row,
-    fail_map_processing,
+    complete_batch_row,
     finalize_batch,
     import_batch_row,
+    on_map_failure,
     process_map,
     process_map_import_batch,
 )
@@ -530,7 +530,7 @@ def test_batch_row_queues_the_map_with_its_failure_callback():
     process_map_sig = mock_replace.call_args.args[0].tasks[0]
     assert process_map_sig.args == (map.id,)
     [errback] = process_map_sig.options["link_error"]
-    assert errback["task"] == fail_map_processing.name
+    assert errback["task"] == on_map_failure.name
     assert tuple(errback["args"]) == (map.id,)
 
 
@@ -634,7 +634,7 @@ def test_imported_row_marks_the_batch_partial_success():
     batch = make_batch(f"{CSV_HEADER}\n")
     batch.lines.create(line_number=2, reference="r1")
 
-    complete_row.apply(args=(batch.id, 2, "r1"))
+    complete_batch_row.apply(args=(batch.id, 2, "r1"))
     batch.refresh_from_db()
 
     assert batch.import_status == STATUSES.partial_success

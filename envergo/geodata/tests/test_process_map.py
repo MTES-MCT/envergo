@@ -7,11 +7,11 @@ from django.urls import reverse
 
 from envergo.geodata.models import STATUSES
 from envergo.geodata.tasks import (
-    fail_map_processing,
-    fail_maps_processing,
+    on_map_failure,
+    on_maps_chain_failure,
     process_map,
+    process_map_signature,
     process_maps,
-    queue_process_map,
 )
 from envergo.geodata.tests.factories import MapFactory
 
@@ -35,7 +35,7 @@ def test_import_error_is_recorded_on_the_map():
     map = MapFactory(zones=None, expected_geometries=3)
 
     with patch("envergo.geodata.tasks.open_map_file", side_effect=ValueError("boom")):
-        queue_process_map(map.id).apply()
+        process_map_signature(map.id).apply()
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -47,7 +47,7 @@ def test_task_failure_callback_records_the_failure():
     """A crash outside the import itself (e.g. database down) is not silent."""
     map = MapFactory(zones=None)
 
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
+    on_map_failure(None, RuntimeError("db down"), None, map.id)
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -57,7 +57,7 @@ def test_task_failure_callback_records_the_failure():
 def test_failure_callback_leaves_the_notification_to_the_chain(notify_mock):
     map = MapFactory(zones=None)
 
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
+    on_map_failure(None, RuntimeError("db down"), None, map.id)
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -100,7 +100,7 @@ def test_started_task_leaves_a_trace():
 
 def test_queued_map_has_its_failure_callback():
     """The map is failed even if its worker is killed."""
-    assert queue_process_map(3).options["link_error"] == [fail_map_processing.s(3)]
+    assert process_map_signature(3).options["link_error"] == [on_map_failure.s(3)]
 
 
 def test_maps_are_queued_as_a_chain():
@@ -109,10 +109,10 @@ def test_maps_are_queued_as_a_chain():
         process_maps([3, 1, 2])
 
     mock_chain.assert_called_once_with(
-        queue_process_map(3), queue_process_map(1), queue_process_map(2)
+        process_map_signature(3), process_map_signature(1), process_map_signature(2)
     )
     mock_chain.return_value.apply_async.assert_called_once_with(
-        link_error=fail_maps_processing.s([3, 1, 2])
+        link_error=on_maps_chain_failure.s([3, 1, 2])
     )
 
 
@@ -123,7 +123,7 @@ def test_broken_chain_fails_the_skipped_maps(notify_mock, settings):
     )
     map_ids = [done.id, failed.id, skipped_1.id, skipped_2.id]
 
-    fail_maps_processing(
+    on_maps_chain_failure(
         SimpleNamespace(args=[failed.id]), RuntimeError("oom"), None, map_ids
     )
 
@@ -154,7 +154,7 @@ def test_failure_of_the_last_map_skips_nothing(notify_mock):
         2, zones=None, import_status=STATUSES.success
     )
 
-    fail_maps_processing(
+    on_maps_chain_failure(
         SimpleNamespace(args=[failed.id]),
         RuntimeError("oom"),
         None,

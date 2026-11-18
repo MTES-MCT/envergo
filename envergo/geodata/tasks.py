@@ -33,66 +33,25 @@ from envergo.utils.tools import get_base_url
 logger = logging.getLogger(__name__)
 
 
-def notify_batch_failure(batch):
-    """Warn the cartographers of a failed batch import, with its summary."""
-    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
-    message = render_to_string(
-        "geodata/mattermost_batch_import_failure.txt",
-        context={
-            "batch_id": batch.id,
-            "batch_url": base_url
-            + reverse("admin:geodata_mapimportbatch_change", args=[batch.id]),
-            "summary": batch.import_summary,
-            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
-        },
-    )
-    notify(message, "amenagement")
+# Map processing
 
 
-def notify_maps_failure(failed_id, error, skipped_ids):
-    """Warn the cartographers of a broken map chain: the failed map and the skipped ones if any."""
-    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
-
-    def map_link(map_id):
-        return {
-            "id": map_id,
-            "url": base_url + reverse("admin:geodata_map_change", args=[map_id]),
-        }
-
-    message = render_to_string(
-        "geodata/mattermost_map_import_failure.txt",
-        context={
-            "failed": map_link(failed_id),
-            "error": error,
-            "skipped": [map_link(map_id) for map_id in skipped_ids],
-            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
-        },
-    )
-    notify(message, "amenagement")
+def process_maps(map_ids):
+    """Queue the geometry import of several maps, one after the other."""
+    if map_ids:
+        chain(*(process_map_signature(map_id) for map_id in map_ids)).apply_async(
+            link_error=on_maps_chain_failure.s(list(map_ids))
+        )
 
 
-def mark_maps_failed(map_ids, error):
-    Map.objects.filter(pk__in=map_ids).update(
-        import_status=STATUSES.failure,
-        import_error_msg=error,
-        import_date=timezone.now(),
-        task_id=None,
-    )
-
-
-@app.task
-def fail_map_processing(request, exc, traceback, map_id):
-    """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
-    mark_maps_failed([map_id], f"Erreur d'import ({exc})")
-
-
-def queue_process_map(map_id):
-    """Signature of `process_map` with its error callback, to queue the task."""
-    return process_map.si(map_id).on_error(fail_map_processing.s(map_id))
+def process_map_signature(map_id):
+    """Signature of `process_map`, with the error callback failing its map."""
+    return process_map.si(map_id).on_error(on_map_failure.s(map_id))
 
 
 @app.task(bind=True, max_retries=1)
 def process_map(task, map_id):
+    """Replace the geometries of a map with the ones of its file."""
     logger.info(f"Starting import on map {map_id}")
     map = Map.objects.get(pk=map_id)
 
@@ -135,17 +94,21 @@ def process_map(task, map_id):
     map.save()
 
     if map.import_status == STATUSES.failure:
-        notify_maps_failure(map.id, "Aucune géométrie importée.", [])
+        notify_map_failure(map.id, "Aucune géométrie importée.")
 
 
 @app.task
-def fail_maps_processing(request, exc, traceback, map_ids):
+def on_map_failure(request, exc, traceback, map_id):
+    """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
+    mark_maps_failed([map_id], f"Erreur d'import ({exc})")
+
+
+@app.task
+def on_maps_chain_failure(request, exc, traceback, map_ids):
     """Error callback of the `process_maps` chain.
 
-    The chain stops at the first failure: every map queued after the failed one
-    is marked as failed, and a single summary is notified.
-    The failed map itself is marked by its own `process_map` error callback.
-    Both callbacks also run when the worker is killed (e.g. out of memory).
+    Every map queued after the failed one is marked as failed, and a single
+    summary is notified. The failed map itself is marked by `on_map_failure`.
     """
     failed_id = request.args[0]
     next_index = map_ids.index(failed_id) + 1
@@ -155,18 +118,10 @@ def fail_maps_processing(request, exc, traceback, map_ids):
         skipped_ids,
         f"Import non effectué : l'import de la carte {failed_id} a échoué avant",
     )
-    notify_maps_failure(failed_id, f"Erreur d'import ({exc})", skipped_ids)
+    notify_map_failure(failed_id, f"Erreur d'import ({exc})", skipped_ids)
 
 
-def process_maps(map_ids):
-    """Queue the geometry import of several maps, one after the other.
-
-    Chaining the process avoid a too heavy load on DB and memory for big objects
-    """
-    if map_ids:
-        chain(*(queue_process_map(map_id) for map_id in map_ids)).apply_async(
-            link_error=fail_maps_processing.s(list(map_ids))
-        )
+# Batch import
 
 
 @app.task(max_retries=0)
@@ -190,44 +145,15 @@ def process_map_import_batch(batch_id, only_failed=False):
     batch.save(update_fields=["import_status", "import_date"])
 
     errors = is_file_valid(batch.csv_file, batch.files)
-
     if errors:
-        batch.lines.all().delete()
-        batch.lines.create(
-            line_number=0, status=LINE_STATUSES.failure, message="\n".join(errors)
-        )
-        batch.import_status = STATUSES.failure
-        batch.import_date = timezone.now()
-        batch.save(update_fields=["import_status", "import_date"])
-        notify_batch_failure(batch)
+        fail_invalid_batch(batch, errors)
         return
 
     reader = csv.DictReader(read_csv_file(batch.csv_file))
     rows = [(reader.line_num, row) for row in reader if not is_blank_row(row)]
-
-    if only_failed:
-        done = set(
-            batch.lines.filter(status=LINE_STATUSES.success).values_list(
-                "line_number", flat=True
-            )
-        )
-        batch.lines.exclude(line_number__in=done).delete()
-    else:
-        done = set()
-        batch.lines.all().delete()
-    rows = [
-        (csv_line_number, row)
-        for csv_line_number, row in rows
-        if csv_line_number not in done
-    ]
-
-    MapImportBatchLine.objects.bulk_create(
-        MapImportBatchLine(batch=batch, line_number=csv_line_number)
-        for csv_line_number, _ in rows
-    )
-
+    rows = reset_batch_lines(batch, rows, only_failed)
     if not rows:
-        set_final_status(batch)
+        set_batch_final_status(batch)
         return
 
     chain(
@@ -236,58 +162,7 @@ def process_map_import_batch(batch_id, only_failed=False):
             for csv_line_number, raw_row in rows
         ),
         finalize_batch.si(batch_id),
-    ).apply_async(link_error=fail_batch.s(batch_id))
-
-
-def set_line_status(batch, csv_line_number, status, reference="", message=""):
-    """Record the outcome of a CSV line, so the progress survives a broken chain."""
-    MapImportBatchLine.objects.update_or_create(
-        batch=batch,
-        line_number=csv_line_number,
-        defaults={"status": status, "reference": reference, "message": message},
-    )
-
-
-@app.task
-def fail_batch(request, exc, traceback, batch_id):
-    """Error callback of the batch chain: record the failure on the batch."""
-    batch = MapImportBatch.objects.get(pk=batch_id)
-    if batch.import_status == STATUSES.failure:
-        # The callback is linked to every task of the chain: only the first
-        # call describes the failure.
-        return
-
-    # Rows are processed one at a time: the first pending line is the one that broke.
-    # The lines after it stay pending, so they can be retried on their own.
-    line = batch.lines.filter(status=LINE_STATUSES.pending).first()
-    if line is not None:
-        line.status = LINE_STATUSES.failure
-        line.message = f"erreur inattendue ({exc})"
-        line.save()
-
-    batch.import_status = STATUSES.failure
-    batch.import_date = timezone.now()
-    batch.save(update_fields=["import_status", "import_date"])
-    notify_batch_failure(batch)
-
-
-def set_final_status(batch):
-    """Set the batch status from the outcome of its lines."""
-    if not batch.lines.exclude(status=LINE_STATUSES.success).exists():
-        batch.import_status = STATUSES.success
-    elif batch.lines.filter(status=LINE_STATUSES.success).exists():
-        batch.import_status = STATUSES.partial_success
-    else:
-        batch.import_status = STATUSES.failure
-    batch.import_date = timezone.now()
-    batch.save(update_fields=["import_status", "import_date"])
-    if batch.import_status == STATUSES.failure:
-        notify_batch_failure(batch)
-
-
-@app.task
-def finalize_batch(batch_id):
-    set_final_status(MapImportBatch.objects.get(pk=batch_id))
+    ).apply_async(link_error=on_batch_chain_failure.s(batch_id))
 
 
 @app.task(bind=True)
@@ -304,7 +179,7 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
     batch = MapImportBatch.objects.get(pk=batch_id)
     row, errors = is_line_valid(csv_line_number, raw_row, batch.files)
     if errors:
-        set_line_status(
+        set_batch_line_status(
             batch,
             csv_line_number,
             LINE_STATUSES.failure,
@@ -324,20 +199,7 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
             )  # already checked, should not happen
         map = Map(reference=row.reference, batch_created_at=now)
 
-    map.name = row.name
-    map.description = row.description
-    map.departments = row.departments or None
-    if row.display_name:
-        map.display_name = row.display_name
-    if row.source:
-        map.source = row.source
-    if row.map_type:
-        map.map_type = row.map_type
-    if row.data_type:
-        map.data_type = row.data_type
-    if row.display_for_user is not None:
-        map.display_for_user = row.display_for_user
-
+    update_map_from_row(map, row)
     map.import_batch = batch
     map.batch_updated_at = now
 
@@ -361,23 +223,188 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
     if batch_file:
         return task.replace(
             chain(
-                queue_process_map(map.id),
-                complete_row.si(batch_id, csv_line_number, row.reference),
+                process_map_signature(map.id),
+                complete_batch_row.si(batch_id, csv_line_number, row.reference),
             )
         )
     else:
         # Metadata only update do not need map re-processing.
-        return complete_row(batch_id, csv_line_number, row.reference)
+        return complete_batch_row(batch_id, csv_line_number, row.reference)
 
 
 @app.task
-def complete_row(batch_id, csv_line_number, reference):
+def complete_batch_row(batch_id, csv_line_number, reference):
     """Mark the line of a successfully imported row."""
     batch = MapImportBatch.objects.get(pk=batch_id)
-    set_line_status(batch, csv_line_number, LINE_STATUSES.success, reference=reference)
+    set_batch_line_status(
+        batch, csv_line_number, LINE_STATUSES.success, reference=reference
+    )
     if batch.import_status is None:
         batch.import_status = STATUSES.partial_success
         batch.save(update_fields=["import_status"])
+
+
+@app.task
+def finalize_batch(batch_id):
+    """Last task of the batch chain, once every row is imported."""
+    set_batch_final_status(MapImportBatch.objects.get(pk=batch_id))
+
+
+@app.task
+def on_batch_chain_failure(request, exc, traceback, batch_id):
+    """Error callback of the batch chain: record the failure on the batch."""
+    batch = MapImportBatch.objects.get(pk=batch_id)
+    if batch.import_status == STATUSES.failure:
+        # The callback is linked to every task of the chain: only the first
+        # call describes the failure.
+        return
+
+    # Rows are processed one at a time: the first pending line is the one that broke.
+    # The lines after it stay pending, so they can be retried on their own.
+    line = batch.lines.filter(status=LINE_STATUSES.pending).first()
+    if line is not None:
+        line.status = LINE_STATUSES.failure
+        line.message = f"erreur inattendue ({exc})"
+        line.save()
+
+    batch.import_status = STATUSES.failure
+    batch.import_date = timezone.now()
+    batch.save(update_fields=["import_status", "import_date"])
+    notify_batch_failure(batch)
+
+
+def fail_invalid_batch(batch, errors):
+    """Fail a batch whose CSV is invalid, before any import."""
+    batch.lines.all().delete()
+    batch.lines.create(
+        line_number=0, status=LINE_STATUSES.failure, message="\n".join(errors)
+    )
+    batch.import_status = STATUSES.failure
+    batch.import_date = timezone.now()
+    batch.save(update_fields=["import_status", "import_date"])
+    notify_batch_failure(batch)
+
+
+def reset_batch_lines(batch, rows, only_failed):
+    """Create a pending line for each row to import, and return these rows.
+
+    With `only_failed`, the successful lines are kept and their rows skipped.
+    """
+    if only_failed:
+        done = set(
+            batch.lines.filter(status=LINE_STATUSES.success).values_list(
+                "line_number", flat=True
+            )
+        )
+        batch.lines.exclude(line_number__in=done).delete()
+    else:
+        done = set()
+        batch.lines.all().delete()
+
+    rows = [
+        (csv_line_number, row)
+        for csv_line_number, row in rows
+        if csv_line_number not in done
+    ]
+    MapImportBatchLine.objects.bulk_create(
+        MapImportBatchLine(batch=batch, line_number=csv_line_number)
+        for csv_line_number, _ in rows
+    )
+    return rows
+
+
+def update_map_from_row(map, row):
+    """Copy the columns of a valid row on its map, without saving it."""
+    map.name = row.name
+    map.description = row.description
+    map.departments = row.departments or None
+    if row.display_name:
+        map.display_name = row.display_name
+    if row.source:
+        map.source = row.source
+    if row.map_type:
+        map.map_type = row.map_type
+    if row.data_type:
+        map.data_type = row.data_type
+    if row.display_for_user is not None:
+        map.display_for_user = row.display_for_user
+
+
+def set_batch_line_status(batch, csv_line_number, status, reference="", message=""):
+    """Record the outcome of a CSV line, so the progress survives a broken chain."""
+    MapImportBatchLine.objects.update_or_create(
+        batch=batch,
+        line_number=csv_line_number,
+        defaults={"status": status, "reference": reference, "message": message},
+    )
+
+
+def set_batch_final_status(batch):
+    """Set the batch status from the outcome of its lines."""
+    if not batch.lines.exclude(status=LINE_STATUSES.success).exists():
+        batch.import_status = STATUSES.success
+    elif batch.lines.filter(status=LINE_STATUSES.success).exists():
+        batch.import_status = STATUSES.partial_success
+    else:
+        batch.import_status = STATUSES.failure
+    batch.import_date = timezone.now()
+    batch.save(update_fields=["import_status", "import_date"])
+    if batch.import_status == STATUSES.failure:
+        notify_batch_failure(batch)
+
+
+# Status and notification helpers
+
+
+def mark_maps_failed(map_ids, error):
+    """Mark maps as failed with an error message, and detach them from their task."""
+    Map.objects.filter(pk__in=map_ids).update(
+        import_status=STATUSES.failure,
+        import_error_msg=error,
+        import_date=timezone.now(),
+        task_id=None,
+    )
+
+
+def notify_map_failure(map_id, error, skipped_ids=()):
+    """Warn the cartographers of a failed map, and of the maps skipped after it."""
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+
+    def map_link(map_id):
+        return {
+            "id": map_id,
+            "url": base_url + reverse("admin:geodata_map_change", args=[map_id]),
+        }
+
+    message = render_to_string(
+        "geodata/mattermost_map_import_failure.txt",
+        context={
+            "failed": map_link(map_id),
+            "error": error,
+            "skipped": [map_link(skipped_id) for skipped_id in skipped_ids],
+            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
+        },
+    )
+    notify(message, "amenagement")
+
+
+def notify_batch_failure(batch):
+    """Warn the cartographers of a failed batch import, with its summary."""
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    message = render_to_string(
+        "geodata/mattermost_batch_import_failure.txt",
+        context={
+            "batch_id": batch.id,
+            "batch_url": base_url
+            + reverse("admin:geodata_mapimportbatch_change", args=[batch.id]),
+            "summary": batch.import_summary,
+            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
+        },
+    )
+    notify(message, "amenagement")
+
+
+# Preview
 
 
 @app.task(bind=True)
