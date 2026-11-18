@@ -33,29 +33,6 @@ from envergo.utils.tools import get_base_url
 logger = logging.getLogger(__name__)
 
 
-def notify_map_failure(map, error):
-    """Warn the cartographers of a failed map import, with links to the map and batch."""
-    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
-    batch_url = None
-    if map.import_batch_id:
-        batch_url = base_url + reverse(
-            "admin:geodata_mapimportbatch_change", args=[map.import_batch_id]
-        )
-
-    message = render_to_string(
-        "geodata/mattermost_map_import_failure.txt",
-        context={
-            "map_id": map.id,
-            "map_url": base_url + reverse("admin:geodata_map_change", args=[map.id]),
-            "error": error,
-            "batch_id": map.import_batch_id,
-            "batch_url": batch_url,
-            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
-        },
-    )
-    notify(message, "amenagement")
-
-
 def notify_batch_failure(batch):
     """Warn the cartographers of a failed batch import, with its summary."""
     base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
@@ -72,26 +49,46 @@ def notify_batch_failure(batch):
     notify(message, "amenagement")
 
 
-@app.task
-def fail_map_processing(request, exc, traceback, map_id, notify_failure=True):
-    """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
-    error = f"Erreur d'import ({exc})"
-    Map.objects.filter(pk=map_id).update(
+def notify_maps_failure(failed_id, error, skipped_ids):
+    """Warn the cartographers of a broken map chain: the failed map and the skipped ones if any."""
+    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+
+    def map_link(map_id):
+        return {
+            "id": map_id,
+            "url": base_url + reverse("admin:geodata_map_change", args=[map_id]),
+        }
+
+    message = render_to_string(
+        "geodata/mattermost_map_import_failure.txt",
+        context={
+            "failed": map_link(failed_id),
+            "error": error,
+            "skipped": [map_link(map_id) for map_id in skipped_ids],
+            "handlers": settings.CARTO_NOTIFICATION_HANDLERS,
+        },
+    )
+    notify(message, "amenagement")
+
+
+def mark_maps_failed(map_ids, error):
+    Map.objects.filter(pk__in=map_ids).update(
         import_status=STATUSES.failure,
         import_error_msg=error,
         import_date=timezone.now(),
         task_id=None,
     )
-    map = Map.objects.filter(pk=map_id).first()
-    if notify_failure and map is not None:
-        notify_map_failure(map, error)
 
 
-def queue_process_map(map_id, notify_failure=True):
+@app.task
+def fail_map_processing(request, exc, traceback, map_id):
+    """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
+    mark_maps_failed([map_id], f"Erreur d'import ({exc})")
+
+
+def queue_process_map(map_id):
     """Signature of `process_map` with its error callback, to queue the task."""
-    return process_map.si(map_id).on_error(
-        fail_map_processing.s(map_id, notify_failure=notify_failure)
-    )
+    return process_map.si(map_id).on_error(fail_map_processing.s(map_id))
 
 
 @app.task(bind=True, max_retries=1)
@@ -138,7 +135,27 @@ def process_map(task, map_id):
     map.save()
 
     if map.import_status == STATUSES.failure:
-        notify_map_failure(map, "Aucune géométrie importée.")
+        notify_maps_failure(map.id, "Aucune géométrie importée.", [])
+
+
+@app.task
+def fail_maps_processing(request, exc, traceback, map_ids):
+    """Error callback of the `process_maps` chain.
+
+    The chain stops at the first failure: every map queued after the failed one
+    is marked as failed, and a single summary is notified.
+    The failed map itself is marked by its own `process_map` error callback.
+    Both callbacks also run when the worker is killed (e.g. out of memory).
+    """
+    failed_id = request.args[0]
+    next_index = map_ids.index(failed_id) + 1
+    skipped_ids = map_ids[next_index:]
+
+    mark_maps_failed(
+        skipped_ids,
+        f"Import non effectué : l'import de la carte {failed_id} a échoué avant",
+    )
+    notify_maps_failure(failed_id, f"Erreur d'import ({exc})", skipped_ids)
 
 
 def process_maps(map_ids):
@@ -147,7 +164,9 @@ def process_maps(map_ids):
     Chaining the process avoid a too heavy load on DB and memory for big objects
     """
     if map_ids:
-        chain(*(queue_process_map(map_id) for map_id in map_ids)).delay()
+        chain(*(queue_process_map(map_id) for map_id in map_ids)).apply_async(
+            link_error=fail_maps_processing.s(list(map_ids))
+        )
 
 
 @app.task(max_retries=0)
@@ -342,8 +361,7 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
     if batch_file:
         return task.replace(
             chain(
-                # The batch failure callback notifies the failure, with the summary.
-                queue_process_map(map.id, notify_failure=False),
+                queue_process_map(map.id),
                 complete_row.si(batch_id, csv_line_number, row.reference),
             )
         )

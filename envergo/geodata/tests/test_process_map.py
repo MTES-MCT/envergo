@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -5,8 +6,14 @@ from django.db.models.fields.files import FieldFile
 from django.urls import reverse
 
 from envergo.geodata.models import STATUSES
-from envergo.geodata.tasks import fail_map_processing, process_map, process_maps
-from envergo.geodata.tests.factories import MapFactory, MapImportBatchFactory
+from envergo.geodata.tasks import (
+    fail_map_processing,
+    fail_maps_processing,
+    process_map,
+    process_maps,
+    queue_process_map,
+)
+from envergo.geodata.tests.factories import MapFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -28,7 +35,7 @@ def test_import_error_is_recorded_on_the_map():
     map = MapFactory(zones=None, expected_geometries=3)
 
     with patch("envergo.geodata.tasks.open_map_file", side_effect=ValueError("boom")):
-        process_maps([map.id])
+        queue_process_map(map.id).apply()
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -47,42 +54,14 @@ def test_task_failure_callback_records_the_failure():
     assert "db down" in map.import_error_msg
 
 
-def test_failure_notification_links_the_map_and_its_batch(notify_mock, settings):
-    settings.CARTO_NOTIFICATION_HANDLERS = ["carto"]
-    batch = MapImportBatchFactory()
-    map = MapFactory(zones=None, import_batch=batch)
-
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
-
-    message, site = notify_mock.call_args.args
-    assert site == "amenagement"
-    assert reverse("admin:geodata_map_change", args=[map.id]) in message
-    assert reverse("admin:geodata_mapimportbatch_change", args=[batch.id]) in message
-    assert "db down" in message
-    assert "ping carto" in message
-
-
-def test_failure_callback_can_leave_the_notification_to_the_caller(notify_mock):
+def test_failure_callback_leaves_the_notification_to_the_chain(notify_mock):
     map = MapFactory(zones=None)
 
-    fail_map_processing(
-        None, RuntimeError("db down"), None, map.id, notify_failure=False
-    )
+    fail_map_processing(None, RuntimeError("db down"), None, map.id)
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
     notify_mock.assert_not_called()
-
-
-def test_failure_notification_without_batch_has_no_batch_link(notify_mock):
-    map = MapFactory(zones=None)
-
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
-
-    message, _ = notify_mock.call_args.args
-    assert reverse("admin:geodata_map_change", args=[map.id]) in message
-    assert "Import par lot" not in message
-    assert "ping" not in message
 
 
 def test_map_without_geometry_is_notified(notify_mock):
@@ -119,20 +98,91 @@ def test_started_task_leaves_a_trace():
     assert map.import_date is not None
 
 
+def test_queued_map_has_its_failure_callback():
+    """The map is failed even if its worker is killed."""
+    assert queue_process_map(3).options["link_error"] == [fail_map_processing.s(3)]
+
+
 def test_maps_are_queued_as_a_chain():
     """Chained tasks run one at a time, whatever the worker concurrency."""
     with patch("envergo.geodata.tasks.chain") as mock_chain:
         process_maps([3, 1, 2])
 
-    signatures = mock_chain.call_args.args
-    assert [sig.args for sig in signatures] == [(3,), (1,), (2,)]
-    # The failure callback is run even if the worker is killed
-    assert [sig.options["link_error"][0].args for sig in signatures] == [
-        (3,),
-        (1,),
-        (2,),
-    ]
-    mock_chain.return_value.delay.assert_called_once_with()
+    mock_chain.assert_called_once_with(
+        queue_process_map(3), queue_process_map(1), queue_process_map(2)
+    )
+    mock_chain.return_value.apply_async.assert_called_once_with(
+        link_error=fail_maps_processing.s([3, 1, 2])
+    )
+
+
+def test_broken_chain_fails_the_skipped_maps(notify_mock, settings):
+    settings.CARTO_NOTIFICATION_HANDLERS = ["carto"]
+    done, failed, skipped_1, skipped_2 = MapFactory.create_batch(
+        4, zones=None, import_status=STATUSES.success
+    )
+    map_ids = [done.id, failed.id, skipped_1.id, skipped_2.id]
+
+    fail_maps_processing(
+        SimpleNamespace(args=[failed.id]), RuntimeError("oom"), None, map_ids
+    )
+
+    for map in (done, failed, skipped_1, skipped_2):
+        map.refresh_from_db()
+    assert done.import_status == STATUSES.success
+    # Left to the map own error callback
+    assert failed.import_status == STATUSES.success
+    for map in (skipped_1, skipped_2):
+        assert map.import_status == STATUSES.failure
+        assert f"carte {failed.id} a échoué" in map.import_error_msg
+        assert map.import_date is not None
+
+    # A single summary notification
+    notify_mock.assert_called_once()
+    message, site = notify_mock.call_args.args
+    assert site == "amenagement"
+    assert reverse("admin:geodata_map_change", args=[failed.id]) in message
+    assert "oom" in message
+    assert reverse("admin:geodata_map_change", args=[skipped_1.id]) in message
+    assert reverse("admin:geodata_map_change", args=[skipped_2.id]) in message
+    assert reverse("admin:geodata_map_change", args=[done.id]) not in message
+    assert "ping carto" in message
+
+
+def test_failure_of_the_last_map_skips_nothing(notify_mock):
+    done, failed = MapFactory.create_batch(
+        2, zones=None, import_status=STATUSES.success
+    )
+
+    fail_maps_processing(
+        SimpleNamespace(args=[failed.id]),
+        RuntimeError("oom"),
+        None,
+        [done.id, failed.id],
+    )
+
+    done.refresh_from_db()
+    assert done.import_status == STATUSES.success
+    message, _ = notify_mock.call_args.args
+    assert "non importées" not in message
+
+
+def test_failed_map_stops_the_chain_and_fails_the_next_ones(notify_mock):
+    failed, skipped = MapFactory.create_batch(
+        2, zones=None, import_status=STATUSES.success
+    )
+
+    with patch("envergo.geodata.tasks.open_map_file", side_effect=ValueError("boom")):
+        # An eager chain raises the failure when moving on to the next task
+        with pytest.raises(ValueError, match="boom"):
+            process_maps([failed.id, skipped.id])
+
+    skipped.refresh_from_db()
+    assert skipped.import_status == STATUSES.failure
+    assert f"carte {failed.id} a échoué" in skipped.import_error_msg
+    notify_mock.assert_called_once()
+    message, _ = notify_mock.call_args.args
+    assert "boom" in message
 
 
 def test_nothing_is_queued_without_maps():

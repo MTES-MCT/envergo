@@ -532,8 +532,6 @@ def test_batch_row_queues_the_map_with_its_failure_callback():
     [errback] = process_map_sig.options["link_error"]
     assert errback["task"] == fail_map_processing.name
     assert tuple(errback["args"]) == (map.id,)
-    # Only the batch failure is notified
-    assert errback["kwargs"] == {"notify_failure": False}
 
 
 def test_import_batch_row_records_errors_on_its_line_and_skips_the_row():
