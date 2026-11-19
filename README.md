@@ -649,6 +649,14 @@ nouvelle version, la compiler avec l'outillage du buildpack (`make buildenv`
 puis `builds/gdal.sh`) et l'ajouter à la release de la stack, par exemple
 `heroku-24/GDAL`.
 
+`PIP_NO_BINARY=fiona` fait compiler fiona contre ce GDAL. Le buildpack Python
+garde fiona dans son cache de build : après un changement de version de GDAL,
+vider ce cache avant de déployer.
+
+```
+$ scalingo --app envergo deployment-delete-cache
+```
+
 Les versions attendues sont déclarées dans le fichier `buildpacks.env`. Après
 chaque modification de ce fichier, appliquer les versions sur Scalingo :
 
