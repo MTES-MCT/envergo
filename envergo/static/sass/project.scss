@@ -811,7 +811,7 @@ form#request-evaluation-form {
 .autocomplete__wrapper .autocomplete__input {
   border: 0;
   border-radius: space(1v) space(1v) 0 0; /* stylelint-disable-line */
-  color: var(--text-label-grey);
+  color: #161616;
 
   --blend: var(--background-contrast-grey-blend);
 
@@ -829,7 +829,7 @@ form#request-evaluation-form {
 .autocomplete__wrapper .autocomplete__input::placeholder {
   opacity: 1;
   font-style: italic;
-  color: var(--text-mention-grey);
+  color: #666;
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
@@ -841,6 +841,11 @@ form#request-evaluation-form {
   border: 2px solid #0a76f6;
   border-top: none;
   left: -4px;
+}
+
+.autocomplete__wrapper .autocomplete__option {
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .fr-input-group--error .autocomplete__wrapper .autocomplete__input {
@@ -949,6 +954,7 @@ div.leaflet-container {
   width: 100%;
   height: 100%;
   position: relative;
+  font-family: Marianne, arial, sans-serif;
 
   &.with-address-search-bar {
     display: grid;
