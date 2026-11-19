@@ -491,7 +491,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==21.14.12
+virtualenv==21.15.9
     # via pre-commit
 watchdog==6.0.0
     # via -r local.in
