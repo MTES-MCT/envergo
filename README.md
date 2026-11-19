@@ -643,6 +643,12 @@ Le buildpack lit les versions dans les variables d'environnement `GDAL_VERSION`,
 `GEOS_VERSION` et `PROJ_VERSION`. Sans ces variables, il réutilise la version
 gardée dans son cache de build et ne la met jamais à jour.
 
+Heroku ne publie pas de GDAL au-delà de 3.12. `GEO_ARCHIVES_URL` fait donc
+télécharger les archives depuis les releases du dépôt du buildpack. Pour une
+nouvelle version, la compiler avec l'outillage du buildpack (`make buildenv`
+puis `builds/gdal.sh`) et l'ajouter à la release de la stack, par exemple
+`heroku-24/GDAL`.
+
 Les versions attendues sont déclarées dans le fichier `buildpacks.env`. Après
 chaque modification de ce fichier, appliquer les versions sur Scalingo :
 
