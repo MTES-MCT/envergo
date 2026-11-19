@@ -14,6 +14,7 @@ from envergo.moulinette.tests.factories import (
 from envergo.moulinette.tests.utils import (
     flatten_actions_to_take,
     make_amenagement_data,
+    setup_eval_env,
     setup_loi_sur_leau,
 )
 
@@ -323,6 +324,18 @@ def test_2150_with_pv_sol_not_activated():
     moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis"
+
+
+def test_2150_evaluation_keeps_additional_forms(france_map):  # noqa
+    """Reading the PV localisation during the evaluation must not hide the
+    additional questions of the other criteria."""
+    setup_eval_env(france_map)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=30000, final_surface=30000)
+    )
+
+    field_names = [f.name for form in moulinette.additional_forms for f in form]
+    assert "terrain_assiette" in field_names
 
 
 # ---------------------------------------------------------------------------
