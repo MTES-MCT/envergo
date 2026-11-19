@@ -10,7 +10,6 @@ django-redis
 django-phonenumber-field[phonenumbers]
 pytz
 python-slugify
-Pillow
 rcssmin
 argon2-cffi
 whitenoise
