@@ -118,3 +118,24 @@ def test_git_record_naming_a_package_gives_commit_fix(monkeypatch):
     findings = osv.find_vulnerabilities([git_component])[git_component]
 
     assert findings[0].fixed_versions == ["f" * 12]
+
+
+def test_fix_listed_by_several_entries_appears_once(monkeypatch):
+    """A fix commit listed by two entries of a record is reported once."""
+    repository = "https://github.com/freetype/freetype"
+    git_component = Component(repository, "VER-2-14-3", Ecosystem.GIT)
+    entry = {
+        "ranges": [
+            {
+                "type": "GIT",
+                "repo": repository,
+                "events": [{"introduced": "0"}, {"fixed": "f" * 40}],
+            }
+        ]
+    }
+    record = {"id": "CVE-2026-50811", "affected": [entry, entry]}
+    mock_osv(monkeypatch, [record], git_component)
+
+    findings = osv.find_vulnerabilities([git_component])[git_component]
+
+    assert findings[0].fixed_versions == ["f" * 12]

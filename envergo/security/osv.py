@@ -87,12 +87,13 @@ class OsvRecord:
         }
 
     def fixed_versions(self, component):
-        """Return the versions, or short commits, that fix this flaw for `component`."""
+        """Return the distinct versions, or short commits, that fix this flaw for `component`."""
         all_entries = self.data.get("affected", [])
         our_entries = [entry for entry in all_entries if describes(entry, component)]
         ranges = chain.from_iterable(entry.get("ranges", []) for entry in our_entries)
         fixes = chain.from_iterable(read_range_fixes(r) for r in ranges)
-        return list(fixes)
+        distinct_fixes = dict.fromkeys(fixes)
+        return list(distinct_fixes)
 
 
 def find_vulnerabilities(components):
