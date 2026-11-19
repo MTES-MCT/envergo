@@ -42,11 +42,7 @@ urlpatterns = [
         settings.HEALTH_CHECK_URL,
         EnvergoHealthCheckView.as_view(
             checks=[
-                "health_check.Cache",
-                "health_check.DNS",
                 "health_check.Database",
-                "health_check.Mail",
-                "health_check.Storage",
                 "health_check.contrib.celery.Ping",
                 (
                     "health_check.contrib.redis.Redis",
