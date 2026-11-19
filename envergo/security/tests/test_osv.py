@@ -5,10 +5,10 @@ from envergo.security.models import Severity
 COMPONENT = Component("some-package", "1.0.0", Ecosystem.PYPI)
 
 
-def mock_osv(monkeypatch, records):
-    """Make OSV report these records as affecting `COMPONENT`."""
+def mock_osv(monkeypatch, records, component=COMPONENT):
+    """Make OSV report these records as affecting `component`."""
     records_by_id = {record["id"]: record for record in records}
-    record_ids_by_component = {COMPONENT: list(records_by_id)}
+    record_ids_by_component = {component: list(records_by_id)}
     monkeypatch.setattr(osv, "query_record_ids", lambda _: record_ids_by_component)
     monkeypatch.setattr(
         osv, "fetch_record", lambda record_id: osv.OsvRecord(records_by_id[record_id])
@@ -83,12 +83,38 @@ def test_git_record_gives_commit_fix_and_cvss_rating(monkeypatch):
             }
         ],
     }
-    monkeypatch.setattr(
-        osv, "query_record_ids", lambda _: {git_component: [record["id"]]}
-    )
-    monkeypatch.setattr(osv, "fetch_record", lambda _: osv.OsvRecord(record))
+    mock_osv(monkeypatch, [record], git_component)
 
     findings = osv.find_vulnerabilities([git_component])[git_component]
 
     assert findings[0].fixed_versions == ["f" * 12]
     assert findings[0].severity == Severity.MODERATE
+
+
+def test_git_record_naming_a_package_gives_commit_fix(monkeypatch):
+    """A C library record matches by repository even when it also names a package."""
+    repository = "https://github.com/libjpeg-turbo/libjpeg-turbo"
+    git_component = Component(repository, "3.2.0", Ecosystem.GIT)
+    record = {
+        "id": "OSV-2026-1068",
+        "affected": [
+            {
+                "package": {"name": "libjpeg-turbo", "ecosystem": "OSS-Fuzz"},
+                "ranges": [
+                    {
+                        "type": "GIT",
+                        "repo": repository,
+                        "events": [
+                            {"introduced": "0"},
+                            {"fixed": "f" * 40},
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+    mock_osv(monkeypatch, [record], git_component)
+
+    findings = osv.find_vulnerabilities([git_component])[git_component]
+
+    assert findings[0].fixed_versions == ["f" * 12]

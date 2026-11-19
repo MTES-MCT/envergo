@@ -215,15 +215,17 @@ def rate_cvss(cvss_vectors):
 def describes(affected_entry, component):
     """Tell whether one `affected` entry of a record is about the scanned library.
 
-    Entries for C libraries name no package, only the repository of each commit range.
+    C libraries match by the repository of a commit range. Their entries may also name
+    a package in another ecosystem, such as OSS-Fuzz's.
     """
-    if "package" in affected_entry:
-        is_about_component = is_same_package(component, affected_entry["package"])
-    else:
-        ranges = affected_entry["ranges"]
-        repositories = [version_range.get("repo") for version_range in ranges]
-        is_about_component = component.name in repositories
-    return is_about_component
+    ranges = affected_entry.get("ranges", [])
+    repositories = [version_range.get("repo") for version_range in ranges]
+    matches_repository = component.name in repositories
+
+    package = affected_entry.get("package")
+    matches_package = package is not None and is_same_package(component, package)
+
+    return matches_repository or matches_package
 
 
 def read_range_fixes(version_range):
