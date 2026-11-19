@@ -231,7 +231,7 @@ class StateChangeForm(forms.ModelForm):
     - applicant_message: mandatory for every decision, sent to the applicant
       through the Démarches Simplifiées messagerie.
 
-    When an RU dossier switches to authorisation, the refusal deadline is the
+    When an RU dossier switches to authorization, the refusal deadline is the
     date after which silence means refusal. It is mandatory, at least two
     months away, and becomes the stage due date. The applicant message is
     mandatory and must be fully completed. Its deadline placeholder line must
@@ -389,7 +389,7 @@ class StateChangeForm(forms.ModelForm):
 
     @property
     def is_authorization_switch(self):
-        """Whether the dossier enters authorisation instruction from its declaration phase.
+        """Whether the dossier enters authorization instruction from its declaration phase.
 
         Only meaningful once the form is cleaned.
         """
@@ -544,7 +544,7 @@ class RequestAdditionalInfoForm(forms.Form):
     """Let an instructor pause the instruction and request for more information.
 
     During an RU declaration, the due date is at most three months away.
-    During an RU authorisation, it is at most the refusal deadline.
+    During an RU authorization, it is at most the refusal deadline.
     Otherwise, any future date is accepted.
     """
 
