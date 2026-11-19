@@ -56,13 +56,13 @@
             {% if not form.lat.data and form.lat.errors or not form.lng.data and form.lng.errors %}
               <p class="fr-error-text">
                 ↑
-                Aucune localisation indiquée. Veuillez indiquer l’emplacement du projet sur la carte en double-cliquant.
+                Aucune localisation indiquée. Veuillez indiquer l’emplacement du projet sur la carte en saisissant l’adresse ou la commune la plus proche, ou en double-cliquant.
                 ↑
               </p>
             {% elif form.lat.errors or form.lng.errors %}
               <p class="fr-error-text">
                 ↑
-                Les coordonnées saisies sont incorrectes
+                Les coordonnées saisies sont incorrectes.
                 ↑
               </p>
             {% endif %}
