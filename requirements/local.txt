@@ -208,7 +208,7 @@ flake8-isort==7.0.0
     # via -r local.in
 gql==4.4.0
     # via -r base.txt
-graphql-core==3.3.0
+graphql-core==3.3.2
     # via
     #   -r base.txt
     #   gql
