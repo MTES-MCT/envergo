@@ -92,6 +92,7 @@ LOCAL_APPS = [
     "envergo.petitions",
     "envergo.demos",
     "envergo.security",
+    "envergo.monitoring",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -330,7 +331,8 @@ SENTRY_DSN = env("SENTRY_DSN", default="")
 SENTRY_KEY = env("SENTRY_KEY", default="")
 
 # MONITORING
-HEALTHCHECK_URL = env("HEALTHCHECK_URL", default="ht/")
+HEALTH_CHECK_URL = env("HEALTH_CHECK_URL", default="ht/")
+HEALTH_CHECK_AUTH_TOKEN = env("HEALTH_CHECK_AUTH_TOKEN")
 
 # Your stuff...
 # ------------------------------------------------------------------------------
