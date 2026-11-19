@@ -15,7 +15,6 @@ from django.conf import settings
 from django.contrib.gis.gdal.libgdal import gdal_version
 from django.contrib.gis.geos.libgeos import geos_version_tuple
 from packaging.utils import canonicalize_name
-from PIL import features
 from psycopg import pq
 
 logger = logging.getLogger(__name__)
@@ -60,8 +59,7 @@ class RuntimeLibrary:
 
 # Programs and C libraries that no package manager lists, so the inventory cannot
 # find them on its own. This list is maintained by hand. Each entry reads the
-# running version, and OSV matches it by repository and release tag. Pillow
-# reports the libraries its wheel bundles.
+# running version, and OSV matches it by repository and release tag.
 RUNTIME_LIBRARIES = [
     RuntimeLibrary(
         "https://github.com/python/cpython",
@@ -84,25 +82,6 @@ RUNTIME_LIBRARIES = [
         tag_prefix="REL_",
         tag_separator="_",
     ),
-    RuntimeLibrary(
-        "https://github.com/libjpeg-turbo/libjpeg-turbo",
-        lambda: features.version("libjpeg_turbo"),
-    ),
-    RuntimeLibrary(
-        "https://github.com/freetype/freetype",
-        lambda: features.version("freetype2"),
-        tag_prefix="VER-",
-        tag_separator="-",
-    ),
-    RuntimeLibrary(
-        "https://github.com/uclouvain/openjpeg",
-        lambda: features.version("jpg_2000"),
-        tag_prefix="v",
-    ),
-    RuntimeLibrary(
-        "https://github.com/harfbuzz/harfbuzz",
-        lambda: features.version("harfbuzz"),
-    ),
 ]
 
 
@@ -120,10 +99,6 @@ UNMONITORED_COMPONENTS = [
     UnmonitoredComponent(
         "PROJ, système et embarqué par pyproj",
         "aucune source de vulnérabilités ne le couvre",
-    ),
-    UnmonitoredComponent(
-        "libtiff, libwebp, Little CMS, libavif et zlib-ng, embarqués par Pillow",
-        "OSV n'a pas de données sur ces bibliothèques",
     ),
     UnmonitoredComponent(
         "OpenSSL 1.1, curl, SQLite, libtiff, GEOS et PROJ, embarqués par fiona",

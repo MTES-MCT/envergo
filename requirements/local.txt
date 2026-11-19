@@ -304,8 +304,6 @@ phonenumbers==9.0.41
     # via
     #   -r base.txt
     #   django-phonenumber-field
-pillow==13.0.0
-    # via -r base.txt
 pip-tools==7.6.2
     # via -r base.txt
 platformdirs==4.13.5

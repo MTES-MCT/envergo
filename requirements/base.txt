@@ -145,8 +145,6 @@ packaging==26.3
     #   wheel
 phonenumbers==9.0.41
     # via django-phonenumber-field
-pillow==13.0.0
-    # via -r base.in
 pip-tools==7.6.2
     # via -r base.in
 prompt-toolkit==3.0.53
