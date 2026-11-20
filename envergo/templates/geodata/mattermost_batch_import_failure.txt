@@ -1,0 +1,6 @@
+{% autoescape off %}### Échec de l'import par lot [{{ batch_id }}]({{ batch_url }})
+
+{{ summary }}
+{% if handlers %}
+ping {{ handlers|join:", " }}
+{% endif %}{% endautoescape %}
