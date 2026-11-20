@@ -1,4 +1,5 @@
 import datetime
+import re
 from decimal import Decimal
 from unittest.mock import ANY, patch
 
@@ -53,6 +54,8 @@ from envergo.petitions.regulations.loi_sur_leau_haie import (
 )
 from envergo.petitions.services import (
     UNTRACKED_SUBMISSION_SESSION_KEY,
+    attestation_non_opposition_html,
+    attestation_non_opposition_pdf,
     compute_instructor_informations_ds,
     declaration_receipt_message,
     get_context_from_dn,
@@ -1447,6 +1450,115 @@ class TestDeclarationReceiptMessage:
             "02011 LAON\n"
             "Tel. : 03 23 24 64 00"
         )
+
+
+class TestAttestationNonOpposition:
+    """The attestation the applicant gets once silence means agreement."""
+
+    PROHIBITION_RANGE = DateRange(datetime.date(2026, 3, 18), datetime.date(2026, 9, 1))
+    AGREEMENT_DATE = datetime.date(2026, 12, 5)
+
+    def make_project(self, hedges=None, **config_overrides):
+        """An RU project with a dossier and a prohibition period in its département."""
+        config = {"prohibition_range": self.PROHIBITION_RANGE, **config_overrides}
+        RUConfigHaieFactory(**config)
+
+        if hedges is None:
+            hedges = [
+                make_hedge_factory(10, type_haie="arbustive", id="D1"),
+                make_hedge_factory(20, type_haie="arbustive", id="D2"),
+                make_hedge_factory(22, type_haie="mixte", id="D3"),
+                make_hedge_factory(85, type_haie="mixte", id="P1", to_plant=True),
+            ]
+        return PetitionProjectFactory(
+            hedge_data=HedgeDataFactory(hedges=hedges),
+            demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+        )
+
+    def render(self, project, agreement_date=AGREEMENT_DATE):
+        """The HTML with spaces and line breaks collapsed, as the PDF shows it."""
+        html = attestation_non_opposition_html(project, agreement_date)
+        return re.sub(r"[ \n]+", " ", html)
+
+    def test_attestation_names_the_dossier_the_applicant_and_the_department(self):
+        html = self.render(self.make_project())
+
+        assert "Attestation n° 2105-9675 de non-opposition" in html
+        assert "présenté par LAMARR Hedy" in html
+        assert "Le Préfet du département Loire-Atlantique (44)" in html
+
+    def test_attestation_names_the_commune_declared_in_the_dossier(self):
+        project = self.make_project(
+            demarche_numerique_config__display_fields={
+                "project_url": "ABC123",
+                "city": "Q2hhbXAtNDcyOTE4Nw==",
+            },
+        )
+
+        html = self.render(project)
+
+        assert "destruction de haie située sur la commune de Laon (02000) lui" in html
+
+    def test_attestation_omits_the_commune_when_the_dossier_does_not_carry_one(self):
+        html = self.render(self.make_project())
+
+        assert "destruction de haie lui donnant droit" in html
+
+    def test_attestation_sums_the_lengths_of_each_hedge_type(self):
+        """Hedges are listed per type, with the régime unique labels."""
+        html = self.render(self.make_project())
+
+        # Under the régime unique, a "mixte" hedge reads "arborée".
+        to_remove = (
+            "Linéaires à détruire :</p> <ul> "
+            "<li>Haie arbustive, 30\u00a0m</li> <li>Haie arborée, 22\u00a0m</li> </ul>"
+        )
+        to_plant = (
+            "Linéaires à planter en compensation :</p> <ul> "
+            "<li>Haie arborée, 85\u00a0m</li> </ul>"
+        )
+        assert to_remove in html
+        assert to_plant in html
+
+    def test_attestation_omits_the_plantation_list_when_nothing_is_planted(self):
+        project = self.make_project(
+            hedges=[make_hedge_factory(30, type_haie="arbustive", id="D1")]
+        )
+
+        html = self.render(project)
+
+        assert "Linéaires à planter en compensation" not in html
+
+    def test_works_start_on_the_agreement_date_outside_the_prohibition_period(self):
+        html = self.render(self.make_project())
+
+        assert "à partir de la date du 5 décembre 2026" in html
+        assert "<p>le 5 décembre 2026</p>" in html  # Signature date
+
+    def test_works_start_after_the_prohibition_period_when_agreed_inside_it(self):
+        html = self.render(
+            self.make_project(), agreement_date=datetime.date(2027, 7, 1)
+        )
+
+        assert "à partir de la date du 1er septembre 2027" in html
+        assert "<p>le 1er juillet 2027</p>" in html  # Signature date
+
+    def test_attestation_names_the_prohibition_period_of_the_department(self):
+        html = self.render(self.make_project())
+
+        assert (
+            "fixée par arrêté préfectoral, soit du 18 mars au 31 août, sauf cas" in html
+        )
+
+    def test_attestation_cites_the_order_alone_without_a_prohibition_period(self):
+        html = self.render(self.make_project(prohibition_range=None))
+
+        assert "fixée par arrêté préfectoral, sauf cas particuliers" in html
+
+    def test_attestation_renders_as_a_pdf(self):
+        pdf = attestation_non_opposition_pdf(self.make_project(), self.AGREEMENT_DATE)
+
+        assert pdf.startswith(b"%PDF-")
 
 
 @pytest.mark.parametrize(

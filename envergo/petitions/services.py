@@ -9,6 +9,7 @@ from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
+from weasyprint import HTML
 
 from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
@@ -429,6 +430,42 @@ def declaration_receipt_message(petition_project, received_on, due_date):
             "faq_url": settings.HAIE_FAQ_URLS["SERVICE_USERS"],
         },
     )
+
+
+def attestation_non_opposition_html(petition_project, agreement_date):
+    """Render the attestation de non-opposition granted by tacit agreement.
+
+    `agreement_date` is the day silence became agreement. The attestation is dated
+    that day, and works may start then, or once the prohibition period ends.
+    """
+    config = petition_project.config
+    hedge_data = petition_project.hedge_data
+    work_start_date = config.first_allowed_work_date(agreement_date) or agreement_date
+
+    return render_to_string(
+        "haie/petitions/attestation_non_opposition.html",
+        context={
+            "department": petition_project.department,
+            "dossier_number": petition_project.demarche_numerique_dossier_number,
+            "applicant": petition_project.prefetched_dossier.applicant_name,
+            "commune": declared_commune(petition_project),
+            "work_start_date": work_start_date,
+            "hedges_to_remove": hedge_data.hedges_to_remove(),
+            "hedges_to_plant": hedge_data.hedges_to_plant(),
+            "hedge_types": petition_project.hedge_types,
+            "prohibition_range_display": config.prohibition_range_display,
+            "signed_on": agreement_date,
+        },
+    )
+
+
+def attestation_non_opposition_pdf(petition_project, agreement_date) -> bytes:
+    """Render the attestation de non-opposition as a PDF document."""
+    html = attestation_non_opposition_html(petition_project, agreement_date)
+    # The template loads its fonts from the collected static files.
+    static_root = f"{settings.STATIC_ROOT}/"
+    # PDF/A-2a: the archival format for official acts, with an accessible structure.
+    return HTML(string=html, base_url=static_root).write_pdf(pdf_variant="pdf/a-2a")
 
 
 def get_item_value_from_ds_champ(champ):
