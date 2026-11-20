@@ -629,7 +629,7 @@ dédié](https://github.com/Scalingo/geo-buildpack), qui est tombé en désuétu
 
 À titre de solution temporaire, les actions suivantes ont été réalisées :
 
-1/ Forker le `heroku-geo-buildpack` et [modifier cette ligne](https://github.com/thibault/heroku-geo-buildpack/blob/master/bin/compile#L9) pour obtenir la bonne url.
+1/ Forker le `heroku-geo-buildpack` et [modifier cette ligne](https://github.com/thibault/heroku-geo-buildpack/blob/main/bin/compile#L31) pour obtenir la bonne url.
 
 2/ Remplacer le buildpack scalingo par l'url du buildpack clôné : https://github.com/MTES-MCT/envergo/blob/fix_geo_buildpack/.buildpacks#L3
 
@@ -643,11 +643,9 @@ Le buildpack lit les versions dans les variables d'environnement `GDAL_VERSION`,
 `GEOS_VERSION` et `PROJ_VERSION`. Sans ces variables, il réutilise la version
 gardée dans son cache de build et ne la met jamais à jour.
 
-Heroku ne publie pas de GDAL au-delà de 3.12. `GEO_ARCHIVES_URL` fait donc
-télécharger les archives depuis les releases du dépôt du buildpack. Pour une
-nouvelle version, la compiler avec l'outillage du buildpack (`make buildenv`
-puis `builds/gdal.sh`) et l'ajouter à la release de la stack, par exemple
-`heroku-24/GDAL`.
+Heroku ne fournit pas GDAL au-delà de 3.12. `GEO_ARCHIVES_URL` fait donc
+télécharger les archives depuis les releases de notre fork du buildpack. Son
+README explique comment y ajouter une version.
 
 `PIP_NO_BINARY=fiona` fait compiler fiona contre ce GDAL. Le buildpack Python
 garde fiona dans son cache de build : après un changement de version de GDAL,
