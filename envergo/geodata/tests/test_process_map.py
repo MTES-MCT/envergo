@@ -105,7 +105,7 @@ def test_started_task_leaves_a_trace():
 def test_queued_map_has_its_failure_callback():
     """The map is failed even if its worker is killed."""
     assert process_map_signature(3).options["link_error"] == [
-        on_map_failure.s(3, owner=None)
+        on_map_failure.s(3, handover_from=None)
     ]
 
 
@@ -244,10 +244,10 @@ def test_claim_of_a_dead_task_can_be_taken():
     assert map.import_status is None
 
 
-def test_claim_can_be_handed_over_by_its_owner():
+def test_claim_can_be_handed_over_by_its_holder():
     map = MapFactory(zones=None, task_id="row-task", import_date=timezone.now())
 
-    claim_map(map.id, "task", owner="row-task")
+    claim_map(map.id, "task", handover_from="row-task")
 
     map.refresh_from_db()
     assert map.task_id == "task"

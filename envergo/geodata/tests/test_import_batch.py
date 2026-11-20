@@ -24,15 +24,15 @@ from envergo.geodata.models import (
 )
 from envergo.geodata.tasks import (
     BatchImportInProgress,
-    complete_batch_row,
-    finalize_batch,
+    end_batch_import,
     import_batch_row,
-    on_batch_chain_failure,
-    on_batch_failure,
+    mark_batch_row_imported,
+    on_batch_rows_failure,
+    on_batch_run_failure,
     on_map_failure,
     process_map,
-    process_map_import_batch,
-    process_map_import_batch_signature,
+    run_batch_import,
+    run_batch_import_signature,
     start_batch_import,
 )
 from envergo.geodata.tests.factories import (
@@ -94,7 +94,7 @@ def fake_open_map_file(file):
 def record_map(processed):
     """Stub of `process_map`, recording the processed map ids."""
 
-    def process_map_stub(map_id, owner=None):
+    def process_map_stub(map_id, *, handover_from=None):
         processed.append(map_id)
 
     return process_map_stub
@@ -110,7 +110,7 @@ def run_task(batch, only_failed=False):
         patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
         patch.object(process_map, "run", side_effect=record_map(processed)),
     ):
-        process_map_import_batch.apply(args=(batch.id, start_run(batch), only_failed))
+        run_batch_import.apply(args=(batch.id, start_run(batch), only_failed))
     batch.refresh_from_db()
     return processed
 
@@ -335,7 +335,7 @@ def test_batch_metadata_only_update_skips_reimport():
         patch("envergo.geodata.tasks.open_map_file") as mock_open,
         patch.object(process_map, "run", side_effect=record_map(queued)),
     ):
-        process_map_import_batch.apply(args=(batch.id, start_run(batch)))
+        run_batch_import.apply(args=(batch.id, start_run(batch)))
     batch.refresh_from_db()
 
     assert batch.import_status == STATUSES.success
@@ -485,11 +485,11 @@ def test_batch_with_invalid_csv_imports_nothing():
 
 
 def test_queued_batch_has_its_failure_callback():
-    signature = process_map_import_batch_signature(3, "run", only_failed=True)
+    signature = run_batch_import_signature(3, "run", only_failed=True)
 
     assert signature.args == (3, "run")
     assert signature.kwargs == {"only_failed": True}
-    assert signature.options["link_error"] == [on_batch_failure.s(3, "run")]
+    assert signature.options["link_error"] == [on_batch_run_failure.s(3, "run")]
 
 
 def test_batch_crash_before_import_fails_the_batch(notify_mock):
@@ -497,7 +497,7 @@ def test_batch_crash_before_import_fails_the_batch(notify_mock):
     batch = make_batch(f"{CSV_HEADER}\nr1,a.gpkg,Carte A,Description A,44\n")
     batch.csv_file.storage.delete(batch.csv_file.name)
 
-    process_map_import_batch_signature(batch.id, start_run(batch)).apply()
+    run_batch_import_signature(batch.id, start_run(batch)).apply()
 
     batch.refresh_from_db()
     assert batch.import_status == STATUSES.failure
@@ -533,7 +533,7 @@ def test_batch_is_failed_when_a_map_processing_crashes(notify_mock, settings):
         patch.object(process_map, "run", side_effect=RuntimeError("boom")),
         patch.object(process_map, "max_retries", 0),
     ):
-        process_map_import_batch.apply(args=(batch.id, start_run(batch)))
+        run_batch_import.apply(args=(batch.id, start_run(batch)))
     batch.refresh_from_db()
 
     assert batch.import_status == STATUSES.failure
@@ -575,19 +575,19 @@ def test_batch_row_queues_the_map_with_its_failure_callback():
         patch("envergo.geodata.tasks.open_map_file", fake_open_map_file),
         patch.object(import_batch_row, "replace") as mock_replace,
     ):
-        process_map_import_batch.apply(args=(batch.id, start_run(batch)))
+        run_batch_import.apply(args=(batch.id, start_run(batch)))
 
     map = Map.objects.get(reference="r1")
     process_map_sig = mock_replace.call_args.args[0].tasks[0]
     assert process_map_sig.args == (map.id,)
-    # The row hands its claim on the map over to process_map
-    owner = process_map_sig.kwargs["owner"]
-    assert owner is not None
-    assert Map.objects.get(pk=map.id).task_id == owner
+    # The row hands its lease on the map over to process_map
+    row_task_id = process_map_sig.kwargs["handover_from"]
+    assert row_task_id is not None
+    assert Map.objects.get(pk=map.id).task_id == row_task_id
     [errback] = process_map_sig.options["link_error"]
     assert errback["task"] == on_map_failure.name
     assert tuple(errback["args"]) == (map.id,)
-    assert errback["kwargs"] == {"owner": owner}
+    assert errback["kwargs"] == {"handover_from": row_task_id}
 
 
 def test_import_batch_row_records_errors_on_its_line_and_skips_the_row():
@@ -636,12 +636,12 @@ def test_import_summary_counts_the_lines_and_the_interruption():
         ([LINE_STATUSES.failure, LINE_STATUSES.failure], STATUSES.failure),
     ],
 )
-def test_finalize_batch_status(statuses, expected, notify_mock):
+def test_end_batch_import_status(statuses, expected, notify_mock):
     batch = make_batch(f"{CSV_HEADER}\n")
     for line_number, status in enumerate(statuses, start=2):
         batch.lines.create(line_number=line_number, status=status)
 
-    finalize_batch.apply(args=(batch.id, start_run(batch)))
+    end_batch_import.apply(args=(batch.id, start_run(batch)))
     batch.refresh_from_db()
 
     assert batch.import_status == expected
@@ -691,7 +691,7 @@ def test_imported_row_keeps_the_running_batch_in_progress():
     batch.lines.create(line_number=2, reference="r1")
     batch.lines.create(line_number=3, reference="r2")
 
-    complete_batch_row.apply(args=(batch.id, start_run(batch), 2, "r1"))
+    mark_batch_row_imported.apply(args=(batch.id, start_run(batch), 2, "r1"))
     batch.refresh_from_db()
 
     assert batch.lines.get(line_number=2).status == LINE_STATUSES.success
@@ -720,9 +720,7 @@ def test_start_batch_import_queues_a_new_run(django_capture_on_commit_callbacks)
     batch = MapImportBatchFactory(import_status=STATUSES.partial_success)
 
     with (
-        patch(
-            "envergo.geodata.tasks.process_map_import_batch_signature"
-        ) as mock_signature,
+        patch("envergo.geodata.tasks.run_batch_import_signature") as mock_signature,
         django_capture_on_commit_callbacks(execute=True),
     ):
         run_id = start_batch_import(batch.id, only_failed=True)
@@ -739,7 +737,7 @@ def test_start_batch_import_refuses_a_running_batch():
     batch = MapImportBatchFactory()
     run_id = start_run(batch)
 
-    with patch("envergo.geodata.tasks.process_map_import_batch_signature"):
+    with patch("envergo.geodata.tasks.run_batch_import_signature"):
         with pytest.raises(BatchImportInProgress):
             start_batch_import(batch.id)
 
@@ -764,7 +762,7 @@ def test_interrupted_run_can_be_restarted():
         "1 ligne(s) non traitée(s). Le lot peut être relancé."
     )
 
-    with patch("envergo.geodata.tasks.process_map_import_batch_signature"):
+    with patch("envergo.geodata.tasks.run_batch_import_signature"):
         run_id = start_batch_import(batch.id, only_failed=True)
 
     assert run_id != old_run_id
@@ -776,7 +774,7 @@ def test_task_of_a_replaced_run_is_ignored():
     old_run_id = start_run(batch)
     start_run(batch)
 
-    result = complete_batch_row.apply(args=(batch.id, old_run_id, 2, "r1"))
+    result = mark_batch_row_imported.apply(args=(batch.id, old_run_id, 2, "r1"))
 
     assert result.state == "IGNORED"
     assert batch.lines.get(line_number=2).status == LINE_STATUSES.pending
@@ -788,8 +786,8 @@ def test_failure_callback_of_a_replaced_run_does_nothing(notify_mock):
     old_run_id = start_run(batch)
     run_id = start_run(batch)
 
-    on_batch_chain_failure(None, RuntimeError("boom"), None, batch.id, old_run_id)
-    on_batch_failure(None, RuntimeError("boom"), None, batch.id, old_run_id)
+    on_batch_rows_failure(None, RuntimeError("boom"), None, batch.id, old_run_id)
+    on_batch_run_failure(None, RuntimeError("boom"), None, batch.id, old_run_id)
 
     batch.refresh_from_db()
     assert str(batch.run_id) == run_id
