@@ -109,9 +109,7 @@ from envergo.petitions.services import (
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
-    update_demarche_numerique_status,
 )
-from envergo.petitions.tasks import send_applicant_message_async
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
@@ -2005,9 +2003,7 @@ class PetitionProjectInstructorProcedureView(
             self.append_applicant_message_notice(log)
 
         try:
-            with transaction.atomic():
-                log.save()
-                self.update_ds_status(log)
+            self.object.record_status_change(log)
         except DemarcheNumeriqueError as e:
             logger.error(e)
             # The status log signal changed the in-memory project before the rollback.
@@ -2027,26 +2023,12 @@ class PetitionProjectInstructorProcedureView(
             )
 
         if is_closing:
-            self.schedule_applicant_message(log)
             self.notify_closing_succeeded(form)
         elif form.is_authorization_switch:
-            self.schedule_applicant_message(log)
             self.notify_authorization_switch_succeeded()
 
         self.schedule_state_change_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
-
-    def update_ds_status(self, log):
-        """Update the « Démarche numérique » status to match the new log.
-
-        Skipped when the status is already up to date. Raises
-        DemarcheNumeriqueError on failure so the enclosing transaction
-        rolls the log back.
-        """
-        previous_ds_status = self.object.demarche_numerique_state
-        new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
-        if previous_ds_status != new_ds_status:
-            update_demarche_numerique_status(self.object, new_ds_status)
 
     def append_applicant_message_notice(self, log):
         """Append to the log's internal comment that the applicant gets a message."""
@@ -2055,14 +2037,6 @@ class PetitionProjectInstructorProcedureView(
             log.update_comment = f"{log.update_comment}\n{notice}"
         else:
             log.update_comment = notice
-
-    def schedule_applicant_message(self, log):
-        """Queue the log's applicant message for after commit.
-
-        Sent asynchronously, so a DN messagerie failure never blocks the state
-        change. The task retry policy handles transient errors.
-        """
-        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def notify_closing_succeeded(self, form):
         attachment_phrase = (

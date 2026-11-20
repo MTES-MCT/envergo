@@ -2149,8 +2149,8 @@ def procedure_url(project):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2197,8 +2197,8 @@ def test_petition_project_close_with_express_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2229,8 +2229,8 @@ def test_petition_project_close_with_tacit_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2254,8 +2254,8 @@ def test_petition_project_close_with_dropped(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2285,8 +2285,8 @@ def test_petition_project_close_with_missing_fields(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2319,7 +2319,7 @@ def test_petition_project_close_status_change_failure(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 @pytest.mark.django_db(transaction=True)
 def test_closing_actually_calls_ds_messagerie(
@@ -5261,8 +5261,8 @@ def state_change_form_data(**overrides):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_authorization_switch_sends_the_applicant_message(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -5301,8 +5301,8 @@ def test_authorization_switch_sends_the_applicant_message(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_stage_change_without_switch_sends_no_applicant_message(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -5324,8 +5324,8 @@ def test_stage_change_without_switch_sends_no_applicant_message(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_authorization_switch_status_change_failure(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site

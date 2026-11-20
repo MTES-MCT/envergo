@@ -26,9 +26,11 @@ from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Re
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.services import (
+    DEMARCHE_NUMERIQUE_STATUS_MAPPING,
     dossier_state_changed_outside_guh_alert,
     dossier_submission_alert,
     log_dossier_submission_event,
+    update_demarche_numerique_status,
 )
 from envergo.utils.models import ResultSnapshotBase
 from envergo.utils.urls import extract_param_from_url, update_qs
@@ -613,6 +615,36 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             ),
             robust=True,
         )
+
+    def record_status_change(self, log):
+        """Save a status log of this dossier and mirror it in « Démarche numérique ».
+
+        The log's applicant message, if any, goes out after commit. Raises
+        DemarcheNumeriqueError when « Démarche numérique » rejects the new status,
+        and the log is rolled back.
+        """
+        with transaction.atomic():
+            log.save()
+            self.sync_demarche_numerique_status(log)
+            if log.applicant_message:
+                self.schedule_applicant_message(log)
+
+    def sync_demarche_numerique_status(self, log):
+        """Update the « Démarche numérique » status to match the new log, when it differs."""
+        new_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
+        if self.demarche_numerique_state != new_status:
+            update_demarche_numerique_status(self, new_status)
+
+    def schedule_applicant_message(self, log):
+        """Queue the log's applicant message for after commit.
+
+        Sent asynchronously, so a DN messagerie failure never blocks the state
+        change. The task retry policy handles transient errors.
+        """
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_applicant_message_async
+
+        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
