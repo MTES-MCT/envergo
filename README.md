@@ -741,6 +741,12 @@ scalingo --app nom_de_lapplication run "python manage.py health_check --no-http 
 
 Les variables d'env concernées sont respectivement `HEALTH_CHECK_URL` et `HEALTH_CHECK_AUTH_TOKEN`.
 
+### Workers
+
+Pour vérifier le bon fonctionnement des workers (Celery), la commande monitoring_send_pulse est
+programmée à intervalles réguliers. Elle planifie une tâche qui lance une requête http vers une
+URL définie dans le paramètre `HEALTH_CHECK_PULSE_URL` ou à défaut laisse une entrée de log.
+
 ## Glossaire
 
 Voici un petit index des acronymes et termes métiers fréquemment rencontrés.
