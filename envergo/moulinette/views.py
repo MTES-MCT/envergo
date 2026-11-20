@@ -600,7 +600,7 @@ class MoulinetteResultMixin:
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
 
-        context["non_disponible_tag_style"] = TagStyleEnum.Grey
+        context["non_disponible_tag_style"] = TagStyleEnum.Neutral
         context["is_admin"] = self.request.user.is_staff
         context["is_debug"] = is_debug
 

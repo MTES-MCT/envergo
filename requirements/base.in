@@ -36,3 +36,4 @@ requests-toolbelt
 dacite
 python-magic
 django-storages[boto3]
+cvss
