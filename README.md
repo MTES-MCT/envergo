@@ -719,6 +719,34 @@ Pour récupérer les backups et les restaurer.
 
 Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](https://www.scaleway.com/en/docs/object-storage/how-to/restore-an-object-from-glacier/)
 
+## Monitoring
+
+### Page de contrôle
+
+Une page de statut technique existe à une adresse "secrète" (stockée en variable d'environnement),
+accessible aux utilisateurs is_staff connectés et protégée par un token le reste du temps.
+
+Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]`
+
+Par exemple en dev :
+- http://envergo.local:8000/ht/quick
+- http://envergo.local:8000/ht/full
+
+Pour analyser la situation en ligne de commande avec le client scalingo :
+
+```
+scalingo --app nom_de_lapplication run "python manage.py health_check --no-http monitoring:check_full"
+scalingo --app nom_de_lapplication run "python manage.py health_check --no-http monitoring:check_quick"
+```
+
+Les variables d'env concernées sont respectivement `HEALTH_CHECK_URL` et `HEALTH_CHECK_AUTH_TOKEN`.
+
+### Workers
+
+Pour vérifier le bon fonctionnement des workers (Celery), la commande monitoring_send_pulse est
+programmée à intervalles réguliers. Elle planifie une tâche qui lance une requête http vers une
+URL définie dans le paramètre `HEALTH_CHECK_PULSE_URL` ou à défaut laisse une entrée de log.
+
 ## Glossaire
 
 Voici un petit index des acronymes et termes métiers fréquemment rencontrés.

@@ -48,6 +48,10 @@ EMAIL_BACKEND = env(
 # http://whitenoise.evans.io/en/latest/django.html#using-whitenoise-in-development
 INSTALLED_APPS = ["whitenoise.runserver_nostatic"] + INSTALLED_APPS  # noqa F405
 
+# MONITORING
+HEALTH_CHECK_AUTH_TOKEN = env(
+    "HEALTH_CHECK_AUTH_TOKEN", default="UFs97KN9R4GLV-ZAwFcXubpKP62UQU3iGo4AvltrExA"
+)
 
 # django-debug-toolbar
 # ------------------------------------------------------------------------------

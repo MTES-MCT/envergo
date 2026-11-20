@@ -72,6 +72,7 @@ THIRD_PARTY_APPS = [
     "localflavor",
     "django_otp",
     "django_otp.plugins.otp_totp",
+    "health_check",
 ]
 
 LOCAL_APPS = [
@@ -91,6 +92,7 @@ LOCAL_APPS = [
     "envergo.petitions",
     "envergo.demos",
     "envergo.security",
+    "envergo.monitoring",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -328,6 +330,10 @@ CELERY_TASK_TRACK_STARTED = True
 SENTRY_DSN = env("SENTRY_DSN", default="")
 SENTRY_KEY = env("SENTRY_KEY", default="")
 
+# MONITORING
+HEALTH_CHECK_URL = env("HEALTH_CHECK_URL", default="ht/")
+HEALTH_CHECK_AUTH_TOKEN = env("HEALTH_CHECK_AUTH_TOKEN", default="")
+HEALTH_CHECK_PULSE_URL = env("HEALTH_CHECK_PULSE_URL", default="")
 
 # Your stuff...
 # ------------------------------------------------------------------------------
