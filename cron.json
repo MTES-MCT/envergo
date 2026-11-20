@@ -33,7 +33,7 @@
       "size": "M"
     },
     {
-      "command": "*/7 * * * * python manage.py monitoring_send_pulse",
+      "command": "*/11 * * * * python manage.py monitoring_send_pulse",
       "size": "S"
     }
   ]
