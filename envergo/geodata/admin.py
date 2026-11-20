@@ -28,9 +28,10 @@ from envergo.geodata.models import (
     Zone,
 )
 from envergo.geodata.tasks import (
+    BatchImportInProgress,
     generate_map_preview,
-    process_map_import_batch_signature,
     process_maps,
+    start_batch_import,
 )
 from envergo.geodata.utils import InvalidMapFile, open_map_file
 from envergo.utils.validators import detect_mime, validate_mime
@@ -381,6 +382,13 @@ class MapImportBatchAdmin(admin.ModelAdmin):
         description=mark_safe("<abbr title='Importé avec succes ?'>Imp.</abbr>"),
     )
     def col_import_status(self, obj):
+        if obj.is_interrupted:
+            return format_html(
+                '<img src="{}" title="{}" alt="{}"/>',
+                "/static/admin/img/icon-alert.svg",
+                "Interrompu",
+                "Interrompu",
+            )
         if not obj.import_status:
             return ""
 
@@ -423,6 +431,12 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 reverse("admin:geodata_mapimportbatch_changelist")
             )
 
+        change_url = reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
+        already_running = "Un import de ce lot est déjà en cours."
+        if batch.is_running:
+            self.message_user(request, already_running, level=messages.ERROR)
+            return HttpResponseRedirect(change_url)
+
         only_failed = request.POST.get("mode") == "failed"
         if only_failed and not batch.can_retry_failed_lines:
             self.message_user(
@@ -430,19 +444,20 @@ class MapImportBatchAdmin(admin.ModelAdmin):
                 "Seules les lignes en échec d'un lot partiellement importé peuvent être relancées.",
                 level=messages.ERROR,
             )
-            return HttpResponseRedirect(
-                reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
-            )
+            return HttpResponseRedirect(change_url)
 
-        process_map_import_batch_signature(batch.id, only_failed=only_failed).delay()
+        try:
+            start_batch_import(batch.id, only_failed=only_failed)
+        except BatchImportInProgress:
+            # Started by someone else since the batch was loaded.
+            self.message_user(request, already_running, level=messages.ERROR)
+            return HttpResponseRedirect(change_url)
         self.message_user(
             request,
             "Lot en cours de traitement. Cela peut prendre plusieurs minutes.",
             level=messages.INFO,
         )
-        return HttpResponseRedirect(
-            reverse("admin:geodata_mapimportbatch_change", args=[batch.pk])
-        )
+        return HttpResponseRedirect(change_url)
 
     def get_urls(self):
         urls = super().get_urls()

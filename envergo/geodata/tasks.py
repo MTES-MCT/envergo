@@ -1,10 +1,13 @@
 import csv
 import logging
+import uuid
 
 from celery import chain
+from celery.exceptions import Ignore
 from django.conf import settings
 from django.core.files import File
 from django.db import transaction
+from django.db.models import Q
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -12,6 +15,7 @@ from django.utils import timezone
 from config.celery_app import app
 from envergo.geodata.import_batch import is_blank_row, is_file_valid, is_line_valid
 from envergo.geodata.models import (
+    IMPORT_LEASE,
     LINE_STATUSES,
     STATUSES,
     Map,
@@ -33,6 +37,14 @@ from envergo.utils.tools import get_base_url
 logger = logging.getLogger(__name__)
 
 
+class BatchImportInProgress(Exception):
+    """Another run of the batch import is still alive."""
+
+
+class MapImportInProgress(Exception):
+    """Another live task is importing the map."""
+
+
 # Map processing
 
 
@@ -44,24 +56,24 @@ def process_maps(map_ids):
         )
 
 
-def process_map_signature(map_id):
-    """Signature of `process_map`, with the error callback failing its map."""
-    return process_map.si(map_id).on_error(on_map_failure.s(map_id))
+def process_map_signature(map_id, owner=None):
+    """Signature of `process_map`, with the error callback failing its map.
+
+    The task claims the map for itself, and fails if another live task holds it.
+    A bigger process that has already claimed the map (see `claim_map`) passes
+    its task id as `owner`, to hand its claim over to this task.
+    """
+    return process_map.si(map_id, owner=owner).on_error(
+        on_map_failure.s(map_id, owner=owner)
+    )
 
 
-@app.task(bind=True, max_retries=1)
-def process_map(task, map_id):
+@app.task(bind=True, max_retries=1, dont_autoretry_for=(MapImportInProgress,))
+def process_map(task, map_id, owner=None):
     """Replace the geometries of a map with the ones of its file."""
     logger.info(f"Starting import on map {map_id}")
-    map = Map.objects.get(pk=map_id)
-
-    # Store the task data in the model, so we can display progression
-    # in the admin page.
-    map.task_id = task.request.id
-    map.import_error_msg = ""
-    map.import_status = None
-    map.import_date = timezone.now()
-    map.save()
+    # The claim is committed on its own, so the admin page displays the progression.
+    map = claim_map(map_id, task.request.id, owner=owner)
 
     # Proceed with the map import
     with transaction.atomic():
@@ -91,16 +103,25 @@ def process_map(task, map_id):
     map.task_id = None
     map.imported_geometries = nb_imported_geometries
     map.import_date = timezone.now()
-    map.save()
+    # Only the import fields: metadata can be updated during processing (e.g. through admin interface).
+    map.save(
+        update_fields=[
+            "geometry",
+            "import_status",
+            "task_id",
+            "imported_geometries",
+            "import_date",
+        ]
+    )
 
     if map.import_status == STATUSES.failure:
         notify_map_failure(map.id, "Aucune géométrie importée.")
 
 
 @app.task
-def on_map_failure(request, exc, traceback, map_id):
+def on_map_failure(request, exc, traceback, map_id, owner=None):
     """Error callback of `process_map`: make sure a map never stays silently unprocessed."""
-    mark_maps_failed([map_id], f"Erreur d'import ({exc})")
+    mark_maps_failed([map_id], f"Erreur d'import ({exc})", owners=[request.id, owner])
 
 
 @app.task
@@ -121,18 +142,62 @@ def on_maps_chain_failure(request, exc, traceback, map_ids):
     notify_map_failure(failed_id, f"Erreur d'import ({exc})", skipped_ids)
 
 
+def claim_map(map_id, task_id, owner=None):
+    """Make the task the owner of the map import, and return the map."""
+    with transaction.atomic():
+        map = Map.objects.select_for_update().get(pk=map_id)
+        if (
+            map.task_id not in (None, task_id, owner)  # map is already claimed
+            and map.import_date is not None
+            and map.import_date
+            > timezone.now() - IMPORT_LEASE  # the previous owner is not dead
+        ):
+            raise MapImportInProgress(
+                f"Carte {map_id} en cours d'import par une autre tâche"
+            )
+        claim = {
+            "task_id": task_id,
+            "import_status": None,
+            "import_error_msg": "",
+            "import_date": timezone.now(),
+        }
+        Map.objects.filter(pk=map_id).update(**claim)
+    map.refresh_from_db(fields=list(claim))
+    return map
+
+
 # Batch import
+#
+# A run owns the batch through `run_id`, renewed by each of its tasks: only one run
+# is alive at a time, and the tasks of a replaced run stop on their own.
+# The batch status is derived from its lines on every update, under the batch lock.
 
 
-def process_map_import_batch_signature(batch_id, only_failed=False):
-    """Signature of `process_map_import_batch`, with the error callback failing its batch."""
-    return process_map_import_batch.si(batch_id, only_failed=only_failed).on_error(
-        on_batch_failure.s(batch_id)
-    )
+def start_batch_import(batch_id, only_failed=False):
+    """Start a run of the batch import, unless one is still alive."""
+    with transaction.atomic():
+        batch = MapImportBatch.objects.select_for_update().get(pk=batch_id)
+        if batch.is_running:
+            raise BatchImportInProgress()
+        run_id = str(uuid.uuid4())
+        batch.run_id = run_id
+        batch.run_updated_at = timezone.now()
+        refresh_batch_status(batch)
+        transaction.on_commit(
+            process_map_import_batch_signature(batch_id, run_id, only_failed).delay
+        )
+    return run_id
+
+
+def process_map_import_batch_signature(batch_id, run_id, only_failed=False):
+    """Signature of `process_map_import_batch`, with the error callback failing its run."""
+    return process_map_import_batch.si(
+        batch_id, run_id, only_failed=only_failed
+    ).on_error(on_batch_failure.s(batch_id, run_id))
 
 
 @app.task(max_retries=0)
-def process_map_import_batch(batch_id, only_failed=False):
+def process_map_import_batch(batch_id, run_id, only_failed=False):
     """Create or update Map objects described in a batch CSV.
 
     The CSV is validated first: any error fails the batch before any import.
@@ -145,52 +210,60 @@ def process_map_import_batch(batch_id, only_failed=False):
     other rows are processed again.
     """
     logger.info(f"Starting import on map batch {batch_id}")
-
-    batch = MapImportBatch.objects.get(pk=batch_id)
-    batch.import_status = None
-    batch.import_date = timezone.now()
-    batch.save(update_fields=["import_status", "import_date"])
+    with transaction.atomic():
+        batch = claim_batch_run(batch_id, run_id)
 
     errors = is_file_valid(batch.csv_file, batch.files)
     if errors:
-        fail_batch_before_import(batch, errors)
+        with transaction.atomic():
+            batch = claim_batch_run(batch_id, run_id)
+            fail_batch_before_import(batch, errors)
+        notify_batch_failure(batch)
         return
 
     reader = csv.DictReader(read_csv_file(batch.csv_file))
     rows = [(reader.line_num, row) for row in reader if not is_blank_row(row)]
-    rows = reset_batch_lines(batch, rows, only_failed)
+    with transaction.atomic():
+        batch = claim_batch_run(batch_id, run_id)
+        rows = reset_batch_lines(batch, rows, only_failed)
+        if not rows:
+            end_batch_run(batch)
     if not rows:
-        set_batch_final_status(batch)
+        notify_batch_end(batch)
         return
 
     chain(
         *(
-            import_batch_row.si(batch_id, csv_line_number, raw_row)
+            import_batch_row.si(batch_id, run_id, csv_line_number, raw_row)
             for csv_line_number, raw_row in rows
         ),
-        finalize_batch.si(batch_id),
-    ).apply_async(link_error=on_batch_chain_failure.s(batch_id))
+        finalize_batch.si(batch_id, run_id),
+    ).apply_async(link_error=on_batch_chain_failure.s(batch_id, run_id))
 
 
 @app.task(bind=True)
-def import_batch_row(task, batch_id, csv_line_number, raw_row):
+def import_batch_row(task, batch_id, run_id, csv_line_number, raw_row):
     """Create or update the Map described by a CSV row, and then process it if needed.
 
-    A row failing validation is recorded on its line and skipped.
+    A row failing validation, or whose map is imported by another task, is
+    recorded on its line and skipped.
     Otherwise the map is saved: required columns always overwrite, optional
     ones only when non-empty, and a blank `departments` clears the field.
-    A row with a file replaces the map's file; a blank file cell only updates
-    the metadata of an existing map. The task then replaces itself with
-    `process_map`, so the next row starts once the geometries are imported.
+    A row with a file claims the map, replaces its file, then the task replaces
+    itself with `process_map`, so the next row starts once the geometries are
+    imported. A blank file cell only updates the metadata of an existing map.
     """
-    batch = MapImportBatch.objects.get(pk=batch_id)
+    with transaction.atomic():
+        batch = claim_batch_run(batch_id, run_id)
+    reference = (raw_row.get("reference") or "").strip()
     row, errors = is_line_valid(csv_line_number, raw_row, batch.files)
     if errors:
         set_batch_line_status(
-            batch,
+            batch_id,
+            run_id,
             csv_line_number,
             LINE_STATUSES.failure,
-            reference=(raw_row.get("reference") or "").strip(),
+            reference=reference,
             message=" ; ".join(errors),
         )
         return None
@@ -204,88 +277,158 @@ def import_batch_row(task, batch_id, csv_line_number, raw_row):
             raise ValueError(
                 "carte inexistante : un fichier est requis pour la créer"
             )  # already checked, should not happen
-        map = Map(reference=row.reference, batch_created_at=now)
+        # Nobody else knows the map before it is saved.
+        map = Map(
+            reference=row.reference,
+            batch_created_at=now,
+            task_id=task.request.id,
+            import_date=now,
+        )
+    elif batch_file is not None:
+        # Claimed before replacing its file, which another import may be reading.
+        try:
+            map = claim_map(map.id, task.request.id)
+        except MapImportInProgress as exc:
+            set_batch_line_status(
+                batch_id,
+                run_id,
+                csv_line_number,
+                LINE_STATUSES.failure,
+                reference=reference,
+                message=str(exc),
+            )
+            return None
 
     update_map_from_row(map, row)
     map.import_batch = batch
     map.batch_updated_at = now
 
-    replaced_file_name = None
-    if batch_file is not None:
-        replaced_file_name = map.file.name
-        with batch_file.file.open("rb") as source:
-            with open_map_file(source) as data_source:
-                map.expected_geometries = len(data_source[0])
-            map.file.save(row.file, File(source), save=False)
-
     try:
-        map.save()
-    except Exception:
-        # The new file is already stored but nothing references it.
-        if batch_file is not None:
-            map.file.storage.delete(map.file.name)
+        replaced_file_name = save_map_from_row(map, batch_file, row.file)
+    except Exception as exc:
+        if map.pk is not None and batch_file is not None:
+            # Release the claim: the map must not look imported by a dead task.
+            mark_maps_failed(
+                [map.pk], f"Erreur d'import ({exc})", owners=[task.request.id]
+            )
         raise
     if replaced_file_name:
         map.file.storage.delete(replaced_file_name)
     if batch_file:
         return task.replace(
             chain(
-                process_map_signature(map.id),
-                complete_batch_row.si(batch_id, csv_line_number, row.reference),
+                process_map_signature(map.id, owner=task.request.id),
+                complete_batch_row.si(batch_id, run_id, csv_line_number, row.reference),
             )
         )
     else:
         # Metadata only update do not need map re-processing.
-        return complete_batch_row(batch_id, csv_line_number, row.reference)
+        return complete_batch_row(batch_id, run_id, csv_line_number, row.reference)
 
 
 @app.task
-def complete_batch_row(batch_id, csv_line_number, reference):
+def complete_batch_row(batch_id, run_id, csv_line_number, reference):
     """Mark the line of a successfully imported row."""
-    batch = MapImportBatch.objects.get(pk=batch_id)
     set_batch_line_status(
-        batch, csv_line_number, LINE_STATUSES.success, reference=reference
+        batch_id, run_id, csv_line_number, LINE_STATUSES.success, reference=reference
     )
-    if batch.import_status is None:
-        batch.import_status = STATUSES.partial_success
-        batch.save(update_fields=["import_status"])
 
 
 @app.task
-def finalize_batch(batch_id):
+def finalize_batch(batch_id, run_id):
     """Last task of the batch chain, once every row is imported."""
-    set_batch_final_status(MapImportBatch.objects.get(pk=batch_id))
+    with transaction.atomic():
+        batch = claim_batch_run(batch_id, run_id)
+        end_batch_run(batch)
+    notify_batch_end(batch)
 
 
 @app.task
-def on_batch_failure(request, exc, traceback, batch_id):
+def on_batch_failure(request, exc, traceback, batch_id, run_id):
     """Error callback of `process_map_import_batch`: a batch never stays silently in progress."""
-    batch = MapImportBatch.objects.filter(pk=batch_id).first()
-    if batch is not None:
+    with transaction.atomic():
+        batch = lock_batch_run(batch_id, run_id)
+        if batch is None:
+            return
         fail_batch_before_import(batch, [f"erreur inattendue ({exc})"])
+    notify_batch_failure(batch)
 
 
 @app.task
-def on_batch_chain_failure(request, exc, traceback, batch_id):
+def on_batch_chain_failure(request, exc, traceback, batch_id, run_id):
     """Error callback of the batch chain: record the failure on the batch."""
-    batch = MapImportBatch.objects.get(pk=batch_id)
-    if batch.import_status == STATUSES.failure:
-        # The callback is linked to every task of the chain: only the first
-        # call describes the failure.
-        return
+    with transaction.atomic():
+        batch = lock_batch_run(batch_id, run_id)
+        if batch is None:
+            # The callback is linked to every task of the chain: the first call
+            # ends the run, the next ones have nothing left to do.
+            return
 
-    # Rows are processed one at a time: the first pending line is the one that broke.
-    # The lines after it stay pending, so they can be retried on their own.
-    line = batch.lines.filter(status=LINE_STATUSES.pending).first()
-    if line is not None:
-        line.status = LINE_STATUSES.failure
-        line.message = f"erreur inattendue ({exc})"
-        line.save()
-
-    batch.import_status = STATUSES.failure
-    batch.import_date = timezone.now()
-    batch.save(update_fields=["import_status", "import_date"])
+        # Rows are processed one at a time: the first pending line is the one that broke.
+        # The lines after it stay pending, so they can be retried on their own.
+        line = batch.lines.filter(status=LINE_STATUSES.pending).first()
+        if line is not None:
+            line.status = LINE_STATUSES.failure
+            line.message = f"erreur inattendue ({exc})"
+            line.save()
+        end_batch_run(batch)
     notify_batch_failure(batch)
+
+
+def lock_batch_run(batch_id, run_id):
+    """Lock and return the batch if `run_id` still owns it, None otherwise.
+
+    Must be called in a transaction, which holds the lock.
+    """
+    return (
+        MapImportBatch.objects.select_for_update()
+        .filter(pk=batch_id, run_id=run_id)
+        .first()
+    )
+
+
+def claim_batch_run(batch_id, run_id):
+    """Lock the batch owned by the run, renew the run lease and return the batch.
+
+    A task of a run replaced by another one is ignored: Celery stops its chain
+    without recording a failure. Must be called in a transaction.
+    """
+    batch = lock_batch_run(batch_id, run_id)
+    if batch is None:
+        logger.info(f"Run {run_id} of map batch {batch_id} is over, task ignored")
+        raise Ignore()
+    batch.run_updated_at = timezone.now()
+    batch.save(update_fields=["run_updated_at"])
+    return batch
+
+
+def end_batch_run(batch):
+    """Release the batch from its run, and set its final status. The batch is locked."""
+    batch.run_id = None
+    batch.run_updated_at = None
+    refresh_batch_status(batch)
+
+
+def refresh_batch_status(batch):
+    """Derive the batch status from its run and its lines, and save it."""
+    lines = batch.lines.all()
+    if batch.run_id is not None:
+        batch.import_status = None
+    elif not lines.exclude(status=LINE_STATUSES.success).exists():
+        batch.import_status = STATUSES.success
+    elif lines.filter(status=LINE_STATUSES.success).exists():
+        batch.import_status = STATUSES.partial_success
+    else:
+        batch.import_status = STATUSES.failure
+    batch.import_date = timezone.now()
+    batch.save(
+        update_fields=["run_id", "run_updated_at", "import_status", "import_date"]
+    )
+
+
+def notify_batch_end(batch):
+    if batch.import_status == STATUSES.failure:
+        notify_batch_failure(batch)
 
 
 def fail_batch_before_import(batch, errors):
@@ -294,10 +437,7 @@ def fail_batch_before_import(batch, errors):
     batch.lines.create(
         line_number=0, status=LINE_STATUSES.failure, message="\n".join(errors)
     )
-    batch.import_status = STATUSES.failure
-    batch.import_date = timezone.now()
-    batch.save(update_fields=["import_status", "import_date"])
-    notify_batch_failure(batch)
+    end_batch_run(batch)
 
 
 def reset_batch_lines(batch, rows, only_failed):
@@ -328,6 +468,29 @@ def reset_batch_lines(batch, rows, only_failed):
     return rows
 
 
+def save_map_from_row(map, batch_file, file_name):
+    """Save the map, with the batch file as its new file if any.
+
+    Return the name of the replaced file, to delete once the map is saved.
+    """
+    replaced_file_name = None
+    if batch_file is not None:
+        replaced_file_name = map.file.name
+        with batch_file.file.open("rb") as source:
+            with open_map_file(source) as data_source:
+                map.expected_geometries = len(data_source[0])
+            map.file.save(file_name, File(source), save=False)
+
+    try:
+        map.save()
+    except Exception:
+        # The new file is already stored but nothing references it.
+        if batch_file is not None:
+            map.file.storage.delete(map.file.name)
+        raise
+    return replaced_file_name
+
+
 def update_map_from_row(map, row):
     """Copy the columns of a valid row on its map, without saving it."""
     map.name = row.name
@@ -345,35 +508,38 @@ def update_map_from_row(map, row):
         map.display_for_user = row.display_for_user
 
 
-def set_batch_line_status(batch, csv_line_number, status, reference="", message=""):
-    """Record the outcome of a CSV line, so the progress survives a broken chain."""
-    MapImportBatchLine.objects.update_or_create(
-        batch=batch,
-        line_number=csv_line_number,
-        defaults={"status": status, "reference": reference, "message": message},
-    )
+def set_batch_line_status(
+    batch_id, run_id, csv_line_number, status, reference="", message=""
+):
+    """Record the outcome of a CSV line, then refresh the batch status.
 
-
-def set_batch_final_status(batch):
-    """Set the batch status from the outcome of its lines."""
-    if not batch.lines.exclude(status=LINE_STATUSES.success).exists():
-        batch.import_status = STATUSES.success
-    elif batch.lines.filter(status=LINE_STATUSES.success).exists():
-        batch.import_status = STATUSES.partial_success
-    else:
-        batch.import_status = STATUSES.failure
-    batch.import_date = timezone.now()
-    batch.save(update_fields=["import_status", "import_date"])
-    if batch.import_status == STATUSES.failure:
-        notify_batch_failure(batch)
+    The progress survives a broken chain.
+    """
+    with transaction.atomic():
+        batch = claim_batch_run(batch_id, run_id)
+        MapImportBatchLine.objects.update_or_create(
+            batch=batch,
+            line_number=csv_line_number,
+            defaults={"status": status, "reference": reference, "message": message},
+        )
+        refresh_batch_status(batch)
 
 
 # Status and notification helpers
 
 
-def mark_maps_failed(map_ids, error):
-    """Mark maps as failed with an error message, and detach them from their task."""
-    Map.objects.filter(pk__in=map_ids).update(
+def mark_maps_failed(map_ids, error, owners=()):
+    """Mark maps as failed with an error message, and detach them from their task.
+
+    Maps owned by another live task than `owners` are left untouched.
+    """
+    not_owned = (
+        Q(task_id__isnull=True)
+        | Q(task_id__in=[owner for owner in owners if owner])
+        | Q(import_date__isnull=True)
+        | Q(import_date__lt=timezone.now() - IMPORT_LEASE)
+    )
+    Map.objects.filter(not_owned, pk__in=map_ids).update(
         import_status=STATUSES.failure,
         import_error_msg=error,
         import_date=timezone.now(),
