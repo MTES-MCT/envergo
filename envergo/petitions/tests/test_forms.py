@@ -123,6 +123,7 @@ def make_state_change_form(
     previous_stage="preparing_decision",
     single_procedure=False,
     can_switch_to_authorization=False,
+    is_regime_unique=False,
 ):
     """Build a StateChangeForm the way the procedure view does."""
     initial = {"stage": previous_stage, "decision": "unset"}
@@ -132,6 +133,7 @@ def make_state_change_form(
         initial=initial,
         single_procedure=single_procedure,
         can_switch_to_authorization=can_switch_to_authorization,
+        is_regime_unique=is_regime_unique,
     )
 
 
@@ -472,6 +474,29 @@ def test_closing_tacit_agreement_requires_simulation_check_and_message():
 
     form = make_state_change_form(closing_data("tacit_agreement"))
     assert form.is_valid(), form.errors
+
+
+@pytest.mark.parametrize(
+    "is_regime_unique, offers_tacit_agreement", [(True, False), (False, True)]
+)
+def test_tacit_agreement_choice_is_removed_under_the_regime_unique(
+    is_regime_unique, offers_tacit_agreement
+):
+    """Under the régime unique, the tacit agreement is never an instructor's choice."""
+    form = make_state_change_form(is_regime_unique=is_regime_unique)
+
+    decisions = [choice[0] for choice in form.fields["decision"].choices]
+    assert ("tacit_agreement" in decisions) is offers_tacit_agreement
+
+
+def test_posting_tacit_agreement_is_rejected_under_the_regime_unique():
+    """The removed choice is enforced on the server, not only in the menu."""
+    form = make_state_change_form(
+        closing_data("tacit_agreement"), is_regime_unique=True
+    )
+
+    assert not form.is_valid()
+    assert "choix valide" in form.errors["decision"][0]
 
 
 @pytest.mark.parametrize("decision", ["express_agreement", "opposition"])

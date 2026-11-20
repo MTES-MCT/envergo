@@ -1908,6 +1908,7 @@ class PetitionProjectInstructorProcedureView(
                 ),
                 is_paused=self.object.is_additional_information_requested,
                 can_switch_to_authorization=self.object.can_switch_to_authorization,
+                is_regime_unique=self.object.is_regime_unique(),
             )
         if action == "request_info":
             return RequestAdditionalInfoForm(self.request.POST)
@@ -1959,6 +1960,7 @@ class PetitionProjectInstructorProcedureView(
                     self.object.config and self.object.config.single_procedure
                 ),
                 can_switch_to_authorization=self.object.can_switch_to_authorization,
+                is_regime_unique=self.object.is_regime_unique(),
             ),
         )
         if self.object.can_switch_to_authorization:

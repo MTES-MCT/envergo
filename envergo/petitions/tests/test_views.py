@@ -2203,12 +2203,14 @@ def test_petition_project_close_with_express_agreement(
 def test_petition_project_close_with_tacit_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
-    """Closing with a tacit agreement needs no prefectural order."""
+    """Outside the régime unique, closing with a tacit agreement needs no prefectural order."""
 
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(
+        underscore_category="hru", status__stage="preparing_decision"
+    )
 
     res = client.post(
         procedure_url(project), closing_form_data("tacit_agreement"), follow=True
@@ -2295,7 +2297,9 @@ def test_petition_project_close_status_change_failure(
     mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(
+        underscore_category="hru", status__stage="preparing_decision"
+    )
 
     res = client.post(
         procedure_url(project), closing_form_data("tacit_agreement"), follow=True
