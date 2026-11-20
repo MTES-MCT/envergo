@@ -4,7 +4,11 @@
 
 {% block object-tools-items %}
   {% if original.pk %}
-    {% if original.can_retry_failed_lines %}
+    {% if original.is_running %}
+      <li>
+        <button type="button" disabled>Import en cours…</button>
+      </li>
+    {% elif original.can_retry_failed_lines %}
       <li>
         <button type="submit" form="process-batch-form" name="mode" value="failed">Relancer les lignes en échec</button>
       </li>

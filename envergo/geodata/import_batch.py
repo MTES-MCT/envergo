@@ -1,7 +1,7 @@
 """Parsing and validation of map import batch CSV files.
 
 Pure functions only: no db access, no storage access. The orchestration
-task (`process_map_import_batch`) is responsible for matching rows against
+task (`run_batch_import`) is responsible for matching rows against
 uploaded files and existing Map objects.
 
 CSV conventions follow the `batch_import_maps` management command:

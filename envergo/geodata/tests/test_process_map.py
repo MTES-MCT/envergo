@@ -1,12 +1,23 @@
+from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 from django.db.models.fields.files import FieldFile
 from django.urls import reverse
+from django.utils import timezone
 
-from envergo.geodata.models import STATUSES
-from envergo.geodata.tasks import fail_map_processing, process_map, process_maps
-from envergo.geodata.tests.factories import MapFactory, MapImportBatchFactory
+from envergo.geodata.models import IMPORT_LEASE, STATUSES
+from envergo.geodata.tasks import (
+    MapImportInProgress,
+    claim_map,
+    on_map_failure,
+    on_maps_chain_failure,
+    process_map,
+    process_map_signature,
+    process_maps,
+)
+from envergo.geodata.tests.factories import MapFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -28,7 +39,7 @@ def test_import_error_is_recorded_on_the_map():
     map = MapFactory(zones=None, expected_geometries=3)
 
     with patch("envergo.geodata.tasks.open_map_file", side_effect=ValueError("boom")):
-        process_maps([map.id])
+        process_map_signature(map.id).apply()
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
@@ -40,49 +51,21 @@ def test_task_failure_callback_records_the_failure():
     """A crash outside the import itself (e.g. database down) is not silent."""
     map = MapFactory(zones=None)
 
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
+    on_map_failure(SimpleNamespace(id="task"), RuntimeError("db down"), None, map.id)
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
     assert "db down" in map.import_error_msg
 
 
-def test_failure_notification_links_the_map_and_its_batch(notify_mock, settings):
-    settings.CARTO_NOTIFICATION_HANDLERS = ["carto"]
-    batch = MapImportBatchFactory()
-    map = MapFactory(zones=None, import_batch=batch)
-
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
-
-    message, site = notify_mock.call_args.args
-    assert site == "amenagement"
-    assert reverse("admin:geodata_map_change", args=[map.id]) in message
-    assert reverse("admin:geodata_mapimportbatch_change", args=[batch.id]) in message
-    assert "db down" in message
-    assert "ping carto" in message
-
-
-def test_failure_callback_can_leave_the_notification_to_the_caller(notify_mock):
+def test_failure_callback_leaves_the_notification_to_the_chain(notify_mock):
     map = MapFactory(zones=None)
 
-    fail_map_processing(
-        None, RuntimeError("db down"), None, map.id, notify_failure=False
-    )
+    on_map_failure(SimpleNamespace(id="task"), RuntimeError("db down"), None, map.id)
 
     map.refresh_from_db()
     assert map.import_status == STATUSES.failure
     notify_mock.assert_not_called()
-
-
-def test_failure_notification_without_batch_has_no_batch_link(notify_mock):
-    map = MapFactory(zones=None)
-
-    fail_map_processing(None, RuntimeError("db down"), None, map.id)
-
-    message, _ = notify_mock.call_args.args
-    assert reverse("admin:geodata_map_change", args=[map.id]) in message
-    assert "Import par lot" not in message
-    assert "ping" not in message
 
 
 def test_map_without_geometry_is_notified(notify_mock):
@@ -119,20 +102,93 @@ def test_started_task_leaves_a_trace():
     assert map.import_date is not None
 
 
+def test_queued_map_has_its_failure_callback():
+    """The map is failed even if its worker is killed."""
+    assert process_map_signature(3).options["link_error"] == [
+        on_map_failure.s(3, handover_from=None)
+    ]
+
+
 def test_maps_are_queued_as_a_chain():
     """Chained tasks run one at a time, whatever the worker concurrency."""
     with patch("envergo.geodata.tasks.chain") as mock_chain:
         process_maps([3, 1, 2])
 
-    signatures = mock_chain.call_args.args
-    assert [sig.args for sig in signatures] == [(3,), (1,), (2,)]
-    # The failure callback is run even if the worker is killed
-    assert [sig.options["link_error"][0].args for sig in signatures] == [
-        (3,),
-        (1,),
-        (2,),
-    ]
-    mock_chain.return_value.delay.assert_called_once_with()
+    mock_chain.assert_called_once_with(
+        process_map_signature(3), process_map_signature(1), process_map_signature(2)
+    )
+    mock_chain.return_value.apply_async.assert_called_once_with(
+        link_error=on_maps_chain_failure.s([3, 1, 2])
+    )
+
+
+def test_broken_chain_fails_the_skipped_maps(notify_mock, settings):
+    settings.CARTO_NOTIFICATION_HANDLERS = ["carto"]
+    done, failed, skipped_1, skipped_2 = MapFactory.create_batch(
+        4, zones=None, import_status=STATUSES.success
+    )
+    map_ids = [done.id, failed.id, skipped_1.id, skipped_2.id]
+
+    on_maps_chain_failure(
+        SimpleNamespace(args=[failed.id]), RuntimeError("oom"), None, map_ids
+    )
+
+    for map in (done, failed, skipped_1, skipped_2):
+        map.refresh_from_db()
+    assert done.import_status == STATUSES.success
+    # Left to the map own error callback
+    assert failed.import_status == STATUSES.success
+    for map in (skipped_1, skipped_2):
+        assert map.import_status == STATUSES.failure
+        assert f"carte {failed.id} a échoué" in map.import_error_msg
+        assert map.import_date is not None
+
+    # A single summary notification
+    notify_mock.assert_called_once()
+    message, site = notify_mock.call_args.args
+    assert site == "amenagement"
+    assert reverse("admin:geodata_map_change", args=[failed.id]) in message
+    assert "oom" in message
+    assert reverse("admin:geodata_map_change", args=[skipped_1.id]) in message
+    assert reverse("admin:geodata_map_change", args=[skipped_2.id]) in message
+    assert reverse("admin:geodata_map_change", args=[done.id]) not in message
+    assert "ping carto" in message
+
+
+def test_failure_of_the_last_map_skips_nothing(notify_mock):
+    done, failed = MapFactory.create_batch(
+        2, zones=None, import_status=STATUSES.success
+    )
+
+    on_maps_chain_failure(
+        SimpleNamespace(args=[failed.id]),
+        RuntimeError("oom"),
+        None,
+        [done.id, failed.id],
+    )
+
+    done.refresh_from_db()
+    assert done.import_status == STATUSES.success
+    message, _ = notify_mock.call_args.args
+    assert "non importées" not in message
+
+
+def test_failed_map_stops_the_chain_and_fails_the_next_ones(notify_mock):
+    failed, skipped = MapFactory.create_batch(
+        2, zones=None, import_status=STATUSES.success
+    )
+
+    with patch("envergo.geodata.tasks.open_map_file", side_effect=ValueError("boom")):
+        # An eager chain raises the failure when moving on to the next task
+        with pytest.raises(ValueError, match="boom"):
+            process_maps([failed.id, skipped.id])
+
+    skipped.refresh_from_db()
+    assert skipped.import_status == STATUSES.failure
+    assert f"carte {failed.id} a échoué" in skipped.import_error_msg
+    notify_mock.assert_called_once()
+    message, _ = notify_mock.call_args.args
+    assert "boom" in message
 
 
 def test_nothing_is_queued_without_maps():
@@ -165,3 +221,64 @@ def test_import_stops_once_the_transaction_is_broken():
                     process_zones_file(map, data_source)
                 assert len(calls) == 1
                 connection.set_rollback(False)
+
+
+def test_map_owned_by_a_live_task_is_not_processed():
+    map = MapFactory(zones=None, task_id="other-task", import_date=timezone.now())
+
+    with pytest.raises(MapImportInProgress):
+        process_map.apply(args=(map.id,), throw=True)
+
+    map.refresh_from_db()
+    assert map.task_id == "other-task"
+
+
+def test_claim_of_a_dead_task_can_be_taken():
+    expired = timezone.now() - IMPORT_LEASE - timedelta(minutes=1)
+    map = MapFactory(zones=None, task_id="dead-task", import_date=expired)
+
+    claim_map(map.id, "task")
+
+    map.refresh_from_db()
+    assert map.task_id == "task"
+    assert map.import_status is None
+
+
+def test_claim_can_be_handed_over_by_its_holder():
+    map = MapFactory(zones=None, task_id="row-task", import_date=timezone.now())
+
+    claim_map(map.id, "task", handover_from="row-task")
+
+    map.refresh_from_db()
+    assert map.task_id == "task"
+
+
+def test_failure_callback_leaves_a_map_owned_by_another_task(notify_mock):
+    map = MapFactory(
+        zones=None,
+        task_id="other-task",
+        import_date=timezone.now(),
+        import_status=None,
+    )
+
+    on_map_failure(SimpleNamespace(id="task"), RuntimeError("busy"), None, map.id)
+
+    map.refresh_from_db()
+    assert map.task_id == "other-task"
+    assert map.import_status is None
+
+
+def test_skipped_maps_owned_by_another_task_are_left_untouched(notify_mock):
+    failed = MapFactory(zones=None)
+    busy = MapFactory(zones=None, task_id="other-task", import_date=timezone.now())
+
+    on_maps_chain_failure(
+        SimpleNamespace(args=[failed.id]),
+        RuntimeError("oom"),
+        None,
+        [failed.id, busy.id],
+    )
+
+    busy.refresh_from_db()
+    assert busy.task_id == "other-task"
+    assert busy.import_status != STATUSES.failure

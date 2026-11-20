@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.gis.db import models as gis_models
@@ -54,6 +55,10 @@ LINE_STATUSES = Choices(
     ("success", _("Success")),
     ("failure", _("Failure")),
 )
+
+# An import task (and its retry) never runs longer than this: a lease older than
+# that belongs to a worker killed without its error callback (container restart).
+IMPORT_LEASE = timedelta(seconds=2 * settings.CELERY_TASK_TIME_LIMIT)
 
 
 class MapQuerySet(models.QuerySet):
@@ -210,6 +215,11 @@ class MapImportBatch(models.Model):
     import_date = models.DateTimeField(
         "Date du dernier traitement", null=True, blank=True
     )
+    # Lease of the running import: only the tasks of this run may update the batch.
+    run_id = models.UUIDField("Traitement en cours", null=True, editable=False)
+    run_updated_at = models.DateTimeField(
+        "Dernière activité du traitement", null=True, editable=False
+    )
 
     class Meta:
         verbose_name = "Lot d'import de cartes"
@@ -220,10 +230,26 @@ class MapImportBatch(models.Model):
         return self.name
 
     @property
+    def is_running(self):
+        """A run holds the batch, and its tasks are still alive."""
+        return (
+            self.run_id is not None
+            and self.run_updated_at > timezone.now() - IMPORT_LEASE
+        )
+
+    @property
+    def is_interrupted(self):
+        """The run worker died without its error callback (e.g. container restart)."""
+        return self.run_id is not None and not self.is_running
+
+    @property
     def can_retry_failed_lines(self):
         """A batch processed but not fully imported can resume on its failed lines."""
-        return self.import_status in (STATUSES.partial_success, STATUSES.failure) and (
-            self.lines.exists()
+        if self.is_running or not self.lines.exists():
+            return False
+        return self.is_interrupted or self.import_status in (
+            STATUSES.partial_success,
+            STATUSES.failure,
         )
 
     @property
@@ -238,7 +264,17 @@ class MapImportBatch(models.Model):
 
         total = len(lines)
         pending = [line for line in lines if line.status == LINE_STATUSES.pending]
-        if self.import_status == STATUSES.failure and pending:
+        if self.is_running:
+            header = (
+                f"Import en cours, {total - len(pending)}/{total} ligne(s) traitée(s)."
+            )
+        elif self.is_interrupted:
+            header = (
+                "Import interrompu de façon inattendue : le traitement s'est arrêté "
+                "sans pouvoir enregistrer son résultat (ex. redémarrage du serveur), "
+                f"{len(pending)} ligne(s) non traitée(s). Le lot peut être relancé."
+            )
+        elif self.import_status == STATUSES.failure and pending:
             # Lines run one at a time: the last settled one is the one that broke.
             settled = [
                 position
