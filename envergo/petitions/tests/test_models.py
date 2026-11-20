@@ -8,8 +8,9 @@ from django.contrib.auth.models import AnonymousUser
 from envergo.analytics.models import Event
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import Department34Factory
-from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     LOG_TYPES,
     STAGES,
@@ -19,6 +20,7 @@ from envergo.petitions.models import (
     StatusLog,
 )
 from envergo.petitions.tests.factories import (
+    GET_DOSSIER_FAKE_RESPONSE,
     InvitationTokenFactory,
     PetitionProjectFactory,
     SimulationFactory,
@@ -712,3 +714,80 @@ class TestDemarcheNumeriqueSync:
         project.refresh_from_db()
         assert project.demarche_numerique_state == DOSSIER_STATES.en_construction
         assert mock_alert_task.delay.call_count == 1
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestCloseByTacitAgreement:
+    """Closing a déclaration once silence means agreement."""
+
+    AGREEMENT_DEADLINE = date(2026, 12, 5)
+
+    def make_project(self):
+        """An RU dossier in déclaration whose silence means agreement on AGREEMENT_DEADLINE."""
+        RUConfigHaieFactory()
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_instruction,
+            demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+        )
+        StatusLogFactory(
+            petition_project=project,
+            stage=STAGES.instruction_d,
+            agreement_deadline=self.AGREEMENT_DEADLINE,
+        )
+        return project
+
+    def test_closing_records_a_tacit_agreement_on_the_agreement_deadline(
+        self, mock_update_status, mock_send_message
+    ):
+        """The closing log dates the agreement on the deadline. No instructor authors it."""
+        project = self.make_project()
+
+        project.close_by_tacit_agreement()
+
+        log = project.status_history.first()
+        assert log.stage == STAGES.closed
+        assert log.decision == DECISIONS.tacit_agreement
+        assert log.status_date == self.AGREEMENT_DEADLINE
+        assert log.update_comment.startswith(
+            "Clôture automatique : silence vaut accord."
+        )
+        assert log.created_by is None
+        assert project.stage == STAGES.closed
+        assert project.decision == DECISIONS.tacit_agreement
+
+    def test_closing_stores_the_attestation_as_the_decision_document(
+        self, mock_update_status, mock_send_message
+    ):
+        """The attestation is kept with the dossier, like any decision document."""
+        project = self.make_project()
+
+        project.close_by_tacit_agreement()
+
+        log = project.status_history.first()
+        assert log.prefectural_order.name.endswith(".pdf")
+        assert log.prefectural_order.read().startswith(b"%PDF-")
+
+    def test_closing_marks_the_dossier_accepted_in_demarche_numerique(
+        self, mock_update_status, mock_send_message
+    ):
+        """« Démarche numérique » shows the dossier as accepted."""
+        project = self.make_project()
+
+        project.close_by_tacit_agreement()
+
+        mock_update_status.assert_called_once_with(project, DOSSIER_STATES.accepte)
+
+    def test_closing_sends_the_applicant_the_tacit_agreement_message(
+        self, mock_update_status, mock_send_message, django_capture_on_commit_callbacks
+    ):
+        """The applicant gets the fixed message once the closing is committed."""
+        project = self.make_project()
+
+        with django_capture_on_commit_callbacks(execute=True):
+            project.close_by_tacit_agreement()
+
+        log = project.status_history.first()
+        assert "a fait l'objet d'un accord tacite" in log.applicant_message
+        mock_send_message.delay.assert_called_once_with(log.pk)

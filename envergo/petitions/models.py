@@ -9,9 +9,11 @@ from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
 from django.db import models, transaction
 from django.db.models import Q
 from django.http import QueryDict
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -27,6 +29,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.services import (
     DEMARCHE_NUMERIQUE_STATUS_MAPPING,
+    attestation_non_opposition_pdf,
     dossier_state_changed_outside_guh_alert,
     dossier_submission_alert,
     log_dossier_submission_event,
@@ -575,6 +578,36 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             # The instruction is due when silence turns into an agreement.
             due_date=agreement_deadline,
         )
+
+    def close_by_tacit_agreement(self):
+        """Close the dossier on its agreement deadline and send the applicant the attestation.
+
+        Raises DemarcheNumeriqueError when « Démarche numérique » rejects the closing.
+        Nothing is recorded then.
+        """
+        agreement_date = self.agreement_deadline
+        attestation = ContentFile(
+            attestation_non_opposition_pdf(self, agreement_date),
+            name="attestation_non_opposition.pdf",
+        )
+        applicant_message = render_to_string(
+            "haie/petitions/tacit_agreement_message.txt"
+        )
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=STAGES.closed,
+            decision=DECISIONS.tacit_agreement,
+            status_date=agreement_date,
+            update_comment=(
+                "Clôture automatique : silence vaut accord. "
+                "Message envoyé au demandeur avec l’attestation de non-opposition."
+            ),
+            prefectural_order=attestation,
+            applicant_message=applicant_message,
+        )
+        self.record_status_change(log)
 
     def schedule_submission_alert(self, fetched_dossier: dict):
         """Queue the team alert announcing the dépôt, for after commit."""
