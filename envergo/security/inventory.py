@@ -1,5 +1,6 @@
 """List the libraries the running application is made of."""
 
+import ctypes
 import json
 import logging
 import platform
@@ -103,6 +104,17 @@ RUNTIME_LIBRARIES = [
         "https://github.com/harfbuzz/harfbuzz",
         lambda: features.version("harfbuzz"),
     ),
+    # WeasyPrint loads the system copies, separate from those Pillow bundles.
+    RuntimeLibrary(
+        "https://github.com/freetype/freetype",
+        lambda: read_system_freetype_version(),
+        tag_prefix="VER-",
+        tag_separator="-",
+    ),
+    RuntimeLibrary(
+        "https://github.com/harfbuzz/harfbuzz",
+        lambda: read_system_harfbuzz_version(),
+    ),
 ]
 
 
@@ -128,6 +140,10 @@ UNMONITORED_COMPONENTS = [
     UnmonitoredComponent(
         "OpenSSL 1.1, curl, SQLite, libtiff, GEOS et PROJ, embarqués par fiona",
         "fiona ne donne pas leurs versions",
+    ),
+    UnmonitoredComponent(
+        "Pango, GLib et fontconfig, chargés par WeasyPrint",
+        "OSV n'a pas de données sur ces bibliothèques",
     ),
     UnmonitoredComponent(
         "curl, SQLite et libtiff, embarqués par pyproj",
@@ -229,3 +245,41 @@ def read_program_version(*command):
     # nginx prints its version on stderr, node on stdout.
     output = completed.stdout + completed.stderr
     return re.search(r"\d+\.\d+\.\d+", output).group()
+
+
+def read_system_freetype_version():
+    """Return the version of the system FreeType, or None if it isn't installed."""
+    freetype = load_system_library("libfreetype.so.6")
+    if freetype is None:
+        return None
+
+    # FreeType only reports its version through an initialized library handle.
+    handle = ctypes.c_void_p()
+    freetype.FT_Init_FreeType(ctypes.byref(handle))
+
+    major, minor, patch = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+    freetype.FT_Library_Version(
+        handle, ctypes.byref(major), ctypes.byref(minor), ctypes.byref(patch)
+    )
+
+    freetype.FT_Done_FreeType(handle)
+    return f"{major.value}.{minor.value}.{patch.value}"
+
+
+def read_system_harfbuzz_version():
+    """Return the version of the system HarfBuzz, or None if it isn't installed."""
+    harfbuzz = load_system_library("libharfbuzz.so.0")
+    if harfbuzz is None:
+        return None
+
+    harfbuzz.hb_version_string.restype = ctypes.c_char_p
+    return harfbuzz.hb_version_string().decode()
+
+
+def load_system_library(file_name):
+    """Load a C library the way WeasyPrint finds it, or return None if it is absent."""
+    try:
+        return ctypes.CDLL(file_name)
+    except OSError:
+        logger.warning("%s is not installed, so it is not scanned.", file_name)
+        return None
