@@ -11,4 +11,7 @@ logger = logging.getLogger(__name__)
 @app.task(max_retries=0)
 def send_pulse():
     if settings.HEALTH_CHECK_PULSE_URL:
-        requests.head(settings.HEALTH_CHECK_PULSE_URL)
+        resp = requests.head(settings.HEALTH_CHECK_PULSE_URL)
+        logger.info(f"Pulse URL status code: {resp.status_code}")
+    else:
+        logger.info("No pulse URL configured, but worker is working.")
