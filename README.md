@@ -733,14 +733,27 @@ Pour récupérer les backups et les restaurer.
 
 Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](https://www.scaleway.com/en/docs/object-storage/how-to/restore-an-object-from-glacier/)
 
-## Monitoring de la prod
+## Monitoring
 
-Un dashboard de surveillance de la prod est mis en place à une adresse "secrète" (stockée en variable d'environnement)
-et protégée par authentification HTTP.
+### Page de contrôle
+
+Une page de statut technique existe à une adresse "secrète" (stockée en variable d'environnement),
+accessible aux utilisateurs is_staff connectés et protégée par un token le reste du temps.
+
+Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]`
+
+Par exemple en dev :
+- http://envergo.local:8000/ht/quick
+- http://envergo.local:8000/ht/full
+
+Pour analyser la situation en ligne de commande avec le client scalingo :
 
 ```
-scalingo --app nom_de_lapplication run "python manage.py health_check --no-http health_check"
+scalingo --app nom_de_lapplication run "python manage.py health_check --no-http monitoring:check_full"
+scalingo --app nom_de_lapplication run "python manage.py health_check --no-http monitoring:check_quick"
 ```
+
+Les variables d'env concernées sont respectivement `HEALTH_CHECK_URL` et `HEALTH_CHECK_AUTH_TOKEN`.
 
 ## Glossaire
 

@@ -4,11 +4,9 @@ from django.contrib import admin
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
-from redis.asyncio import Redis as RedisClient
 
 from envergo.analytics.views import CSPReportView
 from envergo.confs.views import PrivateFileDownloadView, PublicFileDownloadView
-from envergo.monitoring.views import EnvergoHealthCheckView
 from envergo.pages.views import rate_limited, server_error
 from envergo.urlmappings.views import UrlMappingRedirect
 
@@ -38,24 +36,7 @@ urlpatterns = [
         name="private_file_download",
     ),
     path(settings.ADMIN_URL, admin.site.urls),
-    path(
-        settings.HEALTH_CHECK_URL,
-        EnvergoHealthCheckView.as_view(
-            checks=[
-                "health_check.Database",
-                "health_check.contrib.celery.Ping",
-                (
-                    "health_check.contrib.redis.Redis",
-                    {
-                        "client_factory": lambda: RedisClient.from_url(
-                            settings.CELERY_BROKER_URL
-                        )
-                    },
-                ),
-            ],
-        ),
-        name="health_check",
-    ),
+    path(settings.HEALTH_CHECK_URL, include("envergo.monitoring.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
