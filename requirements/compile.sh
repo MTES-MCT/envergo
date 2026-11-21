@@ -4,3 +4,4 @@
 pip-compile base.in
 pip-compile local.in
 pip-compile production.in
+pip-compile loadtest.in
