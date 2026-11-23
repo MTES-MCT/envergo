@@ -40,11 +40,11 @@
                         Rechercher une commune ou une
                         adresse
                       </label>
-                      <input class="fr-input"
-                             aria-describedby="id_address-messages"
+                      <input class="fr-input autocomplete__input autocomplete__input--default"
                              placeholder="Rechercher une commune ou une adresse"
                              id="id_address"
                              type="search"
+                             value="{{ form.address.value|default_if_none:"" }}"
                              name="address">
                       <button title="Rechercher" type="button" class="fr-btn">Rechercher</button>
                     </div>
