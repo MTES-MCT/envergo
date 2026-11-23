@@ -6,6 +6,24 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from envergo.confs.models import SETTINGS_HELP, HostedFile, Setting, TopBar
+from envergo.utils.validators import CSV_MIME_TYPES, ZIP_MIME_TYPES, validate_file_type
+
+HOSTED_FILE_ALLOWED_TYPES = {
+    ".html": {"text/html"},
+    ".pdf": {"application/pdf"},
+    ".png": {"image/png"},
+    ".jpg": {"image/jpeg"},
+    ".jpeg": {"image/jpeg"},
+    ".webp": {"image/webp"},
+    ".zip": ZIP_MIME_TYPES,
+    ".csv": CSV_MIME_TYPES,
+    ".odt": {"application/vnd.oasis.opendocument.text"},
+    ".ods": {"application/vnd.oasis.opendocument.spreadsheet"},
+    ".docx": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    ".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+}
 
 
 class TopBarAdminForm(forms.ModelForm):
@@ -49,8 +67,21 @@ class SettingAdmin(admin.ModelAdmin):
         return super().render_change_form(request, context, add, change, form_url, obj)
 
 
+class HostedFileAdminForm(forms.ModelForm):
+    class Meta:
+        model = HostedFile
+        fields = "__all__"
+
+    def clean_file(self):
+        file = self.cleaned_data["file"]
+        if "file" in self.changed_data:
+            validate_file_type(file, HOSTED_FILE_ALLOWED_TYPES)
+        return file
+
+
 @admin.register(HostedFile)
 class HostedFileAdmin(admin.ModelAdmin):
+    form = HostedFileAdminForm
     list_display = ["name", "public_url_short", "uploaded_by", "created_at"]
     fields = ("file", "name", "description", "public_url")
     readonly_fields = ("public_url",)

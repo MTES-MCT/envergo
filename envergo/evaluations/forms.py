@@ -265,7 +265,7 @@ class WizardFilesForm(forms.ModelForm):
         label=_("Additional files you might deem useful for the evaluation"),
         required=False,
         help_text=f"""
-            Formats autorisés : images (png, jpg), pdf, zip. <br>
+            Formats autorisés : images (png, jpg, webp), pdf, zip. <br>
             Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
             Maximum {settings.MAX_EVALREQ_FILESIZE} Mo par fichier. <br>
         """,
@@ -278,7 +278,8 @@ class WizardFilesForm(forms.ModelForm):
             validate_file_type(f, ALLOWED_FILE_TYPES)
             if f.size > settings.MAX_EVALREQ_FILESIZE * 1024 * 1024:
                 raise ValidationError(
-                    f"Ce fichier est trop volumineux({f.size} Mo). Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                    f"Ce fichier est trop volumineux ({f.size / (1024 * 1024):.1f} Mo). "
+                    f"Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
                 )
 
         return files
