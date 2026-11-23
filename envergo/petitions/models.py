@@ -698,17 +698,23 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     def record_status_change(self, log):
-        """Save a status log of this dossier and mirror it in « Démarche numérique ».
+        """Save a status log of this dossier and mirror it in « Démarche numérique »."""
 
-        The log's applicant message, if any, goes out after commit. Raises
-        DemarcheNumeriqueError when « Démarche numérique » rejects the new status,
-        and the log is rolled back.
-        """
+        # Entering déclaration starts a new agreement delay.
+        if self.enters_declaration(log):
+            log.agreement_deadline = declaration_due_date(log.status_date)
+
         with transaction.atomic():
             log.save()
             self.sync_demarche_numerique_status(log)
             if log.applicant_message:
                 self.schedule_applicant_message(log)
+
+    def enters_declaration(self, log):
+        """Whether the log moves this régime unique dossier into déclaration from another stage."""
+        is_declaration = log.stage == STAGES.instruction_d
+        was_declaration = self.stage == STAGES.instruction_d
+        return self.is_regime_unique() and is_declaration and not was_declaration
 
     def sync_demarche_numerique_status(self, log):
         """Update the « Démarche numérique » status to match the new log, when it differs."""

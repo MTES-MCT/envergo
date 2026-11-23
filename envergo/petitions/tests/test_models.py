@@ -22,6 +22,7 @@ from envergo.petitions.models import (
 )
 from envergo.petitions.tests.factories import (
     GET_DOSSIER_FAKE_RESPONSE,
+    DeclarationProjectFactory,
     InvitationTokenFactory,
     PetitionProjectFactory,
     SimulationFactory,
@@ -873,3 +874,50 @@ class TestDueForTacitAgreement:
         )
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestEnteringDeclaration:
+    """Entering déclaration starts a new agreement delay."""
+
+    ENTRY_DATE = date(2026, 10, 15)
+
+    def record_declaration_status(self, project):
+        """Record a status change to déclaration, effective on ENTRY_DATE."""
+        log = StatusLog(
+            petition_project=project,
+            stage=STAGES.instruction_d,
+            status_date=self.ENTRY_DATE,
+        )
+        project.record_status_change(log)
+        return log
+
+    def test_entering_declaration_starts_the_agreement_delay(self, mock_update):
+        """A requalified dossier gets two months from the day it enters déclaration."""
+        project = PetitionProjectFactory()
+        StatusLogFactory(petition_project=project, stage=STAGES.instruction_h)
+
+        log = self.record_declaration_status(project)
+
+        assert log.agreement_deadline == date(2026, 12, 15)
+
+    def test_staying_in_declaration_keeps_the_agreement_deadline(self, mock_update):
+        """A change within déclaration keeps the running delay."""
+        project = DeclarationProjectFactory(
+            declaration__agreement_deadline=date(2026, 11, 20)
+        )
+
+        log = self.record_declaration_status(project)
+
+        assert log.agreement_deadline is None
+        assert project.agreement_deadline == date(2026, 11, 20)
+
+    def test_dossier_outside_the_regime_unique_gets_no_deadline(self, mock_update):
+        """Silence means agreement under the régime unique only."""
+        project = PetitionProjectFactory(underscore_category=HedgeCategory.hru)
+        StatusLogFactory(petition_project=project, stage=STAGES.instruction_h)
+
+        log = self.record_declaration_status(project)
+
+        assert log.agreement_deadline is None
