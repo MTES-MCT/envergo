@@ -30,6 +30,7 @@ from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.services import (
     DEMARCHE_NUMERIQUE_STATUS_MAPPING,
     attestation_non_opposition_pdf,
+    declaration_receipt_message,
     dossier_state_changed_outside_guh_alert,
     dossier_submission_alert,
     log_dossier_submission_event,
@@ -209,7 +210,87 @@ class PetitionProjectQuerySet(models.QuerySet):
         )
 
 
-class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
+class InstructionMixin:
+    """The instruction events of a dossier.
+
+    Each event builds one complete status log and records it with `record_event`.
+    """
+
+    def request_complements(self, *, complements_due_date, applicant_message, author):
+        """Suspend the instruction until the applicant sends the requested compléments."""
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.suspension,
+            stage=self.stage,
+            decision=self.decision,
+            due_date=complements_due_date,
+            original_due_date=self.due_date,
+            update_comment="Suspension de l’instruction, message envoyé au demandeur.",
+            applicant_message=applicant_message,
+            created_by=author,
+        )
+        return self.record_event(log)
+
+    def receive_complements(self, *, received_on, due_date, author):
+        """Resume the instruction.
+
+        For a déclaration, `due_date` is required. It ends the restarted agreement
+        delay, and the applicant gets a new récépissé stating it.
+        """
+        if self.silence_rule == SilenceRule.AGREEMENT:
+            agreement_deadline = due_date
+            applicant_message = declaration_receipt_message(self, received_on, due_date)
+        else:
+            agreement_deadline = None
+            applicant_message = ""
+
+        if due_date:
+            update_comment = "Reprise de l’instruction, date d'échéance ajustée."
+        else:
+            update_comment = "Reprise de l’instruction."
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.resumption,
+            stage=self.stage,
+            decision=self.decision,
+            info_receipt_date=received_on,
+            due_date=due_date,
+            agreement_deadline=agreement_deadline,
+            update_comment=update_comment,
+            applicant_message=applicant_message,
+            created_by=author,
+        )
+        return self.record_event(log)
+
+    def record_event(self, log):
+        """Save the log of an instruction event, mirror it in « Démarche numérique », and return it."""
+        with transaction.atomic():
+            log.save()
+            self.sync_demarche_numerique_status(log)
+            if log.applicant_message:
+                self.schedule_applicant_message(log)
+        return log
+
+    def sync_demarche_numerique_status(self, log):
+        """Update the « Démarche numérique » status to match the new log, when it differs."""
+        new_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
+        if self.demarche_numerique_state != new_status:
+            update_demarche_numerique_status(self, new_status)
+
+    def schedule_applicant_message(self, log):
+        """Queue the log's applicant message for after commit.
+
+        Sent asynchronously, so a DN messagerie failure never blocks the state
+        change. The task retry policy handles transient errors.
+        """
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_applicant_message_async
+
+        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
+
+
+class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
     A petition project will store any data needed to follow up a request concerning a hedge.
@@ -698,40 +779,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     def record_status_change(self, log):
-        """Save a status log of this dossier and mirror it in « Démarche numérique »."""
+        """Record a status change of this dossier."""
 
         # Entering déclaration starts a new agreement delay.
         if self.enters_declaration(log):
             log.agreement_deadline = declaration_due_date(log.status_date)
 
-        with transaction.atomic():
-            log.save()
-            self.sync_demarche_numerique_status(log)
-            if log.applicant_message:
-                self.schedule_applicant_message(log)
+        self.record_event(log)
 
     def enters_declaration(self, log):
         """Whether the log moves this régime unique dossier into déclaration from another stage."""
         is_declaration = log.stage == STAGES.instruction_d
         was_declaration = self.stage == STAGES.instruction_d
         return self.is_regime_unique() and is_declaration and not was_declaration
-
-    def sync_demarche_numerique_status(self, log):
-        """Update the « Démarche numérique » status to match the new log, when it differs."""
-        new_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
-        if self.demarche_numerique_state != new_status:
-            update_demarche_numerique_status(self, new_status)
-
-    def schedule_applicant_message(self, log):
-        """Queue the log's applicant message for after commit.
-
-        Sent asynchronously, so a DN messagerie failure never blocks the state
-        change. The task retry policy handles transient errors.
-        """
-        # Imported here: the tasks module imports this one.
-        from envergo.petitions.tasks import send_applicant_message_async
-
-        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""

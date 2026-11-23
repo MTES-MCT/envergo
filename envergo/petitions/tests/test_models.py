@@ -922,3 +922,87 @@ class TestEnteringDeclaration:
         log = self.record_declaration_status(project)
 
         assert log.agreement_deadline is None
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+class TestRequestComplements:
+    """A request for compléments suspends the instruction."""
+
+    PREVIOUS_DUE_DATE = date(2026, 12, 1)
+    COMPLEMENTS_DUE_DATE = date(2027, 1, 15)
+    APPLICANT_MESSAGE = "Pièces manquantes"
+
+    def request_complements(self, project):
+        """Request the compléments from the applicant, due on COMPLEMENTS_DUE_DATE."""
+        return project.request_complements(
+            complements_due_date=self.COMPLEMENTS_DUE_DATE,
+            applicant_message=self.APPLICANT_MESSAGE,
+            author=None,
+        )
+
+    def test_suspension_keeps_the_previous_due_date(self, mock_send):
+        """The suspension log keeps the due date in force before it."""
+        project = PetitionProjectFactory(status__due_date=self.PREVIOUS_DUE_DATE)
+
+        log = self.request_complements(project)
+
+        assert log.original_due_date == self.PREVIOUS_DUE_DATE
+
+    def test_request_goes_to_the_applicant_after_commit(
+        self, mock_send, django_capture_on_commit_callbacks
+    ):
+        """The applicant gets the request once the suspension is committed."""
+        RUConfigHaieFactory()
+        project = PetitionProjectFactory()
+
+        with django_capture_on_commit_callbacks(execute=True):
+            log = self.request_complements(project)
+
+        assert log.applicant_message == self.APPLICANT_MESSAGE
+        mock_send.delay.assert_called_once_with(log.pk)
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+class TestReceiveComplements:
+    """The receipt of the compléments resumes the instruction."""
+
+    RECEIVED_ON = date(2026, 11, 2)
+    DUE_DATE = date(2027, 1, 2)
+
+    def suspend(self, project):
+        """Suspend the instruction of the dossier, in its current stage."""
+        StatusLogFactory(
+            petition_project=project,
+            type=LOG_TYPES.suspension,
+            stage=project.stage,
+            due_date=date(2026, 12, 1),
+        )
+
+    def receive_complements(self, project):
+        """Receive the compléments on RECEIVED_ON, with the instruction due on DUE_DATE."""
+        return project.receive_complements(
+            received_on=self.RECEIVED_ON, due_date=self.DUE_DATE, author=None
+        )
+
+    def test_receipt_restarts_the_agreement_delay_of_a_declaration(self, mock_send):
+        """The applicant gets a new récépissé stating the restarted deadline."""
+        RUConfigHaieFactory()
+        project = DeclarationProjectFactory()
+        self.suspend(project)
+
+        log = self.receive_complements(project)
+
+        assert log.agreement_deadline == self.DUE_DATE
+        assert "2 janvier 2027" in log.applicant_message
+
+    def test_receipt_restarts_no_agreement_delay_in_authorisation(self, mock_send):
+        """Silence means refusal in authorisation, so no récépissé goes out."""
+        project = PetitionProjectFactory(status__stage=STAGES.instruction_a)
+        self.suspend(project)
+
+        log = self.receive_complements(project)
+
+        assert log.agreement_deadline is None
+        assert log.applicant_message == ""

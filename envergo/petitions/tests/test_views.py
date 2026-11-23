@@ -2627,14 +2627,13 @@ def test_request_info_default_message(
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
 def test_petition_project_request_for_info(
-    mock_ds_msg, client, haie_coordinator_44, site
+    mock_send_message, client, haie_coordinator_44, site
 ):
     """Instructors can request for additional info."""
 
     client.force_login(haie_coordinator_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     today = date.today()
     next_month = today + timedelta(days=30)
@@ -2656,24 +2655,19 @@ def test_petition_project_request_for_info(
     }
     res = client.post(procedure_url, form_data, follow=True)
     assert res.status_code == 200
-    assert "Le message au demandeur a bien été envoyé." in res.content.decode()
+    assert "Le message au demandeur sera envoyé" in res.content.decode()
 
     project.refresh_from_db()
     clear_cached_properties(project)
     assert project.is_additional_information_requested is True
     assert project.due_date == next_month
-    assert project.latest_suspension.original_due_date == today
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.views.send_message_dossier_ds")
-def test_petition_project_resume_instruction(
-    mock_ds_msg, client, haie_coordinator_44, site
-):
+def test_petition_project_resume_instruction(client, haie_coordinator_44, site):
     """Instructors can resume_instruction."""
 
     client.force_login(haie_coordinator_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     today = date.today()
     last_month = today - timedelta(days=30)
@@ -2734,11 +2728,11 @@ def test_petition_project_resume_instruction(
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.tasks.send_declaration_receipt_async")
-def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
-    mock_receipt_task, client, haie_coordinator_44, site
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+def test_resume_instruction_of_a_declaration_announces_the_receipt(
+    mock_send_message, client, haie_coordinator_44, site
 ):
-    """Receiving the documents restarts the agreement deadline, and a new receipt states it."""
+    """The instructor learns that the applicant gets a new récépissé."""
 
     client.force_login(haie_coordinator_44)
 
@@ -2772,21 +2766,13 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     assert res.status_code == 200
     content = res.content.decode()
     assert "L'instruction du dossier a repris." in content
-    assert "Le récépissé de déclaration sera envoyé au demandeur" in content
-    assert project.agreement_deadline == new_due_date
-
-    assert mock_receipt_task.delay.call_count == 1
-    assert mock_receipt_task.delay.call_args[0] == (
-        project.pk,
-        today.isoformat(),
-        new_due_date.isoformat(),
-    )
+    assert "Le message au demandeur sera envoyé" in content
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
 def test_resume_instruction_refused_without_a_suspension(
-    mock_receipt_task, client, haie_coordinator_44, site
+    mock_send_message, client, haie_coordinator_44, site
 ):
     """The button is hidden when nothing is awaited, so only a replayed post gets here."""
 
@@ -2815,50 +2801,7 @@ def test_resume_instruction_refused_without_a_suspension(
     assert "Ce dossier n'est pas en attente de compléments" in res.content.decode()
 
     assert not project.status_history.filter(type=LOG_TYPES.resumption).exists()
-    assert not mock_receipt_task.delay.called
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.tasks.send_declaration_receipt_async")
-def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
-    mock_receipt_task, client, haie_coordinator_44, site
-):
-    """Only the déclaration stage of the régime unique restarts the agreement deadline."""
-
-    client.force_login(haie_coordinator_44)
-
-    today = date.today()
-    RUConfigHaieFactory()
-    project = PetitionProjectFactory(
-        status__stage="instruction_a",
-        demarche_numerique_state=DOSSIER_STATES.en_instruction,
-    )
-    StatusLogFactory(
-        petition_project=project,
-        type=LOG_TYPES.suspension,
-        stage="instruction_a",
-        original_due_date=today,
-        due_date=today + timedelta(days=90),
-    )
-
-    status_url = reverse(
-        "petition_project_instructor_procedure_view",
-        kwargs={"reference": project.reference},
-    )
-    form_data = {
-        "action": "resume_processing",
-        "info_receipt_date": today,
-        "due_date": today + timedelta(days=60),
-    }
-    res = client.post(status_url, form_data, follow=True)
-
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "L'instruction du dossier a repris." in content
-    assert "récépissé" not in content
-    assert not mock_receipt_task.delay.called
-    resumption = project.status_history.get(type=LOG_TYPES.resumption)
-    assert resumption.agreement_deadline is None
+    assert not mock_send_message.delay.called
 
 
 @pytest.mark.django_db(transaction=True)

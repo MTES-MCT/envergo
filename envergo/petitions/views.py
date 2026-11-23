@@ -88,12 +88,10 @@ from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
     FORBIDDEN_STAGE_TRANSITIONS,
-    LOG_TYPES,
     STAGES,
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
-    SilenceRule,
     Simulation,
     StatusLog,
 )
@@ -2118,71 +2116,27 @@ class PetitionProjectInstructorProcedureView(
         """Instructor requested additional data."""
 
         project = self.object
+        project.request_complements(
+            complements_due_date=form.cleaned_data["info_due_date"],
+            applicant_message=form.cleaned_data["request_message"],
+            author=self.request.user,
+        )
 
-        try:
-            with transaction.atomic():
-                StatusLog.objects.create(
-                    petition_project=project,
-                    type=LOG_TYPES.suspension,
-                    due_date=form.cleaned_data["info_due_date"],
-                    original_due_date=project.due_date,
-                    created_by=self.request.user,
-                    update_comment="Suspension de l’instruction, message envoyé au demandeur.",
-                    stage=project.stage,
-                    decision=project.decision,
-                )
+        self.notify_request_info(project)
 
-                message = form.cleaned_data["request_message"]
-                dn_response = send_message_dossier_ds(self.object, message)
+        log_event(
+            "dossier",
+            "suspension_delai",
+            self.request,
+            switch="on",
+            **project.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
 
-                if dn_response is None or dn_response.get("errors") is not None:
-                    if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
-                        messages.info(
-                            self.request,
-                            """L'accès à l'API « Démarche numérique » n'est pas activée.
-                            Le message n'est pas envoyé""",
-                        )
-                    else:
-                        # Raise to abort the transaction and roll back the
-                        # suspension log created above.
-                        raise DemarcheNumeriqueError(message="DN message not sent")
-
-            self.notify_request_info(project)
-
-            log_event(
-                "dossier",
-                "suspension_delai",
-                self.request,
-                switch="on",
-                **project.get_log_event_data(),
-                **get_matomo_tags(self.request),
-            )
-
-            messagerie_url = reverse(
-                "petition_project_instructor_messagerie_view",
-                args=[project.reference],
-            )
-            messages.success(
-                self.request,
-                f"""
-                Le message au demandeur a bien été envoyé.
-                <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
-                """,
-            )
-            return HttpResponseRedirect(self.get_success_url())
-
-        except DemarcheNumeriqueError:
-            messages.error(
-                self.request,
-                f"""Le message n'a pas pu être envoyé.
-                Merci de ré-essayer dans quelques minutes.
-                Si le problème persiste,
-                <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                    contacter l'équipe du guichet unique de la haie
-                </a> en indiquant l'identifiant du dossier.
-                """,
-            )
-            return HttpResponseRedirect(self.get_success_url())
+        self.notify_applicant_message_scheduled(
+            "L'instruction du dossier est suspendue."
+        )
+        return HttpResponseRedirect(self.get_success_url())
 
     def notify_request_info(self, project):
         """Send Mattermost notification for a request for additional info."""
@@ -2225,33 +2179,11 @@ class PetitionProjectInstructorProcedureView(
             )
             return HttpResponseRedirect(self.get_success_url())
 
-        info_receipt_date = form.cleaned_data["info_receipt_date"]
-        new_due_date = form.cleaned_data.get("due_date")
-
-        # Receiving the documents restarts the déclaration delay.
-        # ResumeProcessingForm requires the due date here, so it is never None.
-        restarts_declaration_delay = project.silence_rule == SilenceRule.AGREEMENT
-        agreement_deadline = new_due_date if restarts_declaration_delay else None
-
-        StatusLog.objects.create(
-            petition_project=project,
-            type=LOG_TYPES.resumption,
-            info_receipt_date=info_receipt_date,
-            due_date=new_due_date,
-            agreement_deadline=agreement_deadline,
-            created_by=self.request.user,
-            update_comment=(
-                "Reprise de l’instruction, date d'échéance ajustée."
-                if new_due_date
-                else "Reprise de l’instruction."
-            ),
-            stage=project.stage,
-            decision=project.decision,
+        log = project.receive_complements(
+            received_on=form.cleaned_data["info_receipt_date"],
+            due_date=form.cleaned_data.get("due_date"),
+            author=self.request.user,
         )
-
-        # The applicant gets a new receipt stating the restarted deadline.
-        if restarts_declaration_delay:
-            project.schedule_declaration_receipt(info_receipt_date, new_due_date)
 
         self.notify_resume_processing(project)
 
@@ -2264,28 +2196,12 @@ class PetitionProjectInstructorProcedureView(
             **get_matomo_tags(self.request),
         )
 
-        self.notify_resume_succeeded(restarts_declaration_delay)
+        outcome = "L'instruction du dossier a repris."
+        if log.applicant_message:
+            self.notify_applicant_message_scheduled(outcome)
+        else:
+            messages.success(self.request, outcome)
         return HttpResponseRedirect(self.get_success_url())
-
-    def notify_resume_succeeded(self, sends_receipt):
-        """Flash a success message, pointing to the messagerie when a receipt goes out."""
-        if not sends_receipt:
-            messages.success(self.request, "L'instruction du dossier a repris.")
-            return
-
-        messagerie_url = reverse(
-            "petition_project_instructor_messagerie_view",
-            args=[self.object.reference],
-        )
-        messages.success(
-            self.request,
-            format_html(
-                "L'instruction du dossier a repris. Le récépissé de déclaration sera "
-                "envoyé au demandeur dans quelques instants. "
-                '<a href="{}">Retrouvez-le dans la messagerie.</a>',
-                messagerie_url,
-            ),
-        )
 
     def notify_resume_processing(self, project):
         """Send Mattermost notification for instruction resumption."""
