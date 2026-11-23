@@ -19,7 +19,7 @@ from envergo.petitions.models import (
 )
 from envergo.petitions.services import get_demarche_numerique_dossier
 from envergo.users.models import User
-from envergo.utils.validators import validate_mime
+from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
 from envergo.utils.widgets import JSONWidget
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class UserMultipleChoiceField(forms.ModelMultipleChoiceField):
 
 
 def validate_zip(value):
-    validate_mime(value, ["application/zip"])
+    validate_file_type(value, {".zip": ZIP_MIME_TYPES})
 
 
 def validate_dn_file_size(value):

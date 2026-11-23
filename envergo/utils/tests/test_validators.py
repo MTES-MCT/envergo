@@ -5,7 +5,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from envergo.utils.validators import detect_mime, validate_mime
+from envergo.utils.validators import detect_mime, validate_file_type
 
 
 def make_png_bytes():
@@ -95,45 +95,39 @@ class TestDetectMime:
         assert detect_mime(uploaded) == "image/png"
 
 
-class TestValidateMime:
-    """validate_mime must accept files whose detected MIME type is in the
-    allowed list, and reject all others with a ValidationError."""
+class TestValidateFileType:
+    """validate_file_type must accept a file only if its extension is allowed and its content matches that extension."""
 
-    def test_allowed_type_passes(self):
+    ALLOWED = {
+        ".png": {"image/png"},
+        ".zip": {"application/zip"},
+    }
+
+    def test_matching_extension_and_content_passes(self):
         uploaded = make_uploaded_file(make_png_bytes(), "img.png", "image/png")
-        validate_mime(uploaded, ["image/png"])
+        validate_file_type(uploaded, self.ALLOWED)
 
-    def test_disallowed_type_raises(self):
-        uploaded = make_uploaded_file(make_png_bytes(), "img.png", "image/png")
+    def test_extension_is_case_insensitive(self):
+        uploaded = make_uploaded_file(make_png_bytes(), "IMG.PNG", "image/png")
+        validate_file_type(uploaded, self.ALLOWED)
+
+    def test_allowed_content_under_another_allowed_extension_is_rejected(self):
+        """Both png and zip are allowed, but a png must not be stored as a zip."""
+        uploaded = make_uploaded_file(make_png_bytes(), "img.zip", "application/zip")
         with pytest.raises(ValidationError):
-            validate_mime(uploaded, ["application/pdf"])
+            validate_file_type(uploaded, self.ALLOWED)
 
-    def test_zip_passes_when_allowed(self):
-        uploaded = make_uploaded_file(
-            make_zip_bytes(), "archive.zip", "application/zip"
-        )
-        validate_mime(uploaded, ["application/zip"])
-
-    def test_zip_rejected_when_not_allowed(self):
-        uploaded = make_uploaded_file(
-            make_zip_bytes(), "archive.zip", "application/zip"
-        )
+    def test_allowed_content_under_disallowed_extension_is_rejected(self):
+        uploaded = make_uploaded_file(make_png_bytes(), "img.html", "text/html")
         with pytest.raises(ValidationError):
-            validate_mime(uploaded, ["image/png"])
+            validate_file_type(uploaded, self.ALLOWED)
 
-    def test_spoofed_content_type_is_rejected(self):
-        """A file whose declared Content-Type is allowed but whose actual
-        content is not must still be rejected. This is the spoofing case the
-        validator exists to defend against: here a zip archive is declared as
-        image/png, the only allowed type."""
-        uploaded = make_uploaded_file(make_zip_bytes(), "archive.zip", "image/png")
+    def test_missing_extension_is_rejected(self):
+        uploaded = make_uploaded_file(make_png_bytes(), "img", "image/png")
         with pytest.raises(ValidationError):
-            validate_mime(uploaded, ["image/png"])
+            validate_file_type(uploaded, self.ALLOWED)
 
     def test_file_pointer_reset_after_validation(self):
-        """After validation the file pointer must be back at 0, otherwise
-        downstream code (e.g. saving the file to storage) would read an
-        empty stream."""
         uploaded = make_uploaded_file(make_png_bytes(), "img.png", "image/png")
-        validate_mime(uploaded, ["image/png"])
+        validate_file_type(uploaded, self.ALLOWED)
         assert uploaded.tell() == 0

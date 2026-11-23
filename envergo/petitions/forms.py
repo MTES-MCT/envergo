@@ -5,7 +5,6 @@ from textwrap import dedent
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -28,7 +27,7 @@ from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import EnrichedChoices, ProjectStageField
 from envergo.utils.urls import remove_from_qs
-from envergo.utils.validators import validate_mime
+from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -105,20 +104,17 @@ def validate_file_size(value):
         )
 
 
-validate_extension = FileExtensionValidator(
-    allowed_extensions=["png", "jpg", "jpeg", "pdf", "zip"],
-)
-
-ALLOWED_MIME_TYPES = {
-    "image/png",
-    "image/jpeg",
-    "application/pdf",
-    "application/zip",
+ALLOWED_FILE_TYPES = {
+    ".png": {"image/png"},
+    ".jpg": {"image/jpeg"},
+    ".jpeg": {"image/jpeg"},
+    ".pdf": {"application/pdf"},
+    ".zip": ZIP_MIME_TYPES,
 }
 
 
-def validate_mime_type(value):
-    validate_mime(value, ALLOWED_MIME_TYPES)
+def validate_file_content(value):
+    validate_file_type(value, ALLOWED_FILE_TYPES)
 
 
 class PetitionProjectInstructorMessageForm(forms.Form):
@@ -139,7 +135,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_extension, validate_mime_type],
+        validators=[validate_file_size, validate_file_content],
     )
 
     class Meta:
@@ -254,7 +250,7 @@ class StateChangeForm(forms.ModelForm):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_extension, validate_mime_type],
+        validators=[validate_file_size, validate_file_content],
     )
     applicant_message = forms.CharField(
         label="Message au demandeur",
