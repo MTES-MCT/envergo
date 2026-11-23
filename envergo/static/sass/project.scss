@@ -808,7 +808,8 @@ form#request-evaluation-form {
   flex-grow: 1;
 }
 
-.autocomplete__wrapper .autocomplete__input {
+.autocomplete__wrapper .autocomplete__input,
+.autocomplete__input.autocomplete__input--default {
   border: 0;
   border-radius: space(1v) space(1v) 0 0; /* stylelint-disable-line */
   color: #161616;
@@ -824,12 +825,12 @@ form#request-evaluation-form {
   appearance: none;
   outline-offset: 2px;
   outline-width: 2px;
-}
 
-.autocomplete__wrapper .autocomplete__input::placeholder {
-  opacity: 1;
-  font-style: italic;
-  color: #666;
+  &::placeholder {
+    opacity: 1;
+    font-style: italic;
+    color: #666;
+  }
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
