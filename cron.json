@@ -29,6 +29,10 @@
       "size": "M"
     },
     {
+      "command": "30 4 * * * python manage.py close_tacit_agreements",
+      "size": "M"
+    },
+    {
       "command": "0 5 * * * python manage.py security_scan",
       "size": "M"
     }
