@@ -1,5 +1,5 @@
 from unittest.mock import Mock, patch
-from urllib.parse import quote, unquote
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 import pytest
 from django.core.exceptions import ImproperlyConfigured
@@ -85,6 +85,41 @@ class TestPrivateStorageUrl:
         with patch.object(S3Boto3Storage, "url", return_value=canned):
             url = storage.url("doc.pdf")
         assert url == f"/fichiers-prives/media/doc.pdf?{SIGNED_QUERY}"
+
+
+def make_signing_storage(cls):
+    """A storage that really presigns urls. boto3 signs locally: no network call."""
+    return make_private_storage(
+        cls=cls,
+        access_key="SCWXXX",  # pragma: allowlist secret
+        secret_key="secret",  # pragma: allowlist secret
+        region_name="fr-par",
+        addressing_style="path",
+        signature_version="s3v4",
+    )
+
+
+def content_disposition(url):
+    """The Content-Disposition S3 will respond with, None if left to default."""
+    query = parse_qs(urlsplit(url).query)
+    return query.get("response-content-disposition", [None])[0]
+
+
+class TestContentDisposition:
+    def test_request_files_are_downloaded(self):
+        storage = make_signing_storage(PrivateUploadStorage)
+        url = storage.url("requests/REF123/file.html")
+        assert content_disposition(url) == "attachment"
+
+    def test_media_files_open_in_browser(self):
+        storage = make_signing_storage(PrivateMediaStorage)
+        url = storage.url("evaluations/doc.pdf")
+        assert content_disposition(url) is None
+
+    def test_server_side_s3_url_is_unchanged(self):
+        storage = make_signing_storage(PrivateUploadStorage)
+        url = storage.s3_url("requests/REF123/file.pdf")
+        assert content_disposition(url) is None
 
 
 class TestPublicStorageUrl:
