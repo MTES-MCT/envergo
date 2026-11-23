@@ -3,6 +3,7 @@ from copy import copy
 from pathlib import Path
 
 import factory
+from django.utils import timezone
 from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory
@@ -19,6 +20,7 @@ from envergo.petitions.models import (
     ResultSnapshot,
     Simulation,
     StatusLog,
+    declaration_due_date,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -142,6 +144,23 @@ class StatusLogFactory(DjangoModelFactory):
             if log.stage == STAGES.closed
             else DECISIONS.unset
         )
+    )
+
+
+class DeclarationStatusLogFactory(StatusLogFactory):
+    """The log moving a dossier into déclaration, which starts the agreement delay."""
+
+    stage = STAGES.instruction_d
+    agreement_deadline = factory.LazyFunction(
+        lambda: declaration_due_date(timezone.localdate())
+    )
+
+
+class DeclarationProjectFactory(PetitionProjectFactory):
+    """A régime unique dossier in déclaration, waiting for its agreement deadline."""
+
+    declaration = factory.RelatedFactory(
+        DeclarationStatusLogFactory, factory_related_name="petition_project"
     )
 
 
