@@ -812,11 +812,10 @@ form#request-evaluation-form {
 .autocomplete__input.autocomplete__input--default {
   border: 0;
   border-radius: space(1v) space(1v) 0 0; /* stylelint-disable-line */
-  color: #161616;
 
   --blend: var(--background-contrast-grey-blend);
 
-  background-color: #fff;
+  background-color: var(--grey-1000-50);
   box-shadow: inset 0 -2px 0 0 var(--border-action-high-blue-france);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
@@ -829,7 +828,6 @@ form#request-evaluation-form {
   &::placeholder {
     opacity: 1;
     font-style: italic;
-    color: #666;
   }
 }
 
