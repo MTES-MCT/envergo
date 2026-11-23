@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
@@ -8,6 +8,7 @@ from django.contrib.auth.models import AnonymousUser
 from envergo.analytics.models import Event
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import Department34Factory
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
 from envergo.petitions.models import (
     DECISIONS,
@@ -791,3 +792,84 @@ class TestCloseByTacitAgreement:
         log = project.status_history.first()
         assert "a fait l'objet d'un accord tacite" in log.applicant_message
         mock_send_message.delay.assert_called_once_with(log.pk)
+
+
+@pytest.mark.haie
+class TestDueForTacitAgreement:
+    """The dossiers the nightly job closes by tacit agreement."""
+
+    TODAY = date(2026, 12, 5)
+
+    def make_project(self, *logs, category=HedgeCategory.ru):
+        """A dossier whose history holds `logs`, each a dict of StatusLog fields."""
+        project = PetitionProjectFactory(underscore_category=category)
+        for log in logs:
+            StatusLogFactory(petition_project=project, **log)
+        return project
+
+    def declaration_submission(self, agreement_deadline):
+        """The log opening the déclaration delay."""
+        return {"stage": STAGES.instruction_d, "agreement_deadline": agreement_deadline}
+
+    def test_dossiers_due_today_or_earlier_are_selected(self):
+        """A dossier whose deadline passed while nobody answered is due."""
+        due_today = self.make_project(self.declaration_submission(self.TODAY))
+        overdue = self.make_project(
+            self.declaration_submission(self.TODAY - timedelta(days=4))
+        )
+
+        due = PetitionProject.objects.due_for_tacit_agreement(self.TODAY)
+
+        assert set(due) == {due_today, overdue}
+
+    def test_dossier_due_tomorrow_is_skipped(self):
+        """Silence means agreement only once the deadline is reached."""
+        tomorrow = self.TODAY + timedelta(days=1)
+        self.make_project(self.declaration_submission(tomorrow))
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_waiting_for_documents_is_skipped(self):
+        """Requesting documents suspends the delay."""
+        suspension = {
+            "type": LOG_TYPES.suspension,
+            "stage": STAGES.instruction_d,
+            "due_date": date(2027, 1, 5),
+        }
+        self.make_project(self.declaration_submission(self.TODAY), suspension)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_whose_resumption_restarted_the_delay_is_skipped(self):
+        """Only the latest agreement deadline counts."""
+        resumption = {
+            "type": LOG_TYPES.resumption,
+            "stage": STAGES.instruction_d,
+            "info_receipt_date": date(2026, 12, 1),
+            "agreement_deadline": date(2027, 2, 1),
+        }
+        self.make_project(self.declaration_submission(self.TODAY), resumption)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_requalified_into_authorization_is_skipped(self):
+        """In authorisation, silence means refusal."""
+        requalification = {"stage": STAGES.instruction_a}
+        self.make_project(self.declaration_submission(self.TODAY), requalification)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_closed_dossier_is_skipped(self):
+        """A dossier with a decision is no longer waiting for one."""
+        closing = {"stage": STAGES.closed}
+        self.make_project(self.declaration_submission(self.TODAY), closing)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_outside_the_regime_unique_is_skipped(self):
+        """Silence means agreement under the régime unique only."""
+        self.make_project(
+            self.declaration_submission(self.TODAY), category=HedgeCategory.hru
+        )
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()

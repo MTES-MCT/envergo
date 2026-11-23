@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.db import models, transaction
-from django.db.models import Q
+from django.db.models import OuterRef, Q, Subquery
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -162,6 +162,53 @@ def declaration_due_date(submission_date: date) -> date:
     return submission_date + relativedelta(months=2)
 
 
+class PetitionProjectQuerySet(models.QuerySet):
+    """Named selections of petition projects."""
+
+    def regime_unique(self):
+        """The dossiers under the régime unique."""
+        return self.filter(_category=HedgeCategory.ru)
+
+    def decision_pending(self):
+        """The dossiers still waiting for a decision."""
+        return self.filter(stage__in=PENDING_DECISION_STAGES)
+
+    def not_suspended(self):
+        """The dossiers not waiting for additional documents from the applicant."""
+        return self.filter(is_additional_information_requested=False)
+
+    def due_for_tacit_agreement(self, today: date):
+        """The dossiers whose silence became agreement on or before `today`."""
+
+        # Latest logs subquery
+        project_logs = StatusLog.objects.filter(petition_project=OuterRef("pk"))
+        newest_first = project_logs.order_by("-created_at")
+
+        # Select latest deadline
+        deadline_logs = newest_first.filter(agreement_deadline__isnull=False)
+        latest_deadline = deadline_logs.values("agreement_deadline")[:1]
+
+        # Select latest instruction stage
+        instruction_logs = newest_first.filter(stage__in=INSTRUCTION_STAGES)
+        latest_instruction_stage = instruction_logs.values("stage")[:1]
+
+        return (
+            self.regime_unique()
+            .decision_pending()
+            .not_suspended()
+            .alias(
+                agreement_deadline=Subquery(latest_deadline),
+                latest_instruction_stage=Subquery(latest_instruction_stage),
+            )
+            .filter(
+                latest_instruction_stage=STAGES.instruction_d,
+                agreement_deadline__lte=today,
+            )
+            .select_related("department", "hedge_data")
+            .defer("department__geometry")
+        )
+
+
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
@@ -169,6 +216,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     Both the project owner and the public administration will be able to follow up the request.
     """
 
+    objects = PetitionProjectQuerySet.as_manager()
     tracker = FieldTracker()
 
     reference = models.CharField(
