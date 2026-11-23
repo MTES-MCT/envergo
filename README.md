@@ -726,7 +726,7 @@ Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](htt
 Une page de statut technique existe à une adresse "secrète" (stockée en variable d'environnement),
 accessible aux utilisateurs is_staff connectés et protégée par un token le reste du temps.
 
-Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]`
+Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]/`
 
 Par exemple en dev :
 - http://envergo.local:8000/ht/quick
