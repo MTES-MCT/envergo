@@ -121,7 +121,7 @@ def test_refusal_deadline_comes_from_the_latest_switch():
 
 
 def test_refusal_deadline_is_none_without_a_switch():
-    """A dossier that never switched to authorisation has no refusal deadline."""
+    """A dossier that never switched to authorization has no refusal deadline."""
     project = PetitionProjectFactory()
 
     assert project.refusal_deadline is None

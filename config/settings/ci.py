@@ -20,6 +20,8 @@ ALLOWED_HOSTS = [
     "localhost",
 ]
 
+HEALTH_CHECK_AUTH_TOKEN = "aaaaaaaaaaaaaaaaaaa"
+
 # CACHES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#caches

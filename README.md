@@ -738,7 +738,7 @@ Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](htt
 Une page de statut technique existe à une adresse "secrète" (stockée en variable d'environnement),
 accessible aux utilisateurs is_staff connectés et protégée par un token le reste du temps.
 
-Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]`
+Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]/`
 
 Par exemple en dev :
 - http://envergo.local:8000/ht/quick
@@ -752,6 +752,12 @@ scalingo --app nom_de_lapplication run "python manage.py health_check --no-http 
 ```
 
 Les variables d'env concernées sont respectivement `HEALTH_CHECK_URL` et `HEALTH_CHECK_AUTH_TOKEN`.
+
+### Workers
+
+Pour vérifier le bon fonctionnement des workers (Celery), la commande monitoring_send_pulse est
+programmée à intervalles réguliers. Elle planifie une tâche qui lance une requête http vers une
+URL définie dans le paramètre `HEALTH_CHECK_PULSE_URL` ou à défaut laisse une entrée de log.
 
 ## Glossaire
 
