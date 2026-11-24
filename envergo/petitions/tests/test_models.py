@@ -115,40 +115,6 @@ def test_can_switch_to_authorization(category, stage, expected):
     assert project.can_switch_to_authorization is expected
 
 
-def test_refusal_deadline_comes_from_the_latest_switch():
-    """A later stage change without a deadline keeps the switch's deadline in force."""
-    project = PetitionProjectFactory()
-    StatusLogFactory(petition_project=project, refusal_deadline=date(2099, 1, 1))
-    StatusLogFactory(petition_project=project, refusal_deadline=date(2099, 9, 21))
-    StatusLogFactory(petition_project=project, stage=STAGES.preparing_decision)
-
-    assert project.refusal_deadline == date(2099, 9, 21)
-
-
-def test_refusal_deadline_is_none_without_a_switch():
-    """A dossier that never switched to authorization has no refusal deadline."""
-    project = PetitionProjectFactory()
-
-    assert project.refusal_deadline is None
-
-
-def test_agreement_deadline_comes_from_the_latest_log_carrying_one():
-    """A later stage change without a deadline keeps the latest deadline in force."""
-    project = PetitionProjectFactory()
-    StatusLogFactory(petition_project=project, agreement_deadline=date(2099, 1, 1))
-    StatusLogFactory(petition_project=project, agreement_deadline=date(2099, 4, 1))
-    StatusLogFactory(petition_project=project, stage=STAGES.preparing_decision)
-
-    assert project.agreement_deadline == date(2099, 4, 1)
-
-
-def test_agreement_deadline_is_none_outside_declaration():
-    """A dossier that never entered déclaration instruction has no agreement deadline."""
-    project = PetitionProjectFactory()
-
-    assert project.agreement_deadline is None
-
-
 @pytest.mark.parametrize(
     "category, stages, expected",
     [
@@ -476,6 +442,7 @@ class TestDemarcheNumeriqueSync:
         project.refresh_from_db()
         assert project.stage == "instruction_d"
         assert project.due_date == date(2025, 3, 29)
+        assert project.agreement_deadline == date(2025, 3, 29)
 
     @pytest.mark.haie
     def test_auto_instruction_non_ru_sets_instruction_h_without_due_date(self):
@@ -749,7 +716,7 @@ class TestCloseByTacitAgreement:
         return DeclarationProjectFactory(
             demarche_numerique_state=DOSSIER_STATES.en_instruction,
             demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
-            declaration__agreement_deadline=self.AGREEMENT_DEADLINE,
+            agreement_deadline=self.AGREEMENT_DEADLINE,
         )
 
     def test_closing_records_a_tacit_agreement_on_the_agreement_deadline(
@@ -815,31 +782,23 @@ class TestDueForTacitAgreement:
 
     def make_project(
         self,
-        *logs,
+        agreement_deadline,
         category=HedgeCategory.ru,
         stage=STAGES.instruction_d,
         suspended=False,
     ):
-        """A dossier in `stage` whose history holds `logs`, each a dict of StatusLog fields."""
-        project = PetitionProjectFactory(
+        """A dossier in `stage` whose agreement delay in force ends on `agreement_deadline`."""
+        return PetitionProjectFactory(
             underscore_category=category,
             stage=stage,
+            agreement_deadline=agreement_deadline,
             is_additional_information_requested=suspended,
         )
-        for log in logs:
-            StatusLogFactory(petition_project=project, **log)
-        return project
-
-    def declaration_submission(self, agreement_deadline):
-        """The log opening the déclaration delay."""
-        return {"stage": STAGES.instruction_d, "agreement_deadline": agreement_deadline}
 
     def test_dossiers_due_today_or_earlier_are_selected(self):
         """A dossier whose deadline passed while nobody answered is due."""
-        due_today = self.make_project(self.declaration_submission(self.TODAY))
-        overdue = self.make_project(
-            self.declaration_submission(self.TODAY - timedelta(days=4))
-        )
+        due_today = self.make_project(self.TODAY)
+        overdue = self.make_project(self.TODAY - timedelta(days=4))
 
         due = PetitionProject.objects.due_for_tacit_agreement(self.TODAY)
 
@@ -847,61 +806,25 @@ class TestDueForTacitAgreement:
 
     def test_dossier_due_tomorrow_is_skipped(self):
         """Silence means agreement only once the deadline is reached."""
-        tomorrow = self.TODAY + timedelta(days=1)
-        self.make_project(self.declaration_submission(tomorrow))
+        self.make_project(self.TODAY + timedelta(days=1))
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
     def test_dossier_waiting_for_documents_is_skipped(self):
         """Requesting documents suspends the delay."""
-        suspension = {
-            "type": LOG_TYPES.suspension,
-            "stage": STAGES.instruction_d,
-            "due_date": date(2027, 1, 5),
-        }
-        self.make_project(
-            self.declaration_submission(self.TODAY), suspension, suspended=True
-        )
-
-        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
-
-    def test_dossier_whose_resumption_restarted_the_delay_is_skipped(self):
-        """Only the latest agreement deadline counts."""
-        resumption = {
-            "type": LOG_TYPES.resumption,
-            "stage": STAGES.instruction_d,
-            "info_receipt_date": date(2026, 12, 1),
-            "agreement_deadline": date(2027, 2, 1),
-        }
-        self.make_project(self.declaration_submission(self.TODAY), resumption)
-
-        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
-
-    def test_dossier_requalified_into_authorization_is_skipped(self):
-        """In authorisation, silence means refusal."""
-        requalification = {"stage": STAGES.instruction_a}
-        self.make_project(
-            self.declaration_submission(self.TODAY),
-            requalification,
-            stage=STAGES.instruction_a,
-        )
+        self.make_project(self.TODAY, suspended=True)
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
     def test_closed_dossier_is_skipped(self):
         """A dossier with a decision is no longer waiting for one."""
-        closing = {"stage": STAGES.closed}
-        self.make_project(
-            self.declaration_submission(self.TODAY), closing, stage=STAGES.closed
-        )
+        self.make_project(self.TODAY, stage=STAGES.closed)
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
     def test_dossier_outside_the_regime_unique_is_skipped(self):
         """Silence means agreement under the régime unique only."""
-        self.make_project(
-            self.declaration_submission(self.TODAY), category=HedgeCategory.hru
-        )
+        self.make_project(self.TODAY, category=HedgeCategory.hru)
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
@@ -979,6 +902,7 @@ class TestReceiveComplements:
         log = self.receive_complements(project)
 
         assert log.agreement_deadline == self.DUE_DATE
+        assert project.agreement_deadline == self.DUE_DATE
         assert "2 janvier 2027" in log.applicant_message
 
     def test_receipt_restarts_no_agreement_delay_in_authorisation(self, mock_send):
@@ -1017,12 +941,11 @@ class TestChangeStatusManually:
         log = self.change_to_declaration(project)
 
         assert log.agreement_deadline == date(2026, 12, 15)
+        assert project.agreement_deadline == date(2026, 12, 15)
 
     def test_staying_in_declaration_keeps_the_agreement_deadline(self, mock_update):
         """A change within déclaration keeps the running delay."""
-        project = DeclarationProjectFactory(
-            declaration__agreement_deadline=date(2026, 11, 20)
-        )
+        project = DeclarationProjectFactory(agreement_deadline=date(2026, 11, 20))
 
         log = self.change_to_declaration(project)
 
@@ -1038,6 +961,38 @@ class TestChangeStatusManually:
         log = self.change_to_declaration(project)
 
         assert log.agreement_deadline is None
+        assert project.agreement_deadline is None
+
+    def test_preparing_the_decision_keeps_the_agreement_delay(self, mock_update):
+        """A pending dossier outside instruction keeps its déclaration's delay."""
+        project = DeclarationProjectFactory(agreement_deadline=date(2026, 11, 20))
+
+        project.change_status_manually(
+            status_date=self.STATUS_DATE,
+            stage=STAGES.preparing_decision,
+            decision=DECISIONS.unset,
+            due_date=None,
+            update_comment="",
+            author=None,
+        )
+
+        assert project.agreement_deadline == date(2026, 11, 20)
+
+    def test_entering_authorisation_ends_the_agreement_delay(self, mock_update):
+        """Silence means refusal in authorisation, so no agreement is in force."""
+        project = DeclarationProjectFactory()
+
+        project.change_status_manually(
+            status_date=self.STATUS_DATE,
+            stage=STAGES.instruction_a,
+            decision=DECISIONS.unset,
+            due_date=None,
+            update_comment="",
+            author=None,
+        )
+
+        assert project.agreement_deadline is None
+        assert project.refusal_deadline is None
 
 
 @pytest.mark.haie
@@ -1064,6 +1019,8 @@ class TestSwitchToAuthorization:
         assert log.due_date == self.REFUSAL_DEADLINE
         assert log.applicant_message == "Votre dossier passe en autorisation."
         assert log.update_comment == "Enjeux Natura 2000\nMessage envoyé au demandeur."
+        assert project.refusal_deadline == self.REFUSAL_DEADLINE
+        assert project.agreement_deadline is None
 
 
 @pytest.mark.haie
@@ -1088,3 +1045,4 @@ class TestCloseByExpressDecision:
         assert log.decision == DECISIONS.dropped
         assert not log.prefectural_order
         assert project.prefectural_order_log is None
+        assert project.agreement_deadline is None

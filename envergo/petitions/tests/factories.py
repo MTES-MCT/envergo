@@ -161,21 +161,19 @@ class StatusLogFactory(DjangoModelFactory):
     )
 
 
-class DeclarationStatusLogFactory(StatusLogFactory):
-    """The log moving a dossier into déclaration, which starts the agreement delay."""
+class DeclarationProjectFactory(PetitionProjectFactory):
+    """A régime unique dossier in déclaration, waiting for its agreement deadline."""
 
     stage = STAGES.instruction_d
     agreement_deadline = factory.LazyFunction(
         lambda: declaration_due_date(timezone.localdate())
     )
-
-
-class DeclarationProjectFactory(PetitionProjectFactory):
-    """A régime unique dossier in déclaration, waiting for its agreement deadline."""
-
-    stage = STAGES.instruction_d
+    # The log moving the dossier into déclaration, which started the agreement delay.
     declaration = factory.RelatedFactory(
-        DeclarationStatusLogFactory, factory_related_name="petition_project"
+        StatusLogFactory,
+        factory_related_name="petition_project",
+        stage=STAGES.instruction_d,
+        agreement_deadline=factory.SelfAttribute("petition_project.agreement_deadline"),
     )
 
 

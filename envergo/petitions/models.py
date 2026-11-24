@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.db import models, transaction
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -180,31 +180,11 @@ class PetitionProjectQuerySet(models.QuerySet):
 
     def due_for_tacit_agreement(self, today: date):
         """The dossiers whose silence became agreement on or before `today`."""
-
-        # Latest logs subquery
-        project_logs = StatusLog.objects.filter(petition_project=OuterRef("pk"))
-        newest_first = project_logs.order_by("-created_at")
-
-        # Select latest deadline
-        deadline_logs = newest_first.filter(agreement_deadline__isnull=False)
-        latest_deadline = deadline_logs.values("agreement_deadline")[:1]
-
-        # Select latest instruction stage
-        instruction_logs = newest_first.filter(stage__in=INSTRUCTION_STAGES)
-        latest_instruction_stage = instruction_logs.values("stage")[:1]
-
         return (
             self.regime_unique()
             .decision_pending()
             .not_suspended()
-            .alias(
-                agreement_deadline=Subquery(latest_deadline),
-                latest_instruction_stage=Subquery(latest_instruction_stage),
-            )
-            .filter(
-                latest_instruction_stage=STAGES.instruction_d,
-                agreement_deadline__lte=today,
-            )
+            .filter(agreement_deadline__lte=today)
             .select_related("department", "hedge_data")
             .defer("department__geometry")
         )
@@ -237,6 +217,8 @@ class InstructionMixin:
         self.stage = instruction_stage
         self.decision = DECISIONS.unset
         self.due_date = agreement_deadline
+        self.agreement_deadline = agreement_deadline
+        self.refusal_deadline = None
         return self._record_event(log)
 
     def request_complements(self, *, complements_due_date, applicant_message, author):
@@ -262,7 +244,8 @@ class InstructionMixin:
         For a déclaration, `due_date` is required. It ends the restarted agreement
         delay, and the applicant gets a new récépissé stating it.
         """
-        if self.silence_rule == SilenceRule.AGREEMENT:
+        restarts_agreement_delay = self.silence_rule == SilenceRule.AGREEMENT
+        if restarts_agreement_delay:
             agreement_deadline = due_date
             applicant_message = declaration_receipt_message(self, received_on, due_date)
         else:
@@ -288,6 +271,8 @@ class InstructionMixin:
         )
         self.is_additional_information_requested = False
         self.due_date = due_date
+        if restarts_agreement_delay:
+            self.agreement_deadline = agreement_deadline
         return self._record_event(log)
 
     def switch_to_authorization(
@@ -323,6 +308,8 @@ class InstructionMixin:
         )
         self.stage = STAGES.instruction_a
         self.due_date = refusal_deadline
+        self.agreement_deadline = None
+        self.refusal_deadline = refusal_deadline
         return self._record_event(log)
 
     def close_by_express_decision(
@@ -354,6 +341,8 @@ class InstructionMixin:
         self.stage = STAGES.closed
         self.decision = decision
         self.due_date = None
+        self.agreement_deadline = None
+        self.refusal_deadline = None
         return self._record_event(log)
 
     def close_by_tacit_agreement(self):
@@ -384,6 +373,8 @@ class InstructionMixin:
         self.stage = STAGES.closed
         self.decision = DECISIONS.tacit_agreement
         self.due_date = None
+        self.agreement_deadline = None
+        self.refusal_deadline = None
         return self._record_event(log)
 
     # Note: This method only exists because the current UI allows for any transition
@@ -395,8 +386,21 @@ class InstructionMixin:
         """An instructor sets the stage, decision and due date freely, outside the named actions.
 
         Entering a stage where silence means agreement starts the agreement delay on `status_date`.
+        Each deadline in force stays only while the silence rule it belongs to applies.
         """
-        agreement_deadline = self._agreement_deadline_on_entering(stage, status_date)
+        started_agreement_deadline = self._agreement_deadline_on_entering(
+            stage, status_date
+        )
+
+        agreement_deadline_in_force = None
+        refusal_deadline_in_force = None
+        silence_rule_in_new_stage = self._silence_rule_after_entering(stage)
+        if silence_rule_in_new_stage == SilenceRule.AGREEMENT:
+            agreement_deadline_in_force = (
+                started_agreement_deadline or self.agreement_deadline
+            )
+        elif silence_rule_in_new_stage == SilenceRule.REFUSAL:
+            refusal_deadline_in_force = self.refusal_deadline
 
         log = StatusLog(
             petition_project=self,
@@ -405,13 +409,15 @@ class InstructionMixin:
             stage=stage,
             decision=decision,
             due_date=due_date,
-            agreement_deadline=agreement_deadline,
+            agreement_deadline=started_agreement_deadline,
             update_comment=update_comment,
             created_by=author,
         )
         self.stage = stage
         self.decision = decision
         self.due_date = due_date
+        self.agreement_deadline = agreement_deadline_in_force
+        self.refusal_deadline = refusal_deadline_in_force
         return self._record_event(log)
 
     def _first_instruction_stage(self):
@@ -435,6 +441,17 @@ class InstructionMixin:
         if starts_agreement_delay:
             deadline = declaration_due_date(start_date)
         return deadline
+
+    def _silence_rule_after_entering(self, stage) -> SilenceRule | None:
+        """What silence will mean once the dossier enters `stage`."""
+        if stage in INSTRUCTION_STAGES:
+            rule = self.silence_rule_in(stage)
+        elif stage in PENDING_DECISION_STAGES:
+            # Outside instruction, a pending dossier keeps its latest instruction stage's rule.
+            rule = self.silence_rule
+        else:
+            rule = None
+        return rule
 
     def _record_event(self, log):
         """Save the event's log and the dossier, mirror them in « Démarche numérique », and return the log."""
@@ -603,13 +620,25 @@ class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
 
     is_additional_information_requested = models.BooleanField(
         "En attente d'informations complémentaires ?",
-        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        help_text="Mis à jour par les étapes de l'instruction.",
         default=False,
     )
 
     due_date = models.DateField(
         "Date de prochaine échéance",
-        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        help_text="Mis à jour par les étapes de l'instruction.",
+        null=True,
+        blank=True,
+    )
+    agreement_deadline = models.DateField(
+        "Date à laquelle le silence vaut accord",
+        help_text="Délai en cours uniquement. Mis à jour par les étapes de l'instruction.",
+        null=True,
+        blank=True,
+    )
+    refusal_deadline = models.DateField(
+        "Date au-delà de laquelle le silence vaut refus",
+        help_text="Délai en cours uniquement. Mis à jour par les étapes de l'instruction.",
         null=True,
         blank=True,
     )
@@ -687,29 +716,6 @@ class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
         return (
             self.status_history.exclude(prefectural_order="")
             .order_by("-created_at")
-            .first()
-        )
-
-    @cached_property
-    def refusal_deadline(self):
-        """Date after which silence means refusal, set by the latest switch to authorization.
-
-        None when the dossier never switched.
-        """
-        return (
-            self.status_history.filter(refusal_deadline__isnull=False)
-            .order_by("-created_at")
-            .values_list("refusal_deadline", flat=True)
-            .first()
-        )
-
-    @cached_property
-    def agreement_deadline(self):
-        """Date at which silence means agreement, or None when the dossier was not deposited in déclaration."""
-        return (
-            self.status_history.filter(agreement_deadline__isnull=False)
-            .order_by("-created_at")
-            .values_list("agreement_deadline", flat=True)
             .first()
         )
 
