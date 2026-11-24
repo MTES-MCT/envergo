@@ -201,9 +201,9 @@ propcache==0.5.4
     # via
     #   -r base.txt
     #   yarl
-psycopg[binary]==3.3.6
+psycopg[binary]==3.3.9
     # via -r base.txt
-psycopg-binary==3.3.6
+psycopg-binary==3.3.9
     # via
     #   -r base.txt
     #   psycopg
