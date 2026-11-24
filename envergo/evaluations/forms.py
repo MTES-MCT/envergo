@@ -14,7 +14,7 @@ from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.fields import MultipleFileField, NoIdnEmailField
-from envergo.utils.validators import validate_mime
+from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
 
 
 class EvaluationFormMixin(forms.Form):
@@ -250,12 +250,13 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-ALLOWED_MIME_TYPES = {
-    "image/png",
-    "image/jpeg",
-    "image/webp",
-    "application/pdf",
-    "application/zip",
+ALLOWED_FILE_TYPES = {
+    ".png": {"image/png"},
+    ".jpg": {"image/jpeg"},
+    ".jpeg": {"image/jpeg"},
+    ".webp": {"image/webp"},
+    ".pdf": {"application/pdf"},
+    ".zip": ZIP_MIME_TYPES,
 }
 
 
@@ -264,7 +265,7 @@ class WizardFilesForm(forms.ModelForm):
         label=_("Additional files you might deem useful for the evaluation"),
         required=False,
         help_text=f"""
-            Formats autorisés : images (png, jpg), pdf, zip. <br>
+            Formats autorisés : images (png, jpg, webp), pdf, zip. <br>
             Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
             Maximum {settings.MAX_EVALREQ_FILESIZE} Mo par fichier. <br>
         """,
@@ -274,10 +275,11 @@ class WizardFilesForm(forms.ModelForm):
         files = self.cleaned_data.get("additional_files") or []
 
         for f in files:
-            validate_mime(f, ALLOWED_MIME_TYPES)
+            validate_file_type(f, ALLOWED_FILE_TYPES)
             if f.size > settings.MAX_EVALREQ_FILESIZE * 1024 * 1024:
                 raise ValidationError(
-                    f"Ce fichier est trop volumineux({f.size} Mo). Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                    f"Ce fichier est trop volumineux ({f.size / (1024 * 1024):.1f} Mo). "
+                    f"Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
                 )
 
         return files

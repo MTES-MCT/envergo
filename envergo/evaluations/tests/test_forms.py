@@ -1,6 +1,12 @@
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils.datastructures import MultiValueDict
 
-from envergo.evaluations.forms import WizardAddressForm, WizardContactForm
+from envergo.evaluations.forms import (
+    WizardAddressForm,
+    WizardContactForm,
+    WizardFilesForm,
+)
 
 
 @pytest.fixture
@@ -73,3 +79,13 @@ def test_prevent_storing_project_owner_details_when_we_should_not_send_him_the_e
     assert form.cleaned_data.get("project_owner_emails") == ["peti@test.com"]
     assert not form.cleaned_data.get("urbanism_department_emails")
     assert not form.cleaned_data.get("urbanism_department_phone")
+
+
+def test_wizard_files_form_reports_too_large_file_size_in_mo(settings):
+    settings.MAX_EVALREQ_FILESIZE = 1
+    content = b"%PDF-1.4\n" + b"0" * (1024 * 1024 + 512 * 1024) + b"%%EOF"
+    pdf = SimpleUploadedFile("doc.pdf", content)
+    form = WizardFilesForm(data={}, files=MultiValueDict({"additional_files": [pdf]}))
+
+    assert not form.is_valid()
+    assert "(1.5\xa0Mo)" in form.errors["additional_files"][0]

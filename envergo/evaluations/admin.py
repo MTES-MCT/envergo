@@ -23,7 +23,11 @@ from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 
 from envergo.analytics.models import Event
-from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
+from envergo.evaluations.forms import (
+    ALLOWED_FILE_TYPES,
+    EvaluationFormMixin,
+    EvaluationVersionForm,
+)
 from envergo.evaluations.models import (
     Evaluation,
     EvaluationSnapshot,
@@ -36,6 +40,7 @@ from envergo.evaluations.models import (
 )
 from envergo.moulinette.utils import get_moulinette_class_from_url
 from envergo.utils.fields import NoIdnEmailField
+from envergo.utils.validators import validate_file_type
 
 logger = logging.getLogger(__name__)
 
@@ -559,8 +564,21 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
 
 
+class RequestFileAdminForm(forms.ModelForm):
+    class Meta:
+        model = RequestFile
+        fields = "__all__"
+
+    def clean_file(self):
+        file = self.cleaned_data["file"]
+        if "file" in self.changed_data:
+            validate_file_type(file, ALLOWED_FILE_TYPES)
+        return file
+
+
 class RequestFileInline(admin.TabularInline):
     model = RequestFile
+    form = RequestFileAdminForm
     fields = ["file", "name"]
     extra = 0
 
@@ -698,6 +716,7 @@ class RequestAdmin(admin.ModelAdmin):
 
 @admin.register(RequestFile)
 class RequestFileAdmin(admin.ModelAdmin):
+    form = RequestFileAdminForm
     list_display = ["name", "file", "request"]
 
 

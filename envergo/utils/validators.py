@@ -1,4 +1,5 @@
 import logging
+import os
 import tempfile
 
 import magic
@@ -6,6 +7,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 
 logger = logging.getLogger(__name__)
+
+# Libmagic reports csv files as plain text, and only recognizes the `text/csv`
+# structure on files with enough rows to sniff a consistent separator.
+CSV_MIME_TYPES = {"text/csv", "text/plain", "application/csv"}
+ZIP_MIME_TYPES = {"application/zip", "application/x-zip-compressed"}
 
 
 class NoIdnEmailValidator(EmailValidator):
@@ -54,11 +60,27 @@ def detect_mime(file):
     return detected
 
 
-def validate_mime(file, allowed_mime_types):
+def validate_file_type(file, allowed_types):
+    """Check that the file extension is allowed and that its content matches it.
+
+    ``allowed_types`` is a dict with the extension (dot included) as key, and a set of allowed mime types as value.
+    """
+    _, extension = os.path.splitext(file.name.lower())
+    allowed_mime_types = allowed_types.get(extension)
+    if allowed_mime_types is None:
+        extensions = ", ".join(ext.lstrip(".") for ext in allowed_types)
+        raise ValidationError(
+            f"L'extension de fichier « {extension.lstrip('.')} » n'est pas autorisée. "
+            f"Les extensions autorisées sont : {extensions}."
+        )
+
     detected = detect_mime(file)
     if detected not in allowed_mime_types:
         logger.warning(
-            f"Le fichier téléchargé a un type MIME détecté de {detected}, qui n'est pas dans la liste des types "
-            f"autorisés. Son type MIME déclaré est {file.content_type}."
+            f"Le fichier téléchargé {file.name} a un type MIME détecté de {detected}, "
+            f"incompatible avec l'extension {extension}. "
+            f"Son type MIME déclaré est {file.content_type}."
         )
-        raise ValidationError("Ce type de fichier n'est pas autorisé.")
+        raise ValidationError(
+            f"Le contenu de ce fichier ne correspond pas à un fichier {extension}."
+        )

@@ -1272,7 +1272,7 @@ def test_messagerie_invalid_extension_error(
     )
     assert (
         "Pièce jointe : L'extension de fichier « odt » n'est pas autorisée. "
-        "Les extensions autorisées sont :  png, jpg, jpeg, pdf, zip."
+        "Les extensions autorisées sont : png, jpg, jpeg, pdf, zip."
     ) in normalized
 
 
