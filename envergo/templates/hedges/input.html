@@ -370,15 +370,15 @@
 
     <script>
       // This script runs while the page is parsed: neither event is dispatched yet.
-      const pageLoaded = new Promise(function (resolve) {
-        window.addEventListener("load", resolve, { once: true });
+      const domReady = new Promise(function (resolve) {
+        document.addEventListener("DOMContentLoaded", resolve, { once: true });
       });
       // dsfr(element) only returns a component once DSFR has started
       const dsfrStarted = new Promise(function (resolve) {
         document.documentElement.addEventListener("dsfr.start", resolve, { once: true });
       });
 
-      Promise.all([pageLoaded, dsfrStarted]).then(function () {
+      Promise.all([domReady, dsfrStarted]).then(function () {
         if (!window.matchMedia("(min-width: 48em)").matches) {
           const warning = document.getElementById("hedge-input-small-screen-warning");
           if (warning) {
