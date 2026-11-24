@@ -7,6 +7,7 @@ from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.utils.formats import date_format
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -23,6 +24,14 @@ from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
 from envergo.utils.widgets import JSONWidget
 
 logger = logging.getLogger(__name__)
+
+# Read-only display methods bypass the admin's empty value and would print "None".
+NOT_APPLICABLE = "Non applicable"
+
+
+def display_deadline(deadline):
+    """The deadline in French format, or NOT_APPLICABLE when there is none."""
+    return date_format(deadline, "DATE_FORMAT") if deadline else NOT_APPLICABLE
 
 
 class InvitationTokenInlineForm(forms.ModelForm):
@@ -138,7 +147,12 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         DepartmentFilter,
         AuthorizationSwitchFilter,
     ]
-    readonly_fields = ["last_result_snapshot", "refusal_deadline"]
+    readonly_fields = [
+        "last_result_snapshot",
+        "silence_rule",
+        "agreement_deadline",
+        "refusal_deadline",
+    ]
     search_fields = ["reference"]
 
     def get_queryset(self, request):
@@ -210,9 +224,21 @@ class PetitionProjectAdmin(admin.ModelAdmin):
 
     length_to_remove.short_description = "Linéaire à détruire"
 
+    @admin.display(description="Règle du silence de l’administration")
+    def silence_rule(self, obj):
+        """The silence rule label, or NOT_APPLICABLE when no rule runs."""
+        rule = obj.silence_rule
+        return rule.label if rule else NOT_APPLICABLE
+
+    @admin.display(description="Date à laquelle le silence vaut accord")
+    def agreement_deadline(self, obj):
+        """The agreement deadline in French format."""
+        return display_deadline(obj.agreement_deadline)
+
     @admin.display(description="Date limite au-delà de laquelle le silence vaut refus")
     def refusal_deadline(self, obj):
-        return obj.refusal_deadline
+        """The refusal deadline in French format."""
+        return display_deadline(obj.refusal_deadline)
 
     @admin.display(description="Dernier résultat de simulation")
     def last_result_snapshot(self, obj):

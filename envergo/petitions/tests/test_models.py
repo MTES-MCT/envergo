@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
@@ -8,16 +8,21 @@ from django.contrib.auth.models import AnonymousUser
 from envergo.analytics.models import Event
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import Department34Factory
-from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.hedges.models import HedgeCategory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     LOG_TYPES,
     STAGES,
     PetitionProject,
     ResultSnapshot,
+    SilenceRule,
     StatusLog,
 )
 from envergo.petitions.tests.factories import (
+    GET_DOSSIER_FAKE_RESPONSE,
+    DeclarationProjectFactory,
     InvitationTokenFactory,
     PetitionProjectFactory,
     SimulationFactory,
@@ -125,6 +130,79 @@ def test_refusal_deadline_is_none_without_a_switch():
     project = PetitionProjectFactory()
 
     assert project.refusal_deadline is None
+
+
+def test_agreement_deadline_comes_from_the_latest_log_carrying_one():
+    """A later stage change without a deadline keeps the latest deadline in force."""
+    project = PetitionProjectFactory()
+    StatusLogFactory(petition_project=project, agreement_deadline=date(2099, 1, 1))
+    StatusLogFactory(petition_project=project, agreement_deadline=date(2099, 4, 1))
+    StatusLogFactory(petition_project=project, stage=STAGES.preparing_decision)
+
+    assert project.agreement_deadline == date(2099, 4, 1)
+
+
+def test_agreement_deadline_is_none_outside_declaration():
+    """A dossier that never entered déclaration instruction has no agreement deadline."""
+    project = PetitionProjectFactory()
+
+    assert project.agreement_deadline is None
+
+
+@pytest.mark.parametrize(
+    "category, stages, expected",
+    [
+        ("ru", [], None),
+        ("ru", [STAGES.instruction_d], SilenceRule.AGREEMENT),
+        (
+            "ru",
+            [STAGES.instruction_d, STAGES.preparing_decision],
+            SilenceRule.AGREEMENT,
+        ),
+        ("ru", [STAGES.instruction_d, STAGES.notification], SilenceRule.AGREEMENT),
+        ("ru", [STAGES.instruction_d, STAGES.closed], None),
+        ("ru", [STAGES.instruction_a], SilenceRule.REFUSAL),
+        (
+            "ru",
+            [STAGES.instruction_d, STAGES.instruction_a, STAGES.preparing_decision],
+            SilenceRule.REFUSAL,
+        ),
+        (
+            "ru",
+            [STAGES.instruction_d, STAGES.instruction_a, STAGES.instruction_d],
+            SilenceRule.AGREEMENT,
+        ),
+        ("hru", [STAGES.instruction_h], None),
+        ("l350_3", [STAGES.instruction_h], None),
+    ],
+)
+def test_silence_rule_follows_the_latest_instruction_stage(category, stages, expected):
+    """Déclaration means agreement and autorisation refusal, until the dossier closes."""
+    project = PetitionProjectFactory(underscore_category=category)
+    for stage in stages:
+        StatusLogFactory(petition_project=project, stage=stage)
+
+    assert project.silence_rule == expected
+
+
+@pytest.mark.parametrize(
+    "category, stage, expected_queries",
+    [
+        ("hru", STAGES.instruction_h, 0),
+        ("ru", STAGES.closed, 0),
+        ("ru", STAGES.instruction_d, 1),
+    ],
+)
+def test_silence_rule_reads_the_history_only_when_a_rule_can_apply(
+    category, stage, expected_queries, django_assert_num_queries
+):
+    """The silence rule reads the history once at most, and never when the dossier rules it out."""
+    project = PetitionProjectFactory(underscore_category=category)
+    StatusLogFactory(petition_project=project, stage=stage)
+
+    with django_assert_num_queries(expected_queries):
+        project.silence_rule
+        project.silence_rule
 
 
 def test_form_url_adds_alternative_param():
@@ -377,6 +455,7 @@ class TestDemarcheNumeriqueSync:
         assert status_log is not None
         # Due date is the deposit date + 2 months (instruction period)
         assert status_log.due_date == date(2025, 3, 29)
+        assert status_log.agreement_deadline == date(2025, 3, 29)
 
         project.refresh_from_db()
         assert project.stage == "instruction_d"
@@ -406,6 +485,7 @@ class TestDemarcheNumeriqueSync:
         ).first()
         assert status_log is not None
         assert status_log.due_date is None
+        assert status_log.agreement_deadline is None
 
         project.refresh_from_db()
         assert project.stage == "instruction_h"
@@ -636,3 +716,208 @@ class TestDemarcheNumeriqueSync:
         project.refresh_from_db()
         assert project.demarche_numerique_state == DOSSIER_STATES.en_construction
         assert mock_alert_task.delay.call_count == 1
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestCloseByTacitAgreement:
+    """Closing a déclaration once silence means agreement."""
+
+    AGREEMENT_DEADLINE = date(2026, 12, 5)
+
+    def make_project(self):
+        """An RU dossier in déclaration whose silence means agreement on AGREEMENT_DEADLINE."""
+        RUConfigHaieFactory()
+        project = PetitionProjectFactory(
+            demarche_numerique_state=DOSSIER_STATES.en_instruction,
+            demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+        )
+        StatusLogFactory(
+            petition_project=project,
+            stage=STAGES.instruction_d,
+            agreement_deadline=self.AGREEMENT_DEADLINE,
+        )
+        return project
+
+    def test_closing_records_a_tacit_agreement_on_the_agreement_deadline(
+        self, mock_update_status, mock_send_message
+    ):
+        """The closing log dates the agreement on the deadline. No instructor authors it."""
+        project = self.make_project()
+
+        project.close_by_tacit_agreement()
+
+        log = project.status_history.first()
+        assert log.stage == STAGES.closed
+        assert log.decision == DECISIONS.tacit_agreement
+        assert log.status_date == self.AGREEMENT_DEADLINE
+        assert log.update_comment.startswith(
+            "Clôture automatique : silence vaut accord."
+        )
+        assert log.created_by is None
+        assert project.stage == STAGES.closed
+        assert project.decision == DECISIONS.tacit_agreement
+
+    def test_closing_stores_the_attestation_as_the_decision_document(
+        self, mock_update_status, mock_send_message
+    ):
+        """The attestation is kept with the dossier, like any decision document."""
+        project = self.make_project()
+
+        project.close_by_tacit_agreement()
+
+        log = project.status_history.first()
+        assert log.prefectural_order.name.endswith(".pdf")
+        assert log.prefectural_order.read().startswith(b"%PDF-")
+
+    def test_closing_marks_the_dossier_accepted_in_demarche_numerique(
+        self, mock_update_status, mock_send_message
+    ):
+        """« Démarche numérique » shows the dossier as accepted."""
+        project = self.make_project()
+
+        project.close_by_tacit_agreement()
+
+        mock_update_status.assert_called_once_with(project, DOSSIER_STATES.accepte)
+
+    def test_closing_sends_the_applicant_the_tacit_agreement_message(
+        self, mock_update_status, mock_send_message, django_capture_on_commit_callbacks
+    ):
+        """The applicant gets the fixed message once the closing is committed."""
+        project = self.make_project()
+
+        with django_capture_on_commit_callbacks(execute=True):
+            project.close_by_tacit_agreement()
+
+        log = project.status_history.first()
+        assert "a fait l'objet d'un accord tacite" in log.applicant_message
+        mock_send_message.delay.assert_called_once_with(log.pk)
+
+
+@pytest.mark.haie
+class TestDueForTacitAgreement:
+    """The dossiers the nightly job closes by tacit agreement."""
+
+    TODAY = date(2026, 12, 5)
+
+    def make_project(self, *logs, category=HedgeCategory.ru):
+        """A dossier whose history holds `logs`, each a dict of StatusLog fields."""
+        project = PetitionProjectFactory(underscore_category=category)
+        for log in logs:
+            StatusLogFactory(petition_project=project, **log)
+        return project
+
+    def declaration_submission(self, agreement_deadline):
+        """The log opening the déclaration delay."""
+        return {"stage": STAGES.instruction_d, "agreement_deadline": agreement_deadline}
+
+    def test_dossiers_due_today_or_earlier_are_selected(self):
+        """A dossier whose deadline passed while nobody answered is due."""
+        due_today = self.make_project(self.declaration_submission(self.TODAY))
+        overdue = self.make_project(
+            self.declaration_submission(self.TODAY - timedelta(days=4))
+        )
+
+        due = PetitionProject.objects.due_for_tacit_agreement(self.TODAY)
+
+        assert set(due) == {due_today, overdue}
+
+    def test_dossier_due_tomorrow_is_skipped(self):
+        """Silence means agreement only once the deadline is reached."""
+        tomorrow = self.TODAY + timedelta(days=1)
+        self.make_project(self.declaration_submission(tomorrow))
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_waiting_for_documents_is_skipped(self):
+        """Requesting documents suspends the delay."""
+        suspension = {
+            "type": LOG_TYPES.suspension,
+            "stage": STAGES.instruction_d,
+            "due_date": date(2027, 1, 5),
+        }
+        self.make_project(self.declaration_submission(self.TODAY), suspension)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_whose_resumption_restarted_the_delay_is_skipped(self):
+        """Only the latest agreement deadline counts."""
+        resumption = {
+            "type": LOG_TYPES.resumption,
+            "stage": STAGES.instruction_d,
+            "info_receipt_date": date(2026, 12, 1),
+            "agreement_deadline": date(2027, 2, 1),
+        }
+        self.make_project(self.declaration_submission(self.TODAY), resumption)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_requalified_into_authorization_is_skipped(self):
+        """In authorisation, silence means refusal."""
+        requalification = {"stage": STAGES.instruction_a}
+        self.make_project(self.declaration_submission(self.TODAY), requalification)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_closed_dossier_is_skipped(self):
+        """A dossier with a decision is no longer waiting for one."""
+        closing = {"stage": STAGES.closed}
+        self.make_project(self.declaration_submission(self.TODAY), closing)
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+    def test_dossier_outside_the_regime_unique_is_skipped(self):
+        """Silence means agreement under the régime unique only."""
+        self.make_project(
+            self.declaration_submission(self.TODAY), category=HedgeCategory.hru
+        )
+
+        assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestEnteringDeclaration:
+    """Entering déclaration starts a new agreement delay."""
+
+    ENTRY_DATE = date(2026, 10, 15)
+
+    def record_declaration_status(self, project):
+        """Record a status change to déclaration, effective on ENTRY_DATE."""
+        log = StatusLog(
+            petition_project=project,
+            stage=STAGES.instruction_d,
+            status_date=self.ENTRY_DATE,
+        )
+        project.record_status_change(log)
+        return log
+
+    def test_entering_declaration_starts_the_agreement_delay(self, mock_update):
+        """A requalified dossier gets two months from the day it enters déclaration."""
+        project = PetitionProjectFactory()
+        StatusLogFactory(petition_project=project, stage=STAGES.instruction_h)
+
+        log = self.record_declaration_status(project)
+
+        assert log.agreement_deadline == date(2026, 12, 15)
+
+    def test_staying_in_declaration_keeps_the_agreement_deadline(self, mock_update):
+        """A change within déclaration keeps the running delay."""
+        project = DeclarationProjectFactory(
+            declaration__agreement_deadline=date(2026, 11, 20)
+        )
+
+        log = self.record_declaration_status(project)
+
+        assert log.agreement_deadline is None
+        assert project.agreement_deadline == date(2026, 11, 20)
+
+    def test_dossier_outside_the_regime_unique_gets_no_deadline(self, mock_update):
+        """Silence means agreement under the régime unique only."""
+        project = PetitionProjectFactory(underscore_category=HedgeCategory.hru)
+        StatusLogFactory(petition_project=project, stage=STAGES.instruction_h)
+
+        log = self.record_declaration_status(project)
+
+        assert log.agreement_deadline is None

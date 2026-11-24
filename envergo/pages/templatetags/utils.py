@@ -11,6 +11,7 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.template.defaultfilters import date as date_filter
 from django.template.defaultfilters import stringfilter
 from django.template.loader import get_template
 from django.utils.dateparse import parse_datetime
@@ -307,3 +308,11 @@ def min_numeric(values):
 @register.filter
 def classname(value):
     return type(value).__name__
+
+
+@register.filter
+def official_date(value):
+    """Format a date as French official documents do, with "1er" for the first day."""
+    day = "1er" if value.day == 1 else value.day
+    month_and_year = date_filter(value, "F Y")
+    return f"{day} {month_and_year}"

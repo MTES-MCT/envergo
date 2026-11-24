@@ -2149,8 +2149,8 @@ def procedure_url(project):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2197,18 +2197,20 @@ def test_petition_project_close_with_express_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
 ):
-    """Closing with a tacit agreement needs no prefectural order."""
+    """Outside the régime unique, closing with a tacit agreement needs no prefectural order."""
 
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(
+        underscore_category="hru", status__stage="preparing_decision"
+    )
 
     res = client.post(
         procedure_url(project), closing_form_data("tacit_agreement"), follow=True
@@ -2227,8 +2229,8 @@ def test_petition_project_close_with_tacit_agreement(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2252,8 +2254,8 @@ def test_petition_project_close_with_dropped(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2283,8 +2285,8 @@ def test_petition_project_close_with_missing_fields(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -2295,7 +2297,9 @@ def test_petition_project_close_status_change_failure(
     mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(
+        underscore_category="hru", status__stage="preparing_decision"
+    )
 
     res = client.post(
         procedure_url(project), closing_form_data("tacit_agreement"), follow=True
@@ -2315,7 +2319,7 @@ def test_petition_project_close_status_change_failure(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 @pytest.mark.django_db(transaction=True)
 def test_closing_actually_calls_ds_messagerie(
@@ -2734,7 +2738,7 @@ def test_petition_project_resume_instruction(
 def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     mock_receipt_task, client, haie_coordinator_44, site
 ):
-    """Receiving the documents restarts the delay, so a new receipt goes out."""
+    """Receiving the documents restarts the agreement deadline, and a new receipt states it."""
 
     client.force_login(haie_coordinator_44)
 
@@ -2769,6 +2773,7 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     content = res.content.decode()
     assert "L'instruction du dossier a repris." in content
     assert "Le récépissé de déclaration sera envoyé au demandeur" in content
+    assert project.agreement_deadline == new_due_date
 
     assert mock_receipt_task.delay.call_count == 1
     assert mock_receipt_task.delay.call_args[0] == (
@@ -2818,7 +2823,7 @@ def test_resume_instruction_refused_without_a_suspension(
 def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
     mock_receipt_task, client, haie_coordinator_44, site
 ):
-    """The receipt only covers the déclaration stage of the régime unique."""
+    """Only the déclaration stage of the régime unique restarts the agreement deadline."""
 
     client.force_login(haie_coordinator_44)
 
@@ -2852,6 +2857,8 @@ def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
     assert "L'instruction du dossier a repris." in content
     assert "récépissé" not in content
     assert not mock_receipt_task.delay.called
+    resumption = project.status_history.get(type=LOG_TYPES.resumption)
+    assert resumption.agreement_deadline is None
 
 
 @pytest.mark.django_db(transaction=True)
@@ -5281,8 +5288,8 @@ def state_change_form_data(**overrides):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_authorization_switch_sends_the_applicant_message(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -5321,8 +5328,8 @@ def test_authorization_switch_sends_the_applicant_message(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_stage_change_without_switch_sends_no_applicant_message(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
@@ -5344,8 +5351,8 @@ def test_stage_change_without_switch_sends_no_applicant_message(
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_applicant_message_async")
-@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+@patch("envergo.petitions.models.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_authorization_switch_status_change_failure(
     mock_update_ds, mock_message_task, mock_notify, client, haie_coordinator_44, site
