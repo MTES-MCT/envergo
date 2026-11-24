@@ -69,7 +69,7 @@ class PrivateUploadStorage(ProxiedPrivateS3Mixin, S3Boto3Storage):
     location = "upload"
 
     def url(self, name, parameters=None, expire=None, http_method=None):
-        #  These files are untrusted, so browsers always download them as attachments instead of rendering them inline.
+        # These files are untrusted, so browsers always download them as attachments instead of rendering them inline.
         parameters = {"ResponseContentDisposition": "attachment", **(parameters or {})}
         return super().url(
             name, parameters=parameters, expire=expire, http_method=http_method
