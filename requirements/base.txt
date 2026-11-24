@@ -137,7 +137,7 @@ jmespath==1.1.0
     #   botocore
 kombu==5.6.2
     # via celery
-markdown==3.11.2
+markdown==3.11.3
     # via -r base.in
 multidict==7.1.0
     # via yarl
