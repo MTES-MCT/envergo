@@ -178,7 +178,8 @@ def test_agreement_deadline_is_none_outside_declaration():
 )
 def test_silence_rule_follows_the_latest_instruction_stage(category, stages, expected):
     """Déclaration means agreement and autorisation refusal, until the dossier closes."""
-    project = PetitionProjectFactory(underscore_category=category)
+    current_stage = stages[-1] if stages else STAGES.to_be_processed
+    project = PetitionProjectFactory(underscore_category=category, stage=current_stage)
     for stage in stages:
         StatusLogFactory(petition_project=project, stage=stage)
 
@@ -197,8 +198,7 @@ def test_silence_rule_reads_the_history_only_when_a_rule_can_apply(
     category, stage, expected_queries, django_assert_num_queries
 ):
     """The silence rule reads the history once at most, and never when the dossier rules it out."""
-    project = PetitionProjectFactory(underscore_category=category)
-    StatusLogFactory(petition_project=project, stage=stage)
+    project = PetitionProjectFactory(underscore_category=category, stage=stage)
 
     with django_assert_num_queries(expected_queries):
         project.silence_rule
@@ -746,16 +746,11 @@ class TestCloseByTacitAgreement:
     def make_project(self):
         """An RU dossier in déclaration whose silence means agreement on AGREEMENT_DEADLINE."""
         RUConfigHaieFactory()
-        project = PetitionProjectFactory(
+        return DeclarationProjectFactory(
             demarche_numerique_state=DOSSIER_STATES.en_instruction,
             demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+            declaration__agreement_deadline=self.AGREEMENT_DEADLINE,
         )
-        StatusLogFactory(
-            petition_project=project,
-            stage=STAGES.instruction_d,
-            agreement_deadline=self.AGREEMENT_DEADLINE,
-        )
-        return project
 
     def test_closing_records_a_tacit_agreement_on_the_agreement_deadline(
         self, mock_update_status, mock_send_message
@@ -818,9 +813,19 @@ class TestDueForTacitAgreement:
 
     TODAY = date(2026, 12, 5)
 
-    def make_project(self, *logs, category=HedgeCategory.ru):
-        """A dossier whose history holds `logs`, each a dict of StatusLog fields."""
-        project = PetitionProjectFactory(underscore_category=category)
+    def make_project(
+        self,
+        *logs,
+        category=HedgeCategory.ru,
+        stage=STAGES.instruction_d,
+        suspended=False,
+    ):
+        """A dossier in `stage` whose history holds `logs`, each a dict of StatusLog fields."""
+        project = PetitionProjectFactory(
+            underscore_category=category,
+            stage=stage,
+            is_additional_information_requested=suspended,
+        )
         for log in logs:
             StatusLogFactory(petition_project=project, **log)
         return project
@@ -854,7 +859,9 @@ class TestDueForTacitAgreement:
             "stage": STAGES.instruction_d,
             "due_date": date(2027, 1, 5),
         }
-        self.make_project(self.declaration_submission(self.TODAY), suspension)
+        self.make_project(
+            self.declaration_submission(self.TODAY), suspension, suspended=True
+        )
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
@@ -873,14 +880,20 @@ class TestDueForTacitAgreement:
     def test_dossier_requalified_into_authorization_is_skipped(self):
         """In authorisation, silence means refusal."""
         requalification = {"stage": STAGES.instruction_a}
-        self.make_project(self.declaration_submission(self.TODAY), requalification)
+        self.make_project(
+            self.declaration_submission(self.TODAY),
+            requalification,
+            stage=STAGES.instruction_a,
+        )
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
     def test_closed_dossier_is_skipped(self):
         """A dossier with a decision is no longer waiting for one."""
         closing = {"stage": STAGES.closed}
-        self.make_project(self.declaration_submission(self.TODAY), closing)
+        self.make_project(
+            self.declaration_submission(self.TODAY), closing, stage=STAGES.closed
+        )
 
         assert not PetitionProject.objects.due_for_tacit_agreement(self.TODAY).exists()
 
@@ -912,7 +925,7 @@ class TestRequestComplements:
 
     def test_suspension_keeps_the_previous_due_date(self, mock_send):
         """The suspension log keeps the due date in force before it."""
-        project = PetitionProjectFactory(status__due_date=self.PREVIOUS_DUE_DATE)
+        project = PetitionProjectFactory(due_date=self.PREVIOUS_DUE_DATE)
 
         log = self.request_complements(project)
 
@@ -948,6 +961,8 @@ class TestReceiveComplements:
             stage=project.stage,
             due_date=date(2026, 12, 1),
         )
+        project.is_additional_information_requested = True
+        project.save()
 
     def receive_complements(self, project):
         """Receive the compléments on RECEIVED_ON, with the instruction due on DUE_DATE."""
@@ -968,7 +983,7 @@ class TestReceiveComplements:
 
     def test_receipt_restarts_no_agreement_delay_in_authorisation(self, mock_send):
         """Silence means refusal in authorisation, so no récépissé goes out."""
-        project = PetitionProjectFactory(status__stage=STAGES.instruction_a)
+        project = PetitionProjectFactory(stage=STAGES.instruction_a)
         self.suspend(project)
 
         log = self.receive_complements(project)
@@ -997,7 +1012,7 @@ class TestChangeStatusManually:
 
     def test_entering_declaration_starts_the_agreement_delay(self, mock_update):
         """A requalified dossier gets two months from the day it enters déclaration."""
-        project = PetitionProjectFactory(status__stage=STAGES.instruction_a)
+        project = PetitionProjectFactory(stage=STAGES.instruction_a)
 
         log = self.change_to_declaration(project)
 
@@ -1017,7 +1032,7 @@ class TestChangeStatusManually:
     def test_dossier_outside_the_regime_unique_gets_no_deadline(self, mock_update):
         """Silence means agreement under the régime unique only."""
         project = PetitionProjectFactory(
-            underscore_category=HedgeCategory.hru, status__stage=STAGES.instruction_h
+            underscore_category=HedgeCategory.hru, stage=STAGES.instruction_h
         )
 
         log = self.change_to_declaration(project)

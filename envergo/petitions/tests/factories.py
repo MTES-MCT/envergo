@@ -102,9 +102,23 @@ class PetitionProjectFactory(DjangoModelFactory):
     demarche_numerique_dossier_number = 21059675
     demarche_numerique_prefill_url = "https://exemple.com/commencer/21059675/token?1234"
     demarche_numerique_state = DOSSIER_STATES.draft
+    stage = STAGES.to_be_processed
+    # A closed dossier always carries a final decision.
+    decision = factory.LazyAttribute(
+        lambda project: (
+            DECISIONS.express_agreement
+            if project.stage == STAGES.closed
+            else DECISIONS.unset
+        )
+    )
+    due_date = None
+    # The history starts with a log of the dossier's state.
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
         factory_related_name="petition_project",
+        stage=factory.SelfAttribute("petition_project.stage"),
+        decision=factory.SelfAttribute("petition_project.decision"),
+        due_date=factory.SelfAttribute("petition_project.due_date"),
     )
     simulation = factory.RelatedFactory(
         "envergo.petitions.tests.factories.SimulationFactory",
@@ -159,6 +173,7 @@ class DeclarationStatusLogFactory(StatusLogFactory):
 class DeclarationProjectFactory(PetitionProjectFactory):
     """A régime unique dossier in déclaration, waiting for its agreement deadline."""
 
+    stage = STAGES.instruction_d
     declaration = factory.RelatedFactory(
         DeclarationStatusLogFactory, factory_related_name="petition_project"
     )

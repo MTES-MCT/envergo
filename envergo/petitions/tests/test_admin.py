@@ -14,10 +14,11 @@ from envergo.petitions.admin import (
     AuthorizationSwitchFilter,
     PetitionProjectAdmin,
 )
-from envergo.petitions.models import STAGES, PetitionProject
+from envergo.petitions.models import PetitionProject
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
     GET_DOSSIER_FAKE_RESPONSE,
+    DeclarationProjectFactory,
     PetitionProjectFactory,
     StatusLogFactory,
 )
@@ -160,11 +161,8 @@ def test_authorization_switch_filter(value, expected, project_admin, admin_reque
 
 def test_silence_display_in_declaration(project_admin):
     """A dossier in déclaration shows the agreement rule and its deadline in French."""
-    project = PetitionProjectFactory()
-    StatusLogFactory(
-        petition_project=project,
-        stage=STAGES.instruction_d,
-        agreement_deadline=date(2099, 3, 29),
+    project = DeclarationProjectFactory(
+        declaration__agreement_deadline=date(2099, 3, 29)
     )
 
     assert project_admin.silence_rule(project) == "Silence vaut accord"

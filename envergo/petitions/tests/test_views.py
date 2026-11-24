@@ -1575,14 +1575,14 @@ def test_petition_project_list_filter_show_closed(haie_coordinator_44, client, s
     open_project = PetitionProjectFactory(
         demarche_numerique_state=DOSSIER_STATES.prefilled,
         demarche_numerique_date_depot=now,
-        status__stage=STAGES.instruction_d,
+        stage=STAGES.instruction_d,
     )
     closed_project = PetitionProjectFactory(
         reference="CLOSED1",
         demarche_numerique_state=DOSSIER_STATES.prefilled,
         demarche_numerique_date_depot=now,
-        status__stage=STAGES.closed,
-        status__decision=DECISIONS.express_agreement,
+        stage=STAGES.closed,
+        decision=DECISIONS.express_agreement,
     )
 
     client.force_login(haie_coordinator_44)
@@ -2160,7 +2160,7 @@ def test_petition_project_close_with_express_agreement(
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
     data = closing_form_data("express_agreement", prefectural_order=attachment)
 
@@ -2209,7 +2209,7 @@ def test_petition_project_close_with_tacit_agreement(
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        underscore_category="hru", status__stage="preparing_decision"
+        underscore_category="hru", stage="preparing_decision"
     )
 
     res = client.post(
@@ -2240,7 +2240,7 @@ def test_petition_project_close_with_dropped(
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     data = closing_form_data("dropped", simulation_check="")
 
     res = client.post(procedure_url(project), data, follow=True)
@@ -2265,7 +2265,7 @@ def test_petition_project_close_with_missing_fields(
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     data = closing_form_data("opposition", simulation_check="", applicant_message="")
 
     res = client.post(procedure_url(project), data, follow=True)
@@ -2298,7 +2298,7 @@ def test_petition_project_close_status_change_failure(
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        underscore_category="hru", status__stage="preparing_decision"
+        underscore_category="hru", stage="preparing_decision"
     )
 
     res = client.post(
@@ -2337,7 +2337,7 @@ def test_closing_actually_calls_ds_messagerie(
     DCConfigHaieFactory()
     # The dossier id is what gates the message send; a real dossier has it.
     project = PetitionProjectFactory(
-        status__stage="preparing_decision",
+        stage="preparing_decision",
         demarche_numerique_state="en_instruction",
         demarche_numerique_dossier_id="RG9zc2llci0xMjM=",
     )
@@ -2369,7 +2369,7 @@ def test_petition_project_prefectural_order_download_block(
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
 
     # WHEN the dossier has no prefectural order
     res = client.get(procedure_url(project))
@@ -2391,8 +2391,9 @@ def test_petition_project_prefectural_order_download_block(
         stage="instruction_d",
         decision="opposition",
     )
-    project.refresh_from_db()
-    assert project.stage == "instruction_d"
+    project.stage = "instruction_d"
+    project.decision = "opposition"
+    project.save()
 
     res = client.get(procedure_url(project))
     content = res.content.decode()
@@ -2606,7 +2607,7 @@ def test_request_info_default_message(
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        status__stage="instruction_d",
+        stage="instruction_d",
         underscore_category=category,
     )
 
@@ -2639,7 +2640,7 @@ def test_petition_project_request_for_info(
     next_month = today + timedelta(days=30)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__due_date=today)
+    project = PetitionProjectFactory(due_date=today)
     assert project.due_date == today
     assert project.is_additional_information_requested is False
 
@@ -2674,8 +2675,9 @@ def test_petition_project_resume_instruction(client, haie_coordinator_44, site):
     next_month = today + timedelta(days=30)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__due_date=today)
-    # Create a suspension log separately
+    project = PetitionProjectFactory(
+        due_date=next_month, is_additional_information_requested=True
+    )
     StatusLogFactory(
         petition_project=project,
         type=LOG_TYPES.suspension,
@@ -2686,7 +2688,6 @@ def test_petition_project_resume_instruction(client, haie_coordinator_44, site):
         original_due_date=today,
         due_date=next_month,
     )
-    assert project.is_additional_information_requested is True
 
     # WHEN the user try to change step while paused
 
@@ -2740,7 +2741,8 @@ def test_resume_instruction_of_a_declaration_announces_the_receipt(
     RUConfigHaieFactory()
     # Already submitted, so only the resumption can send a receipt
     project = PetitionProjectFactory(
-        status__stage="instruction_d",
+        stage="instruction_d",
+        is_additional_information_requested=True,
         demarche_numerique_state=DOSSIER_STATES.en_instruction,
     )
     StatusLogFactory(
@@ -2780,7 +2782,7 @@ def test_resume_instruction_refused_without_a_suspension(
 
     RUConfigHaieFactory()
     project = PetitionProjectFactory(
-        status__stage="instruction_d",
+        stage="instruction_d",
         demarche_numerique_state=DOSSIER_STATES.en_instruction,
     )
     assert project.is_additional_information_requested is False
@@ -2810,7 +2812,7 @@ def test_request_info_date_in_past(client, haie_coordinator_44, site):
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     url = reverse(
         "petition_project_instructor_procedure_view",
@@ -2836,7 +2838,7 @@ def test_request_info_date_exceeds_three_months(client, haie_coordinator_44, sit
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     url = reverse(
         "petition_project_instructor_procedure_view",
@@ -2889,7 +2891,7 @@ def test_request_info_errors_reopen_modal(client, haie_coordinator_44, site):
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     url = reverse(
         "petition_project_instructor_procedure_view",
@@ -5153,7 +5155,7 @@ def test_state_change_modal_embeds_the_authorization_switch_message(
         guh_service_name="Service Eau et Environnement",
         guh_address="50, Bd de Lyon\n02011 LAON",
     )
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     message = get_authorization_switch_message(client, project)
@@ -5182,7 +5184,7 @@ def test_authorization_switch_message_omits_blank_guh_contact_lines(
         guh_service_name="",
         guh_address="",
     )
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     message = get_authorization_switch_message(client, project)
@@ -5198,7 +5200,7 @@ def test_state_change_modal_tells_the_script_the_project_can_switch(
 ):
     """The script shows the switch fields only for a project that can switch."""
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     content = client.get(procedure_url(project)).content.decode()
@@ -5210,7 +5212,7 @@ def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch
     client, haie_coordinator_44, site
 ):
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     client.force_login(haie_coordinator_44)
 
     assert get_authorization_switch_message(client, project) is None
@@ -5240,7 +5242,7 @@ def test_authorization_switch_sends_the_applicant_message(
     """A switch saves the message with its deadline sentence, then queues it."""
     client.force_login(haie_coordinator_44)
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     data = state_change_form_data(refusal_deadline="21/09/2099")
 
     res = client.post(procedure_url(project), data, follow=True)
@@ -5274,7 +5276,7 @@ def test_stage_change_without_switch_sends_no_applicant_message(
     """Only a closing or a switch writes to the applicant."""
     client.force_login(haie_coordinator_44)
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     data = state_change_form_data(stage="preparing_decision")
 
     client.post(procedure_url(project), data, follow=True)
@@ -5298,7 +5300,7 @@ def test_authorization_switch_status_change_failure(
     client.force_login(haie_coordinator_44)
     mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     res = client.post(procedure_url(project), state_change_form_data(), follow=True)
 

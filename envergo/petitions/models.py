@@ -213,8 +213,8 @@ class PetitionProjectQuerySet(models.QuerySet):
 class InstructionMixin:
     """The instruction events of a dossier.
 
-    Each action is triggered by an instructor, the dépôt or the nightly job. It
-    builds its own complete status log and records it with `_record_event`.
+    Each action builds its status log before changing the dossier. The log reads
+    the dossier's previous state.
     """
 
     def start_instruction(self, *, submission_date):
@@ -228,11 +228,15 @@ class InstructionMixin:
             petition_project=self,
             type=LOG_TYPES.status_change,
             stage=instruction_stage,
+            decision=DECISIONS.unset,
             # The instruction is due when silence turns into an agreement.
             due_date=agreement_deadline,
             agreement_deadline=agreement_deadline,
             update_comment="Dépôt du dossier : passage automatique en instruction.",
         )
+        self.stage = instruction_stage
+        self.decision = DECISIONS.unset
+        self.due_date = agreement_deadline
         return self._record_event(log)
 
     def request_complements(self, *, complements_due_date, applicant_message, author):
@@ -248,6 +252,8 @@ class InstructionMixin:
             update_comment="Suspension de l’instruction, message envoyé au demandeur.",
             created_by=author,
         )
+        self.is_additional_information_requested = True
+        self.due_date = complements_due_date
         return self._record_event(log)
 
     def receive_complements(self, *, received_on, due_date, author):
@@ -280,6 +286,8 @@ class InstructionMixin:
             update_comment=update_comment,
             created_by=author,
         )
+        self.is_additional_information_requested = False
+        self.due_date = due_date
         return self._record_event(log)
 
     def switch_to_authorization(
@@ -313,6 +321,8 @@ class InstructionMixin:
             update_comment=log_comment,
             created_by=author,
         )
+        self.stage = STAGES.instruction_a
+        self.due_date = refusal_deadline
         return self._record_event(log)
 
     def close_by_express_decision(
@@ -335,11 +345,15 @@ class InstructionMixin:
             stage=STAGES.closed,
             status_date=status_date,
             decision=decision,
+            due_date=None,
             prefectural_order=prefectural_order,
             applicant_message=applicant_message,
             update_comment=update_comment,
             created_by=author,
         )
+        self.stage = STAGES.closed
+        self.decision = decision
+        self.due_date = None
         return self._record_event(log)
 
     def close_by_tacit_agreement(self):
@@ -359,6 +373,7 @@ class InstructionMixin:
             stage=STAGES.closed,
             status_date=agreement_date,
             decision=DECISIONS.tacit_agreement,
+            due_date=None,
             prefectural_order=attestation,
             applicant_message=applicant_message,
             update_comment=(
@@ -366,6 +381,9 @@ class InstructionMixin:
                 "Message envoyé au demandeur avec l’attestation de non-opposition."
             ),
         )
+        self.stage = STAGES.closed
+        self.decision = DECISIONS.tacit_agreement
+        self.due_date = None
         return self._record_event(log)
 
     # Note: This method only exists because the current UI allows for any transition
@@ -391,6 +409,9 @@ class InstructionMixin:
             update_comment=update_comment,
             created_by=author,
         )
+        self.stage = stage
+        self.decision = decision
+        self.due_date = due_date
         return self._record_event(log)
 
     def _first_instruction_stage(self):
@@ -416,9 +437,10 @@ class InstructionMixin:
         return deadline
 
     def _record_event(self, log):
-        """Save the log of an instruction event, mirror it in « Démarche numérique », and return it."""
+        """Save the event's log and the dossier, mirror them in « Démarche numérique », and return the log."""
         with transaction.atomic():
             log.save()
+            self.save()
             self._sync_demarche_numerique_status(log)
             if log.applicant_message:
                 self._schedule_applicant_message(log)
@@ -1009,19 +1031,6 @@ class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
             and self.latest_access < self.latest_petitioner_msg
         )
         return has_unread_messages
-
-    def update_status(self, status_log):
-        """Update the project status when a new status log is created"""
-        if status_log.type == LOG_TYPES.status_change:
-            self.stage = status_log.stage
-            self.decision = status_log.decision
-        elif status_log.type == LOG_TYPES.suspension:
-            self.is_additional_information_requested = True
-        elif status_log.type == LOG_TYPES.resumption:
-            self.is_additional_information_requested = False
-
-        self.due_date = status_log.due_date
-        self.save()
 
     def get_available_regulations(self):
         return Regulation.objects.filter(
