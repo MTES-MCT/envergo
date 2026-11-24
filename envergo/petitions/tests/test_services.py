@@ -1,3 +1,4 @@
+import copy
 import datetime
 import re
 from decimal import Decimal
@@ -1559,6 +1560,26 @@ class TestAttestationNonOpposition:
         pdf = attestation_non_opposition_pdf(self.make_project(), self.AGREEMENT_DATE)
 
         assert pdf.startswith(b"%PDF-")
+
+    def test_attestation_requires_the_cached_dossier(self):
+        """Rendering fails without the cached « Démarche numérique » dossier."""
+        project = self.make_project()
+        project.demarche_numerique_raw_dossier = {}
+
+        with pytest.raises(
+            ValueError, match="no cached « Démarche numérique » dossier"
+        ):
+            attestation_non_opposition_html(project, self.AGREEMENT_DATE)
+
+    def test_attestation_requires_the_applicant_name(self):
+        """Rendering fails when the applicant has no name."""
+        project = self.make_project()
+        raw_dossier = copy.deepcopy(project.demarche_numerique_raw_dossier)
+        raw_dossier["demandeur"].update(nom="", prenom="")
+        project.demarche_numerique_raw_dossier = raw_dossier
+
+        with pytest.raises(ValueError, match="the applicant has no name"):
+            attestation_non_opposition_html(project, self.AGREEMENT_DATE)
 
 
 @pytest.mark.parametrize(

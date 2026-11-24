@@ -446,7 +446,7 @@ def attestation_non_opposition_html(petition_project, agreement_date):
         context={
             "department": petition_project.department,
             "dossier_number": petition_project.demarche_numerique_dossier_number,
-            "applicant": petition_project.prefetched_dossier.applicant_name,
+            "applicant": attestation_applicant(petition_project),
             "commune": declared_commune(petition_project),
             "work_start_date": work_start_date,
             "hedges_to_remove": hedge_data.hedges_to_remove(),
@@ -456,6 +456,23 @@ def attestation_non_opposition_html(petition_project, agreement_date):
             "signed_on": agreement_date,
         },
     )
+
+
+def attestation_applicant(petition_project) -> str:
+    """The applicant name the attestation shows. An official act must name its applicant."""
+    dossier = petition_project.prefetched_dossier
+    if dossier is None:
+        raise ValueError(
+            f"Dossier {petition_project.reference}: no cached « Démarche numérique » "
+            "dossier to read the applicant from."
+        )
+
+    applicant_name = dossier.applicant_name
+    if applicant_name is None:
+        raise ValueError(
+            f"Dossier {petition_project.reference}: the applicant has no name."
+        )
+    return applicant_name
 
 
 def attestation_non_opposition_pdf(petition_project, agreement_date) -> bytes:
