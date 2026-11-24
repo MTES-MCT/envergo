@@ -31,6 +31,10 @@
     {
       "command": "0 5 * * * python manage.py security_scan",
       "size": "M"
+    },
+    {
+      "command": "*/11 * * * * python manage.py monitoring_send_pulse",
+      "size": "S"
     }
   ]
 }
