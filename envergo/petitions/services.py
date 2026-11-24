@@ -9,7 +9,6 @@ from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
-from weasyprint import HTML
 
 from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
@@ -461,6 +460,9 @@ def attestation_non_opposition_html(petition_project, agreement_date):
 
 def attestation_non_opposition_pdf(petition_project, agreement_date) -> bytes:
     """Render the attestation de non-opposition as a PDF document."""
+    # Imported here: WeasyPrint loads native libraries that only this rendering needs.
+    from weasyprint import HTML
+
     html = attestation_non_opposition_html(petition_project, agreement_date)
     # The template loads its fonts from the collected static files.
     static_root = f"{settings.STATIC_ROOT}/"
