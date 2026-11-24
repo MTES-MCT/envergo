@@ -326,9 +326,9 @@ propcache==0.5.4
     #   yarl
 psutil==7.2.2
     # via ipython
-psycopg[binary]==3.3.6
+psycopg[binary]==3.3.9
     # via -r base.txt
-psycopg-binary==3.3.6
+psycopg-binary==3.3.9
     # via
     #   -r base.txt
     #   psycopg
