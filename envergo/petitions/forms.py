@@ -387,7 +387,7 @@ class StateChangeForm(forms.ModelForm):
                 ),
             )
 
-        if stage == "closed":
+        if self.is_closing:
             self.clean_closing_fields(cleaned_data)
         elif self.is_authorization_switch:
             self.clean_authorization_switch_fields(cleaned_data)
@@ -400,6 +400,14 @@ class StateChangeForm(forms.ModelForm):
             cleaned_data["refusal_deadline"] = None
 
         return cleaned_data
+
+    @property
+    def is_closing(self):
+        """Whether the dossier gets closed.
+
+        Only meaningful once the form is cleaned.
+        """
+        return self.cleaned_data.get("stage") == STAGES.closed
 
     @property
     def is_authorization_switch(self):

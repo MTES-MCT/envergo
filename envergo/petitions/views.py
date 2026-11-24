@@ -1990,18 +1990,11 @@ class PetitionProjectInstructorProcedureView(
     # ── state_change: modify the dossier stage/decision ──────────────
 
     def state_change_form_valid(self, form):
-        log = form.save(commit=False)
-        log.petition_project = self.object
-        log.created_by = self.request.user
         previous_stage = self.object.stage
         previous_decision = self.object.decision
-        is_closing = log.stage == STAGES.closed
-
-        if form.is_authorization_switch:
-            self.append_applicant_message_notice(log)
 
         try:
-            self.object.record_status_change(log)
+            log = self.record_state_change(form)
         except DemarcheNumeriqueError as e:
             logger.error(e)
             # The status log signal changed the in-memory project before the rollback.
@@ -2020,7 +2013,7 @@ class PetitionProjectInstructorProcedureView(
                 self.get_context_data(state_change_form=form)
             )
 
-        if is_closing:
+        if form.is_closing:
             self.notify_closing_succeeded(form)
         elif form.is_authorization_switch:
             self.notify_authorization_switch_succeeded()
@@ -2028,13 +2021,39 @@ class PetitionProjectInstructorProcedureView(
         self.schedule_state_change_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
 
-    def append_applicant_message_notice(self, log):
-        """Append to the log's internal comment that the applicant gets a message."""
-        notice = "Message envoyé au demandeur."
-        if log.update_comment:
-            log.update_comment = f"{log.update_comment}\n{notice}"
+    def record_state_change(self, form):
+        """Record the instruction event the state change form describes, and return its log."""
+        data = form.cleaned_data
+        project = self.object
+        author = self.request.user
+
+        if form.is_closing:
+            log = project.close(
+                decision=data["decision"],
+                status_date=data["status_date"],
+                prefectural_order=data["prefectural_order"],
+                applicant_message=data["applicant_message"],
+                update_comment=data["update_comment"],
+                author=author,
+            )
+        elif form.is_authorization_switch:
+            log = project.switch_to_authorization(
+                status_date=data["status_date"],
+                refusal_deadline=data["refusal_deadline"],
+                applicant_message=data["applicant_message"],
+                update_comment=data["update_comment"],
+                author=author,
+            )
         else:
-            log.update_comment = notice
+            log = project.change_status_manually(
+                stage=data["stage"],
+                decision=data["decision"],
+                status_date=data["status_date"],
+                due_date=data["due_date"],
+                update_comment=data["update_comment"],
+                author=author,
+            )
+        return log
 
     def notify_closing_succeeded(self, form):
         attachment_phrase = (

@@ -878,53 +878,6 @@ class TestDueForTacitAgreement:
 
 
 @pytest.mark.haie
-@patch("envergo.petitions.models.update_demarche_numerique_status")
-class TestEnteringDeclaration:
-    """Entering déclaration starts a new agreement delay."""
-
-    ENTRY_DATE = date(2026, 10, 15)
-
-    def record_declaration_status(self, project):
-        """Record a status change to déclaration, effective on ENTRY_DATE."""
-        log = StatusLog(
-            petition_project=project,
-            stage=STAGES.instruction_d,
-            status_date=self.ENTRY_DATE,
-        )
-        project.record_status_change(log)
-        return log
-
-    def test_entering_declaration_starts_the_agreement_delay(self, mock_update):
-        """A requalified dossier gets two months from the day it enters déclaration."""
-        project = PetitionProjectFactory()
-        StatusLogFactory(petition_project=project, stage=STAGES.instruction_h)
-
-        log = self.record_declaration_status(project)
-
-        assert log.agreement_deadline == date(2026, 12, 15)
-
-    def test_staying_in_declaration_keeps_the_agreement_deadline(self, mock_update):
-        """A change within déclaration keeps the running delay."""
-        project = DeclarationProjectFactory(
-            declaration__agreement_deadline=date(2026, 11, 20)
-        )
-
-        log = self.record_declaration_status(project)
-
-        assert log.agreement_deadline is None
-        assert project.agreement_deadline == date(2026, 11, 20)
-
-    def test_dossier_outside_the_regime_unique_gets_no_deadline(self, mock_update):
-        """Silence means agreement under the régime unique only."""
-        project = PetitionProjectFactory(underscore_category=HedgeCategory.hru)
-        StatusLogFactory(petition_project=project, stage=STAGES.instruction_h)
-
-        log = self.record_declaration_status(project)
-
-        assert log.agreement_deadline is None
-
-
-@pytest.mark.haie
 @patch("envergo.petitions.tasks.send_applicant_message_async")
 class TestRequestComplements:
     """A request for compléments suspends the instruction."""
@@ -1006,3 +959,101 @@ class TestReceiveComplements:
 
         assert log.agreement_deadline is None
         assert log.applicant_message == ""
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestChangeStatusManually:
+    """An instructor sets the stage, decision and due date freely."""
+
+    STATUS_DATE = date(2026, 10, 15)
+
+    def change_to_declaration(self, project):
+        """Move the dossier into déclaration, effective on STATUS_DATE."""
+        return project.change_status_manually(
+            stage=STAGES.instruction_d,
+            decision=DECISIONS.unset,
+            status_date=self.STATUS_DATE,
+            due_date=None,
+            update_comment="",
+            author=None,
+        )
+
+    def test_entering_declaration_starts_the_agreement_delay(self, mock_update):
+        """A requalified dossier gets two months from the day it enters déclaration."""
+        project = PetitionProjectFactory(status__stage=STAGES.instruction_a)
+
+        log = self.change_to_declaration(project)
+
+        assert log.agreement_deadline == date(2026, 12, 15)
+
+    def test_staying_in_declaration_keeps_the_agreement_deadline(self, mock_update):
+        """A change within déclaration keeps the running delay."""
+        project = DeclarationProjectFactory(
+            declaration__agreement_deadline=date(2026, 11, 20)
+        )
+
+        log = self.change_to_declaration(project)
+
+        assert log.agreement_deadline is None
+        assert project.agreement_deadline == date(2026, 11, 20)
+
+    def test_dossier_outside_the_regime_unique_gets_no_deadline(self, mock_update):
+        """Silence means agreement under the régime unique only."""
+        project = PetitionProjectFactory(
+            underscore_category=HedgeCategory.hru, status__stage=STAGES.instruction_h
+        )
+
+        log = self.change_to_declaration(project)
+
+        assert log.agreement_deadline is None
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestSwitchToAuthorization:
+    """An instructor moves a déclaration into authorisation."""
+
+    REFUSAL_DEADLINE = date(2027, 3, 1)
+
+    def test_switch_records_the_refusal_deadline_and_the_message(self, mock_update):
+        """Silence means refusal at the deadline the applicant is told about."""
+        project = DeclarationProjectFactory()
+
+        log = project.switch_to_authorization(
+            status_date=date(2026, 11, 2),
+            refusal_deadline=self.REFUSAL_DEADLINE,
+            applicant_message="Votre dossier passe en autorisation.",
+            update_comment="Enjeux Natura 2000",
+            author=None,
+        )
+
+        assert log.stage == STAGES.instruction_a
+        assert log.refusal_deadline == self.REFUSAL_DEADLINE
+        assert log.due_date == self.REFUSAL_DEADLINE
+        assert log.applicant_message == "Votre dossier passe en autorisation."
+        assert log.update_comment == "Enjeux Natura 2000\nMessage envoyé au demandeur."
+
+
+@pytest.mark.haie
+@patch("envergo.petitions.models.update_demarche_numerique_status")
+class TestClose:
+    """An instructor closes the dossier with its final decision."""
+
+    def test_closing_without_a_decision_document(self, mock_update):
+        """A decision without a document leaves the dossier without one."""
+        project = DeclarationProjectFactory()
+
+        log = project.close(
+            decision=DECISIONS.dropped,
+            status_date=date(2026, 11, 2),
+            prefectural_order=None,
+            applicant_message="Votre dossier est classé sans suite.",
+            update_comment="",
+            author=None,
+        )
+
+        assert log.stage == STAGES.closed
+        assert log.decision == DECISIONS.dropped
+        assert not log.prefectural_order
+        assert project.prefectural_order_log is None

@@ -5241,9 +5241,7 @@ def test_authorization_switch_sends_the_applicant_message(
     client.force_login(haie_coordinator_44)
     RUConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="instruction_d")
-    data = state_change_form_data(
-        refusal_deadline="21/09/2099", update_comment="Haie en site Natura 2000."
-    )
+    data = state_change_form_data(refusal_deadline="21/09/2099")
 
     res = client.post(procedure_url(project), data, follow=True)
 
@@ -5257,15 +5255,11 @@ def test_authorization_switch_sends_the_applicant_message(
 
     log = project.status_history.order_by("-created_at").first()
     assert log.refusal_deadline == date(2099, 9, 21)
-    assert log.due_date == date(2099, 9, 21)
     assert log.applicant_message.startswith(
         "Votre projet relève d'une autorisation.<br>"
         "Compte-tenu des avis qui doivent être recueillis, "
         "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
         "<small>Toute décision relative"
-    )
-    assert (
-        log.update_comment == "Haie en site Natura 2000.\nMessage envoyé au demandeur."
     )
     mock_message_task.delay.assert_called_once_with(log.pk)
 
