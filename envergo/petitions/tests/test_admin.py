@@ -161,11 +161,10 @@ def test_authorization_switch_filter(value, expected, project_admin, admin_reque
 
 def test_silence_display_in_declaration(project_admin):
     """A dossier in déclaration shows the agreement rule and its deadline in French."""
-    project = DeclarationProjectFactory(agreement_deadline=date(2099, 3, 29))
+    project = DeclarationProjectFactory(silence_deadline=date(2099, 3, 29))
 
     assert project_admin.silence_rule(project) == "Silence vaut accord"
-    assert project_admin.agreement_deadline(project) == "29 mars 2099"
-    assert project_admin.refusal_deadline(project) == NOT_APPLICABLE
+    assert project_admin.silence_deadline(project) == "29 mars 2099"
 
 
 def test_silence_display_without_a_rule(project_admin):
@@ -173,5 +172,4 @@ def test_silence_display_without_a_rule(project_admin):
     project = PetitionProjectFactory(underscore_category="hru")
 
     assert project_admin.silence_rule(project) == NOT_APPLICABLE
-    assert project_admin.agreement_deadline(project) == NOT_APPLICABLE
-    assert project_admin.refusal_deadline(project) == NOT_APPLICABLE
+    assert project_admin.silence_deadline(project) == NOT_APPLICABLE

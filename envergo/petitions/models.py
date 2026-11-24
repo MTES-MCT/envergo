@@ -184,7 +184,7 @@ class PetitionProjectQuerySet(models.QuerySet):
             self.regime_unique()
             .decision_pending()
             .not_suspended()
-            .filter(agreement_deadline__lte=today)
+            .filter(silence_rule=SilenceRule.AGREEMENT, silence_deadline__lte=today)
             .select_related("department", "hedge_data")
             .defer("department__geometry")
         )
@@ -217,8 +217,8 @@ class InstructionMixin:
         self.stage = instruction_stage
         self.decision = DECISIONS.unset
         self.due_date = agreement_deadline
-        self.agreement_deadline = agreement_deadline
-        self.refusal_deadline = None
+        self.silence_rule = self.silence_rule_in(instruction_stage)
+        self.silence_deadline = agreement_deadline
         return self._record_event(log)
 
     def request_complements(self, *, complements_due_date, applicant_message, author):
@@ -272,7 +272,7 @@ class InstructionMixin:
         self.is_additional_information_requested = False
         self.due_date = due_date
         if restarts_agreement_delay:
-            self.agreement_deadline = agreement_deadline
+            self.silence_deadline = agreement_deadline
         return self._record_event(log)
 
     def switch_to_authorization(
@@ -308,8 +308,8 @@ class InstructionMixin:
         )
         self.stage = STAGES.instruction_a
         self.due_date = refusal_deadline
-        self.agreement_deadline = None
-        self.refusal_deadline = refusal_deadline
+        self.silence_rule = SilenceRule.REFUSAL
+        self.silence_deadline = refusal_deadline
         return self._record_event(log)
 
     def close_by_express_decision(
@@ -341,13 +341,13 @@ class InstructionMixin:
         self.stage = STAGES.closed
         self.decision = decision
         self.due_date = None
-        self.agreement_deadline = None
-        self.refusal_deadline = None
+        self.silence_rule = None
+        self.silence_deadline = None
         return self._record_event(log)
 
     def close_by_tacit_agreement(self):
         """The nightly job closes the dossier by tacit agreement, with the attestation de non-opposition."""
-        agreement_date = self.agreement_deadline
+        agreement_date = self.silence_deadline
         attestation = ContentFile(
             attestation_non_opposition_pdf(self, agreement_date),
             name="attestation_non_opposition.pdf",
@@ -373,8 +373,8 @@ class InstructionMixin:
         self.stage = STAGES.closed
         self.decision = DECISIONS.tacit_agreement
         self.due_date = None
-        self.agreement_deadline = None
-        self.refusal_deadline = None
+        self.silence_rule = None
+        self.silence_deadline = None
         return self._record_event(log)
 
     # Note: This method only exists because the current UI allows for any transition
@@ -386,21 +386,19 @@ class InstructionMixin:
         """An instructor sets the stage, decision and due date freely, outside the named actions.
 
         Entering a stage where silence means agreement starts the agreement delay on `status_date`.
-        Each deadline in force stays only while the silence rule it belongs to applies.
+        The silence deadline stays only while the silence rule stays.
         """
         started_agreement_deadline = self._agreement_deadline_on_entering(
             stage, status_date
         )
 
-        agreement_deadline_in_force = None
-        refusal_deadline_in_force = None
         silence_rule_in_new_stage = self._silence_rule_after_entering(stage)
-        if silence_rule_in_new_stage == SilenceRule.AGREEMENT:
-            agreement_deadline_in_force = (
-                started_agreement_deadline or self.agreement_deadline
-            )
-        elif silence_rule_in_new_stage == SilenceRule.REFUSAL:
-            refusal_deadline_in_force = self.refusal_deadline
+        if started_agreement_deadline:
+            silence_deadline = started_agreement_deadline
+        elif silence_rule_in_new_stage == self.silence_rule:
+            silence_deadline = self.silence_deadline
+        else:
+            silence_deadline = None
 
         log = StatusLog(
             petition_project=self,
@@ -416,8 +414,8 @@ class InstructionMixin:
         self.stage = stage
         self.decision = decision
         self.due_date = due_date
-        self.agreement_deadline = agreement_deadline_in_force
-        self.refusal_deadline = refusal_deadline_in_force
+        self.silence_rule = silence_rule_in_new_stage
+        self.silence_deadline = silence_deadline
         return self._record_event(log)
 
     def _first_instruction_stage(self):
@@ -447,7 +445,7 @@ class InstructionMixin:
         if stage in INSTRUCTION_STAGES:
             rule = self.silence_rule_in(stage)
         elif stage in PENDING_DECISION_STAGES:
-            # Outside instruction, a pending dossier keeps its latest instruction stage's rule.
+            # Outside instruction, a pending dossier keeps its current rule.
             rule = self.silence_rule
         else:
             rule = None
@@ -630,14 +628,16 @@ class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
         null=True,
         blank=True,
     )
-    agreement_deadline = models.DateField(
-        "Date à laquelle le silence vaut accord",
-        help_text="Délai en cours uniquement. Mis à jour par les étapes de l'instruction.",
+    silence_rule = models.CharField(
+        "Règle du silence de l’administration",
+        help_text="Règle en vigueur uniquement. Mise à jour par les étapes de l'instruction.",
+        max_length=16,
+        choices=SilenceRule.choices,
         null=True,
         blank=True,
     )
-    refusal_deadline = models.DateField(
-        "Date au-delà de laquelle le silence vaut refus",
+    silence_deadline = models.DateField(
+        "Date à laquelle la règle du silence s’applique",
         help_text="Délai en cours uniquement. Mis à jour par les étapes de l'instruction.",
         null=True,
         blank=True,
@@ -718,33 +718,6 @@ class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
             .order_by("-created_at")
             .first()
         )
-
-    @cached_property
-    def latest_instruction_stage(self):
-        """The latest instruction stage the dossier went through.
-
-        None when the dossier never entered instruction.
-        """
-        return (
-            self.status_history.filter(stage__in=INSTRUCTION_STAGES)
-            .order_by("-created_at")
-            .values_list("stage", flat=True)
-            .first()
-        )
-
-    @property
-    def silence_rule(self) -> SilenceRule | None:
-        """What the administration's silence means for this dossier.
-
-        None when no decision is pending under the régime unique.
-        """
-        decision_pending = self.stage in PENDING_DECISION_STAGES
-
-        rule = None
-        # Testing the regime first skips the history query when no rule can apply.
-        if self.is_regime_unique() and decision_pending:
-            rule = self.silence_rule_in(self.latest_instruction_stage)
-        return rule
 
     def silence_rule_in(self, stage) -> SilenceRule | None:
         """What the administration's silence means for this dossier in `stage`.

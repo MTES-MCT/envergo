@@ -312,9 +312,9 @@ class TestCloseTacitAgreements:
         today = timezone.localdate()
         last_week = today - timedelta(days=7)
         tomorrow = today + timedelta(days=1)
-        due = DeclarationProjectFactory(agreement_deadline=today)
-        overdue = DeclarationProjectFactory(agreement_deadline=last_week)
-        DeclarationProjectFactory(agreement_deadline=tomorrow)
+        due = DeclarationProjectFactory(silence_deadline=today)
+        overdue = DeclarationProjectFactory(silence_deadline=last_week)
+        DeclarationProjectFactory(silence_deadline=tomorrow)
 
         call_command("close_tacit_agreements")
 
@@ -325,8 +325,8 @@ class TestCloseTacitAgreements:
     def test_one_failed_closing_does_not_stop_the_others(self, mock_close, caplog):
         """The failure is logged. The next dossier is still closed."""
         yesterday = timezone.localdate() - timedelta(days=1)
-        failing = DeclarationProjectFactory(agreement_deadline=yesterday)
-        other = DeclarationProjectFactory(agreement_deadline=yesterday)
+        failing = DeclarationProjectFactory(silence_deadline=yesterday)
+        other = DeclarationProjectFactory(silence_deadline=yesterday)
 
         def close(project):
             """Let « Démarche numérique » reject the failing dossier only."""
@@ -359,7 +359,7 @@ class TestCloseTacitAgreements:
     def test_command_does_nothing_without_demarche_numerique(self, mock_close):
         """« Démarche numérique » must accept every closing. Without it, each one fails."""
         yesterday = timezone.localdate() - timedelta(days=1)
-        DeclarationProjectFactory(agreement_deadline=yesterday)
+        DeclarationProjectFactory(silence_deadline=yesterday)
 
         call_command("close_tacit_agreements")
 

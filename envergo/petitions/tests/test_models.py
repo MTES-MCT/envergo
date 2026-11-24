@@ -116,62 +116,6 @@ def test_can_switch_to_authorization(category, stage, expected):
 
 
 @pytest.mark.parametrize(
-    "category, stages, expected",
-    [
-        ("ru", [], None),
-        ("ru", [STAGES.instruction_d], SilenceRule.AGREEMENT),
-        (
-            "ru",
-            [STAGES.instruction_d, STAGES.preparing_decision],
-            SilenceRule.AGREEMENT,
-        ),
-        ("ru", [STAGES.instruction_d, STAGES.notification], SilenceRule.AGREEMENT),
-        ("ru", [STAGES.instruction_d, STAGES.closed], None),
-        ("ru", [STAGES.instruction_a], SilenceRule.REFUSAL),
-        (
-            "ru",
-            [STAGES.instruction_d, STAGES.instruction_a, STAGES.preparing_decision],
-            SilenceRule.REFUSAL,
-        ),
-        (
-            "ru",
-            [STAGES.instruction_d, STAGES.instruction_a, STAGES.instruction_d],
-            SilenceRule.AGREEMENT,
-        ),
-        ("hru", [STAGES.instruction_h], None),
-        ("l350_3", [STAGES.instruction_h], None),
-    ],
-)
-def test_silence_rule_follows_the_latest_instruction_stage(category, stages, expected):
-    """Déclaration means agreement and autorisation refusal, until the dossier closes."""
-    current_stage = stages[-1] if stages else STAGES.to_be_processed
-    project = PetitionProjectFactory(underscore_category=category, stage=current_stage)
-    for stage in stages:
-        StatusLogFactory(petition_project=project, stage=stage)
-
-    assert project.silence_rule == expected
-
-
-@pytest.mark.parametrize(
-    "category, stage, expected_queries",
-    [
-        ("hru", STAGES.instruction_h, 0),
-        ("ru", STAGES.closed, 0),
-        ("ru", STAGES.instruction_d, 1),
-    ],
-)
-def test_silence_rule_reads_the_history_only_when_a_rule_can_apply(
-    category, stage, expected_queries, django_assert_num_queries
-):
-    """The silence rule reads the history once at most, and never when the dossier rules it out."""
-    project = PetitionProjectFactory(underscore_category=category, stage=stage)
-
-    with django_assert_num_queries(expected_queries):
-        project.silence_rule
-        project.silence_rule
-
-
-@pytest.mark.parametrize(
     "category, stage, expected",
     [
         ("ru", STAGES.instruction_d, SilenceRule.AGREEMENT),
@@ -442,7 +386,8 @@ class TestDemarcheNumeriqueSync:
         project.refresh_from_db()
         assert project.stage == "instruction_d"
         assert project.due_date == date(2025, 3, 29)
-        assert project.agreement_deadline == date(2025, 3, 29)
+        assert project.silence_deadline == date(2025, 3, 29)
+        assert project.silence_rule == SilenceRule.AGREEMENT
 
     @pytest.mark.haie
     def test_auto_instruction_non_ru_sets_instruction_h_without_due_date(self):
@@ -716,7 +661,7 @@ class TestCloseByTacitAgreement:
         return DeclarationProjectFactory(
             demarche_numerique_state=DOSSIER_STATES.en_instruction,
             demarche_numerique_raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
-            agreement_deadline=self.AGREEMENT_DEADLINE,
+            silence_deadline=self.AGREEMENT_DEADLINE,
         )
 
     def test_closing_records_a_tacit_agreement_on_the_agreement_deadline(
@@ -782,16 +727,17 @@ class TestDueForTacitAgreement:
 
     def make_project(
         self,
-        agreement_deadline,
+        silence_deadline,
         category=HedgeCategory.ru,
         stage=STAGES.instruction_d,
         suspended=False,
     ):
-        """A dossier in `stage` whose agreement delay in force ends on `agreement_deadline`."""
+        """A dossier in `stage` whose agreement delay in force ends on `silence_deadline`."""
         return PetitionProjectFactory(
             underscore_category=category,
             stage=stage,
-            agreement_deadline=agreement_deadline,
+            silence_rule=SilenceRule.AGREEMENT,
+            silence_deadline=silence_deadline,
             is_additional_information_requested=suspended,
         )
 
@@ -902,7 +848,7 @@ class TestReceiveComplements:
         log = self.receive_complements(project)
 
         assert log.agreement_deadline == self.DUE_DATE
-        assert project.agreement_deadline == self.DUE_DATE
+        assert project.silence_deadline == self.DUE_DATE
         assert "2 janvier 2027" in log.applicant_message
 
     def test_receipt_restarts_no_agreement_delay_in_authorisation(self, mock_send):
@@ -941,16 +887,16 @@ class TestChangeStatusManually:
         log = self.change_to_declaration(project)
 
         assert log.agreement_deadline == date(2026, 12, 15)
-        assert project.agreement_deadline == date(2026, 12, 15)
+        assert project.silence_deadline == date(2026, 12, 15)
 
     def test_staying_in_declaration_keeps_the_agreement_deadline(self, mock_update):
         """A change within déclaration keeps the running delay."""
-        project = DeclarationProjectFactory(agreement_deadline=date(2026, 11, 20))
+        project = DeclarationProjectFactory(silence_deadline=date(2026, 11, 20))
 
         log = self.change_to_declaration(project)
 
         assert log.agreement_deadline is None
-        assert project.agreement_deadline == date(2026, 11, 20)
+        assert project.silence_deadline == date(2026, 11, 20)
 
     def test_dossier_outside_the_regime_unique_gets_no_deadline(self, mock_update):
         """Silence means agreement under the régime unique only."""
@@ -961,11 +907,11 @@ class TestChangeStatusManually:
         log = self.change_to_declaration(project)
 
         assert log.agreement_deadline is None
-        assert project.agreement_deadline is None
+        assert project.silence_deadline is None
 
     def test_preparing_the_decision_keeps_the_agreement_delay(self, mock_update):
         """A pending dossier outside instruction keeps its déclaration's delay."""
-        project = DeclarationProjectFactory(agreement_deadline=date(2026, 11, 20))
+        project = DeclarationProjectFactory(silence_deadline=date(2026, 11, 20))
 
         project.change_status_manually(
             status_date=self.STATUS_DATE,
@@ -976,7 +922,8 @@ class TestChangeStatusManually:
             author=None,
         )
 
-        assert project.agreement_deadline == date(2026, 11, 20)
+        assert project.silence_deadline == date(2026, 11, 20)
+        assert project.silence_rule == SilenceRule.AGREEMENT
 
     def test_entering_authorisation_ends_the_agreement_delay(self, mock_update):
         """Silence means refusal in authorisation, so no agreement is in force."""
@@ -991,8 +938,8 @@ class TestChangeStatusManually:
             author=None,
         )
 
-        assert project.agreement_deadline is None
-        assert project.refusal_deadline is None
+        assert project.silence_rule == SilenceRule.REFUSAL
+        assert project.silence_deadline is None
 
 
 @pytest.mark.haie
@@ -1019,8 +966,8 @@ class TestSwitchToAuthorization:
         assert log.due_date == self.REFUSAL_DEADLINE
         assert log.applicant_message == "Votre dossier passe en autorisation."
         assert log.update_comment == "Enjeux Natura 2000\nMessage envoyé au demandeur."
-        assert project.refusal_deadline == self.REFUSAL_DEADLINE
-        assert project.agreement_deadline is None
+        assert project.silence_rule == SilenceRule.REFUSAL
+        assert project.silence_deadline == self.REFUSAL_DEADLINE
 
 
 @pytest.mark.haie
@@ -1045,4 +992,5 @@ class TestCloseByExpressDecision:
         assert log.decision == DECISIONS.dropped
         assert not log.prefectural_order
         assert project.prefectural_order_log is None
-        assert project.agreement_deadline is None
+        assert project.silence_deadline is None
+        assert project.silence_rule is None

@@ -14,6 +14,7 @@ from envergo.petitions.demarche_numerique.client import (
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
+    SILENCE_RULE_BY_INSTRUCTION_STAGE,
     STAGES,
     InvitationToken,
     PetitionProject,
@@ -112,6 +113,15 @@ class PetitionProjectFactory(DjangoModelFactory):
         )
     )
     due_date = None
+    # A régime unique dossier in instruction carries its stage's silence rule.
+    silence_rule = factory.LazyAttribute(
+        lambda project: (
+            SILENCE_RULE_BY_INSTRUCTION_STAGE.get(project.stage)
+            if project.underscore_category == "ru"
+            else None
+        )
+    )
+    silence_deadline = None
     # The history starts with a log of the dossier's state.
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
@@ -165,7 +175,7 @@ class DeclarationProjectFactory(PetitionProjectFactory):
     """A régime unique dossier in déclaration, waiting for its agreement deadline."""
 
     stage = STAGES.instruction_d
-    agreement_deadline = factory.LazyFunction(
+    silence_deadline = factory.LazyFunction(
         lambda: declaration_due_date(timezone.localdate())
     )
     # The log moving the dossier into déclaration, which started the agreement delay.
@@ -173,7 +183,7 @@ class DeclarationProjectFactory(PetitionProjectFactory):
         StatusLogFactory,
         factory_related_name="petition_project",
         stage=STAGES.instruction_d,
-        agreement_deadline=factory.SelfAttribute("petition_project.agreement_deadline"),
+        agreement_deadline=factory.SelfAttribute("petition_project.silence_deadline"),
     )
 
 
