@@ -185,7 +185,7 @@ django-stubs-ext==6.1.2
     # via django-stubs
 djhtml==3.0.11
     # via -r local.in
-djlint==1.46.6
+djlint==1.47.0
     # via -r local.in
 dnspython==2.9.2
     # via
