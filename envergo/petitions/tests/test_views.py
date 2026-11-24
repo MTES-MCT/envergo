@@ -5267,7 +5267,7 @@ def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch
 
 
 def state_change_form_data(**overrides):
-    """Build the procedure form data for a state change, a switch to authorisation by default."""
+    """Build the procedure form data for a state change, a switch to authorization by default."""
     data = {
         "action": "state_change",
         "stage": "instruction_a",

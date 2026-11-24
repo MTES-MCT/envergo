@@ -7,7 +7,7 @@
  *    message) plus the message template pre-filled from the decision,
  *  - the due dates: the stage due date, or the refusal deadline during a
  *    switch,
- *  - the switch of an RU dossier to authorisation. It groups the refusal
+ *  - the switch of an RU dossier to authorization. It groups the refusal
  *    deadline with the applicant message and relabels the message.
  *
  * This is purely an instructor convenience: StateChangeForm re-enforces every
@@ -53,7 +53,7 @@
   const closingMessageTemplateId = (decision) => `closing-message--${decision}`;
   const SWITCH_MESSAGE_TEMPLATE_ID = "authorization-switch-message";
 
-  // Fields whose label reads differently during a switch to authorisation.
+  // Fields whose label reads differently during a switch to authorization.
   const SWITCH_LABELED_FIELDS = ["applicant_message"];
 
   const show = (elt, visible) => {

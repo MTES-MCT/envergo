@@ -136,7 +136,7 @@ def test_save_model_synchronizes_project_with_dn(
     [("yes", ["switched"]), ("no", ["declaration"])],
 )
 def test_authorization_switch_filter(value, expected, project_admin, admin_request):
-    """Admins find the dossiers that switched to authorisation by their refusal deadline."""
+    """Admins find the dossiers that switched to authorization by their refusal deadline."""
     projects = {
         "switched": PetitionProjectFactory(),
         "declaration": PetitionProjectFactory(),
