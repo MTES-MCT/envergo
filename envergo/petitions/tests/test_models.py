@@ -205,6 +205,22 @@ def test_silence_rule_reads_the_history_only_when_a_rule_can_apply(
         project.silence_rule
 
 
+@pytest.mark.parametrize(
+    "category, stage, expected",
+    [
+        ("ru", STAGES.instruction_d, SilenceRule.AGREEMENT),
+        ("ru", STAGES.instruction_a, SilenceRule.REFUSAL),
+        ("ru", STAGES.closed, None),
+        ("hru", STAGES.instruction_d, None),
+    ],
+)
+def test_silence_rule_in_a_stage(category, stage, expected):
+    """Only the régime unique's instruction stages carry a silence rule."""
+    project = PetitionProjectFactory.build(underscore_category=category)
+
+    assert project.silence_rule_in(stage) == expected
+
+
 def test_form_url_adds_alternative_param():
     """form_url appends project_reference to the query string."""
     DCConfigHaieFactory()

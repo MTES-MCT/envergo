@@ -219,12 +219,10 @@ class InstructionMixin:
 
     def start_instruction(self, *, submission_date):
         """On dépôt, move the dossier into its instruction stage."""
-        if self.is_regime_unique():
-            instruction_stage = STAGES.instruction_d
-            agreement_deadline = declaration_due_date(submission_date)
-        else:
-            instruction_stage = STAGES.instruction_h
-            agreement_deadline = None
+        instruction_stage = self._first_instruction_stage()
+        agreement_deadline = self._agreement_deadline_on_entering(
+            instruction_stage, submission_date
+        )
 
         log = StatusLog(
             petition_project=self,
@@ -378,16 +376,9 @@ class InstructionMixin:
     ):
         """An instructor sets the stage, decision and due date freely, outside the named actions.
 
-        A régime unique dossier entering déclaration from another stage starts its
-        agreement delay on `status_date`.
+        Entering a stage where silence means agreement starts the agreement delay on `status_date`.
         """
-        enters_declaration = (
-            stage == STAGES.instruction_d and self.stage != STAGES.instruction_d
-        )
-        if self.is_regime_unique() and enters_declaration:
-            agreement_deadline = declaration_due_date(status_date)
-        else:
-            agreement_deadline = None
+        agreement_deadline = self._agreement_deadline_on_entering(stage, status_date)
 
         log = StatusLog(
             petition_project=self,
@@ -401,6 +392,28 @@ class InstructionMixin:
             created_by=author,
         )
         return self._record_event(log)
+
+    def _first_instruction_stage(self):
+        """The stage a dossier enters when its instruction starts."""
+        if self.is_regime_unique():
+            stage = STAGES.instruction_d
+        else:
+            stage = STAGES.instruction_h
+        return stage
+
+    def _agreement_deadline_on_entering(self, stage, start_date: date) -> date | None:
+        """When silence turns into agreement, for a dossier entering `stage` on `start_date`.
+
+        None when silence in `stage` means no agreement, or when the dossier is already there.
+        """
+        starts_agreement_delay = (
+            self.silence_rule_in(stage) == SilenceRule.AGREEMENT and self.stage != stage
+        )
+
+        deadline = None
+        if starts_agreement_delay:
+            deadline = declaration_due_date(start_date)
+        return deadline
 
     def _record_event(self, log):
         """Save the log of an instruction event, mirror it in « Démarche numérique », and return it."""
@@ -700,8 +713,19 @@ class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
         decision_pending = self.stage in PENDING_DECISION_STAGES
 
         rule = None
+        # Testing the regime first skips the history query when no rule can apply.
         if self.is_regime_unique() and decision_pending:
-            rule = SILENCE_RULE_BY_INSTRUCTION_STAGE.get(self.latest_instruction_stage)
+            rule = self.silence_rule_in(self.latest_instruction_stage)
+        return rule
+
+    def silence_rule_in(self, stage) -> SilenceRule | None:
+        """What the administration's silence means for this dossier in `stage`.
+
+        None outside the régime unique, or for a stage without a silence rule.
+        """
+        rule = None
+        if self.is_regime_unique():
+            rule = SILENCE_RULE_BY_INSTRUCTION_STAGE.get(stage)
         return rule
 
     @cached_property
