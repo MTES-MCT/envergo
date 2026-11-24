@@ -2914,6 +2914,33 @@ def test_request_info_date_exceeds_three_months(client, haie_coordinator_44, sit
 
 
 @pytest.mark.django_db(transaction=True)
+def test_request_info_date_exceeds_refusal_deadline(client, haie_coordinator_44, site):
+    """Requesting additional info beyond the refusal deadline is rejected."""
+
+    client.force_login(haie_coordinator_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_a", status__refusal_deadline=date(2099, 9, 21)
+    )
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "action": "request_info",
+        "info_due_date": date(2099, 9, 22),
+        "request_message": "Test",
+    }
+    res = client.post(url, form_data)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "date limite avant refus tacite (le 21 septembre 2099)" in content
+    assert project.is_additional_information_requested is False
+
+
+@pytest.mark.django_db(transaction=True)
 def test_request_info_errors_reopen_modal(client, haie_coordinator_44, site):
     """When the request-info form has errors, the modal auto-opens."""
 
@@ -5247,7 +5274,7 @@ def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch
 
 
 def state_change_form_data(**overrides):
-    """Build the procedure form data for a state change, a switch to authorisation by default."""
+    """Build the procedure form data for a state change, a switch to authorization by default."""
     data = {
         "action": "state_change",
         "stage": "instruction_a",

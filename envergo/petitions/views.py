@@ -1909,7 +1909,9 @@ class PetitionProjectInstructorProcedureView(
                 is_regime_unique=self.object.is_regime_unique(),
             )
         if action == "request_info":
-            return RequestAdditionalInfoForm(self.request.POST)
+            return RequestAdditionalInfoForm(
+                self.request.POST, petition_project=self.object
+            )
         if action == "resume_processing":
             suspension = self.object.latest_suspension
             return ResumeProcessingForm(
@@ -1917,8 +1919,7 @@ class PetitionProjectInstructorProcedureView(
                 original_due_date=(
                     suspension.original_due_date if suspension else None
                 ),
-                category=self.object.category,
-                stage=self.object.stage,
+                is_declaration_instruction=self.object.is_declaration_instruction(),
             )
         return None
 
@@ -1983,8 +1984,7 @@ class PetitionProjectInstructorProcedureView(
                     original_due_date=(
                         suspension.original_due_date if suspension else None
                     ),
-                    category=self.object.category,
-                    stage=self.object.stage,
+                    is_declaration_instruction=self.object.is_declaration_instruction(),
                 ),
             )
         return context

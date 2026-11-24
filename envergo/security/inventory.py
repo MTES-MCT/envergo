@@ -138,10 +138,6 @@ UNMONITORED_COMPONENTS = [
         "OSV n'a pas de données sur ces bibliothèques",
     ),
     UnmonitoredComponent(
-        "OpenSSL 1.1, curl, SQLite, libtiff, GEOS et PROJ, embarqués par fiona",
-        "fiona ne donne pas leurs versions",
-    ),
-    UnmonitoredComponent(
         "Pango, GLib et fontconfig, chargés par WeasyPrint",
         "OSV n'a pas de données sur ces bibliothèques",
     ),
@@ -205,7 +201,7 @@ def read_geo_components():
 
     OSV has no entry for these C libraries as such. GDAL's flaws are filed under its
     PyPI package, whose versions follow the library, and GEOS's under its OSS-Fuzz project.
-    fiona bundles its own GDAL, separate from the system one Django loads.
+    A fiona wheel embeds its own GDAL, separate from the system one Django loads.
     """
     gdal = gdal_version().decode()
     fiona_gdal = fiona.__gdal_version__

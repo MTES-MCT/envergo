@@ -10,7 +10,6 @@ django-redis
 django-phonenumber-field[phonenumbers]
 pytz
 python-slugify
-Pillow
 rcssmin
 argon2-cffi
 whitenoise
@@ -38,3 +37,4 @@ python-magic
 django-storages[boto3]
 cvss
 weasyprint
+django-health-check[redis,celery]
