@@ -10,15 +10,14 @@ from django.forms.fields import FileField
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 
-from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.forms import DisplayChoiceField
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
-    STAGES,
     PetitionProject,
     Simulation,
     StatusLog,
@@ -542,11 +541,15 @@ def request_for_info_message(petition_project, is_regime_unique):
 
 
 class RequestAdditionalInfoForm(forms.Form):
-    """Let an instructor pause the instruction and request for more information."""
+    """Let an instructor pause the instruction and request for more information.
+
+    During an RU declaration, the due date is at most three months away.
+    During an RU authorisation, it is at most the refusal deadline.
+    Otherwise, any future date is accepted.
+    """
 
     info_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
-        help_text="Délai maximum : 3 mois",
         required=True,
         initial=three_months_from_now,
         error_messages={
@@ -561,16 +564,36 @@ class RequestAdditionalInfoForm(forms.Form):
         help_text="Complétez le message afin de lister les pièces complémentaires attendues.",
     )
 
-    def __init__(self, *args, petition_project=None, **kwargs):
+    def __init__(self, *args, petition_project, **kwargs):
         super().__init__(*args, **kwargs)
+        self.petition_project = petition_project
 
         self.fields["info_due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+        self.fields["info_due_date"].help_text = self.info_due_date_hint()
+        self.fields["request_message"].initial = request_for_info_message(
+            petition_project, petition_project.is_regime_unique()
+        )
 
-        # Setup user message initial content
-        if petition_project:
-            self.fields["request_message"].initial = request_for_info_message(
-                petition_project, petition_project.is_regime_unique()
-            )
+    @cached_property
+    def applicable_refusal_deadline(self):
+        """The refusal deadline capping the due date, or None when it does not apply."""
+        if self.petition_project.is_authorization_instruction():
+            return self.petition_project.refusal_deadline
+        return None
+
+    def refusal_deadline_display(self):
+        """The applicable refusal deadline, formatted for display."""
+        return date_format(self.applicable_refusal_deadline, "DATE_FORMAT")
+
+    def info_due_date_hint(self):
+        """The help text naming the latest allowed due date, empty when there is none."""
+        hint = ""
+        if self.petition_project.is_declaration_instruction():
+            hint = "Délai maximum : 3 mois"
+        elif self.applicable_refusal_deadline:
+            deadline = self.refusal_deadline_display()
+            hint = f"Délai maximum : la date limite avant refus tacite ({deadline})"
+        return hint
 
     def clean_info_due_date(self):
         info_due_date = self.cleaned_data["info_due_date"]
@@ -582,11 +605,21 @@ class RequestAdditionalInfoForm(forms.Form):
                 code="date_in_past",
             )
 
-        max_date = three_months_from_now().date()
-        if info_due_date > max_date:
+        if self.petition_project.is_declaration_instruction():
+            three_months_cap = three_months_from_now().date()
+            if info_due_date > three_months_cap:
+                raise ValidationError(
+                    "La date limite ne peut pas dépasser 3 mois à compter d'aujourd'hui.",
+                    code="date_exceeds_three_months",
+                )
+
+        refusal_deadline = self.applicable_refusal_deadline
+        if refusal_deadline and info_due_date > refusal_deadline:
+            deadline = self.refusal_deadline_display()
             raise ValidationError(
-                "La date limite ne peut pas dépasser 3 mois à compter d'aujourd'hui.",
-                code="date_exceeds_three_months",
+                "La date limite de réception des compléments ne peut pas être postérieure "
+                f"à la date limite avant refus tacite (le {deadline}).",
+                code="date_exceeds_refusal_deadline",
             )
 
         return info_due_date
@@ -627,12 +660,12 @@ class ResumeProcessingForm(forms.Form):
     )
 
     def __init__(
-        self, *args, category=None, stage=None, original_due_date=None, **kwargs
+        self, *args, is_declaration_instruction=False, original_due_date=None, **kwargs
     ):
         """Drop the due date field when the suspension has no original due date."""
         super().__init__(*args, **kwargs)
 
-        if category == HedgeCategory.ru and stage == STAGES.instruction_d:
+        if is_declaration_instruction:
             self.fields["due_date"].widget.attrs["readonly"] = True
             self.fields["due_date"].label = mark_safe(
                 f"{self.fields['due_date'].label}"
