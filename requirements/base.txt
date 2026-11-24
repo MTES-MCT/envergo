@@ -29,7 +29,9 @@ botocore==1.43.117
 build==1.6.1
     # via pip-tools
 celery==5.6.3
-    # via -r base.in
+    # via
+    #   -r base.in
+    #   django-health-check
 certifi==2026.10.19
     # via
     #   fiona
@@ -71,6 +73,7 @@ django==5.2.18
     #   django-braces
     #   django-compressor
     #   django-crispy-forms
+    #   django-health-check
     #   django-leaflet
     #   django-localflavor
     #   django-model-utils
@@ -92,6 +95,8 @@ django-crispy-forms==2.7
     # via -r base.in
 django-environ==0.14.0
     # via -r base.in
+django-health-check[celery,redis]==4.8.0
+    # via -r base.in
 django-leaflet==0.34.0
     # via -r base.in
 django-localflavor==5.1
@@ -108,6 +113,8 @@ django-redis==7.0.0
     # via -r base.in
 django-storages[boto3]==1.14.6
     # via -r base.in
+dnspython==2.9.2
+    # via django-health-check
 faker==40.43.0
     # via -r base.in
 fiona==1.10.1
@@ -184,6 +191,7 @@ rcssmin==1.3.0
 redis==8.1.0
     # via
     #   -r base.in
+    #   django-health-check
     #   django-redis
 requests==2.34.2
     # via

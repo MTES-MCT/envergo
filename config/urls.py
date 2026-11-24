@@ -36,6 +36,7 @@ urlpatterns = [
         name="private_file_download",
     ),
     path(settings.ADMIN_URL, admin.site.urls),
+    path(settings.HEALTH_CHECK_URL, include("envergo.monitoring.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
