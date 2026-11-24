@@ -971,9 +971,9 @@ class TestChangeStatusManually:
     def change_to_declaration(self, project):
         """Move the dossier into déclaration, effective on STATUS_DATE."""
         return project.change_status_manually(
+            status_date=self.STATUS_DATE,
             stage=STAGES.instruction_d,
             decision=DECISIONS.unset,
-            status_date=self.STATUS_DATE,
             due_date=None,
             update_comment="",
             author=None,
@@ -1037,16 +1037,16 @@ class TestSwitchToAuthorization:
 
 @pytest.mark.haie
 @patch("envergo.petitions.models.update_demarche_numerique_status")
-class TestClose:
-    """An instructor closes the dossier with its final decision."""
+class TestCloseByExpressDecision:
+    """An instructor closes the dossier with an express decision."""
 
     def test_closing_without_a_decision_document(self, mock_update):
         """A decision without a document leaves the dossier without one."""
         project = DeclarationProjectFactory()
 
-        log = project.close(
-            decision=DECISIONS.dropped,
+        log = project.close_by_express_decision(
             status_date=date(2026, 11, 2),
+            decision=DECISIONS.dropped,
             prefectural_order=None,
             applicant_message="Votre dossier est classé sans suite.",
             update_comment="",

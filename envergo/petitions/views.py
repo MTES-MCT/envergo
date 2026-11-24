@@ -2028,9 +2028,9 @@ class PetitionProjectInstructorProcedureView(
         author = self.request.user
 
         if form.is_closing:
-            log = project.close(
-                decision=data["decision"],
+            log = project.close_by_express_decision(
                 status_date=data["status_date"],
+                decision=data["decision"],
                 prefectural_order=data["prefectural_order"],
                 applicant_message=data["applicant_message"],
                 update_comment=data["update_comment"],
@@ -2046,9 +2046,9 @@ class PetitionProjectInstructorProcedureView(
             )
         else:
             log = project.change_status_manually(
+                status_date=data["status_date"],
                 stage=data["stage"],
                 decision=data["decision"],
-                status_date=data["status_date"],
                 due_date=data["due_date"],
                 update_comment=data["update_comment"],
                 author=author,

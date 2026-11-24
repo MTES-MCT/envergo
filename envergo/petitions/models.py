@@ -213,11 +213,32 @@ class PetitionProjectQuerySet(models.QuerySet):
 class InstructionMixin:
     """The instruction events of a dossier.
 
-    Each event builds one complete status log and records it with `record_event`.
+    Each action is triggered by an instructor, the dépôt or the nightly job. It
+    builds its own complete status log and records it with `_record_event`.
     """
 
+    def start_instruction(self, *, submission_date):
+        """On dépôt, move the dossier into its instruction stage."""
+        if self.is_regime_unique():
+            instruction_stage = STAGES.instruction_d
+            agreement_deadline = declaration_due_date(submission_date)
+        else:
+            instruction_stage = STAGES.instruction_h
+            agreement_deadline = None
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=instruction_stage,
+            # The instruction is due when silence turns into an agreement.
+            due_date=agreement_deadline,
+            agreement_deadline=agreement_deadline,
+            update_comment="Dépôt du dossier : passage automatique en instruction.",
+        )
+        return self._record_event(log)
+
     def request_complements(self, *, complements_due_date, applicant_message, author):
-        """Suspend the instruction until the applicant sends the requested compléments."""
+        """An instructor suspends the instruction until the applicant sends compléments."""
         log = StatusLog(
             petition_project=self,
             type=LOG_TYPES.suspension,
@@ -225,14 +246,14 @@ class InstructionMixin:
             decision=self.decision,
             due_date=complements_due_date,
             original_due_date=self.due_date,
-            update_comment="Suspension de l’instruction, message envoyé au demandeur.",
             applicant_message=applicant_message,
+            update_comment="Suspension de l’instruction, message envoyé au demandeur.",
             created_by=author,
         )
-        return self.record_event(log)
+        return self._record_event(log)
 
     def receive_complements(self, *, received_on, due_date, author):
-        """Resume the instruction.
+        """An instructor resumes the instruction on receiving the compléments.
 
         For a déclaration, `due_date` is required. It ends the restarted agreement
         delay, and the applicant gets a new récépissé stating it.
@@ -257,39 +278,105 @@ class InstructionMixin:
             info_receipt_date=received_on,
             due_date=due_date,
             agreement_deadline=agreement_deadline,
-            update_comment=update_comment,
             applicant_message=applicant_message,
+            update_comment=update_comment,
             created_by=author,
         )
-        return self.record_event(log)
+        return self._record_event(log)
 
-    def start_instruction(self, *, submission_date):
-        """Move the dossier into instruction, as « Démarche numérique » did on dépôt."""
-        if self.is_regime_unique():
-            instruction_stage = STAGES.instruction_d
-            agreement_deadline = declaration_due_date(submission_date)
+    def switch_to_authorization(
+        self,
+        *,
+        status_date,
+        refusal_deadline,
+        applicant_message,
+        update_comment,
+        author,
+    ):
+        """An instructor moves a déclaration into authorisation.
+
+        Silence then means refusal at `refusal_deadline`.
+        """
+        notice = "Message envoyé au demandeur."
+        if update_comment:
+            log_comment = f"{update_comment}\n{notice}"
         else:
-            instruction_stage = STAGES.instruction_h
-            agreement_deadline = None
+            log_comment = notice
 
         log = StatusLog(
             petition_project=self,
             type=LOG_TYPES.status_change,
-            stage=instruction_stage,
-            # The instruction is due when silence turns into an agreement.
-            due_date=agreement_deadline,
-            agreement_deadline=agreement_deadline,
-            update_comment="Dépôt du dossier : passage automatique en instruction.",
+            stage=STAGES.instruction_a,
+            decision=self.decision,
+            status_date=status_date,
+            due_date=refusal_deadline,
+            refusal_deadline=refusal_deadline,
+            applicant_message=applicant_message,
+            update_comment=log_comment,
+            created_by=author,
         )
-        return self.record_event(log)
+        return self._record_event(log)
+
+    def close_by_express_decision(
+        self,
+        *,
+        status_date,
+        decision,
+        prefectural_order,
+        applicant_message,
+        update_comment,
+        author,
+    ):
+        """An instructor closes the dossier with an express decision.
+
+        `prefectural_order` is the decision document, or None when the decision has none.
+        """
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=STAGES.closed,
+            status_date=status_date,
+            decision=decision,
+            prefectural_order=prefectural_order,
+            applicant_message=applicant_message,
+            update_comment=update_comment,
+            created_by=author,
+        )
+        return self._record_event(log)
+
+    def close_by_tacit_agreement(self):
+        """The nightly job closes the dossier by tacit agreement, with the attestation de non-opposition."""
+        agreement_date = self.agreement_deadline
+        attestation = ContentFile(
+            attestation_non_opposition_pdf(self, agreement_date),
+            name="attestation_non_opposition.pdf",
+        )
+        applicant_message = render_to_string(
+            "haie/petitions/tacit_agreement_message.txt"
+        )
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=STAGES.closed,
+            status_date=agreement_date,
+            decision=DECISIONS.tacit_agreement,
+            prefectural_order=attestation,
+            applicant_message=applicant_message,
+            update_comment=(
+                "Clôture automatique : silence vaut accord. "
+                "Message envoyé au demandeur avec l’attestation de non-opposition."
+            ),
+        )
+        return self._record_event(log)
 
     # Note: This method only exists because the current UI allows for any transition
     # stage transition, even ones that should not be possible.
     # UI is being redesigned right now, so this method is meant to be removed in the end.
     def change_status_manually(
-        self, *, stage, decision, status_date, due_date, update_comment, author
+        self, *, status_date, stage, decision, due_date, update_comment, author
     ):
-        """Set the stage, decision and due date an instructor picks freely, outside the named events.
+        """An instructor sets the stage, decision and due date freely, outside the named actions.
 
         A régime unique dossier entering déclaration from another stage starts its
         agreement delay on `status_date`.
@@ -305,112 +392,32 @@ class InstructionMixin:
         log = StatusLog(
             petition_project=self,
             type=LOG_TYPES.status_change,
+            status_date=status_date,
             stage=stage,
             decision=decision,
-            status_date=status_date,
             due_date=due_date,
             agreement_deadline=agreement_deadline,
             update_comment=update_comment,
             created_by=author,
         )
-        return self.record_event(log)
+        return self._record_event(log)
 
-    def switch_to_authorization(
-        self,
-        *,
-        status_date,
-        refusal_deadline,
-        applicant_message,
-        update_comment,
-        author,
-    ):
-        """Move a déclaration into authorisation, where silence means refusal at `refusal_deadline`."""
-        notice = "Message envoyé au demandeur."
-        if update_comment:
-            log_comment = f"{update_comment}\n{notice}"
-        else:
-            log_comment = notice
-
-        log = StatusLog(
-            petition_project=self,
-            type=LOG_TYPES.status_change,
-            stage=STAGES.instruction_a,
-            decision=self.decision,
-            status_date=status_date,
-            due_date=refusal_deadline,
-            refusal_deadline=refusal_deadline,
-            update_comment=log_comment,
-            applicant_message=applicant_message,
-            created_by=author,
-        )
-        return self.record_event(log)
-
-    def close(
-        self,
-        *,
-        decision,
-        status_date,
-        prefectural_order,
-        applicant_message,
-        update_comment,
-        author,
-    ):
-        """Close the dossier with its final decision.
-
-        `prefectural_order` is the decision document, or None when the decision has none.
-        """
-        log = StatusLog(
-            petition_project=self,
-            type=LOG_TYPES.status_change,
-            stage=STAGES.closed,
-            decision=decision,
-            status_date=status_date,
-            update_comment=update_comment,
-            prefectural_order=prefectural_order,
-            applicant_message=applicant_message,
-            created_by=author,
-        )
-        return self.record_event(log)
-
-    def close_by_tacit_agreement(self):
-        """Close the dossier on its agreement deadline and send the applicant the attestation."""
-        agreement_date = self.agreement_deadline
-        attestation = ContentFile(
-            attestation_non_opposition_pdf(self, agreement_date),
-            name="attestation_non_opposition.pdf",
-        )
-        applicant_message = render_to_string(
-            "haie/petitions/tacit_agreement_message.txt"
-        )
-
-        return self.close(
-            decision=DECISIONS.tacit_agreement,
-            status_date=agreement_date,
-            prefectural_order=attestation,
-            applicant_message=applicant_message,
-            update_comment=(
-                "Clôture automatique : silence vaut accord. "
-                "Message envoyé au demandeur avec l’attestation de non-opposition."
-            ),
-            author=None,
-        )
-
-    def record_event(self, log):
+    def _record_event(self, log):
         """Save the log of an instruction event, mirror it in « Démarche numérique », and return it."""
         with transaction.atomic():
             log.save()
-            self.sync_demarche_numerique_status(log)
+            self._sync_demarche_numerique_status(log)
             if log.applicant_message:
-                self.schedule_applicant_message(log)
+                self._schedule_applicant_message(log)
         return log
 
-    def sync_demarche_numerique_status(self, log):
+    def _sync_demarche_numerique_status(self, log):
         """Update the « Démarche numérique » status to match the new log, when it differs."""
         new_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
         if self.demarche_numerique_state != new_status:
             update_demarche_numerique_status(self, new_status)
 
-    def schedule_applicant_message(self, log):
+    def _schedule_applicant_message(self, log):
         """Queue the log's applicant message for after commit.
 
         Sent asynchronously, so a DN messagerie failure never blocks the state
