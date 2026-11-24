@@ -262,7 +262,7 @@ s3transfer==0.19.3
     #   boto3
 scipy==1.18.1
     # via -r base.txt
-sentry-sdk==2.72.0
+sentry-sdk==2.73.0
     # via -r production.in
 shapely==2.2.0
     # via -r base.txt
