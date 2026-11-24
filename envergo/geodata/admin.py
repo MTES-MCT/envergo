@@ -34,11 +34,7 @@ from envergo.geodata.tasks import (
     start_batch_import,
 )
 from envergo.geodata.utils import InvalidMapFile, open_map_file
-from envergo.utils.validators import detect_mime, validate_mime
-
-# Libmagic reports csv files as plain text, and only recognizes the `text/csv`
-# structure on files with enough rows to sniff a consistent separator.
-CSV_MIME_TYPES = {"text/csv", "text/plain", "application/csv"}
+from envergo.utils.validators import CSV_MIME_TYPES, detect_mime, validate_file_type
 
 # A geopackage is a sqlite database; the exact label depends on the libmagic
 # version. The extension drives how `open_map_file` reads the file, so each
@@ -327,7 +323,7 @@ class MapImportBatchForm(forms.ModelForm):
             raise ValidationError("Ce fichier doit être un fichier csv.")
 
         # The extension is declarative; check the actual bytes too.
-        validate_mime(file, CSV_MIME_TYPES)
+        validate_file_type(file, {".csv": CSV_MIME_TYPES})
 
         errors = is_file_valid(file, check_files=False)
         if errors:
