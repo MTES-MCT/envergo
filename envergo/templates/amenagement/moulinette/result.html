@@ -26,7 +26,7 @@
     {% for additional_form in additional_forms %}
       {% for field in additional_form %}{{ field|as_hidden }}{% endfor %}
     {% endfor %}
-    <figure class="fr-mt-1w fr-mb-1w fr-content-media">
+    <figure class="fr-content-media full-screen-map-content">
       <div id="map-container"
            class="ratio-4x3 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
         <div class="ratio-content">
@@ -37,7 +37,8 @@
       </div>
       <button id="map-refresh-button"
               type="submit"
-              class="fr-btn fr-btn--secondary">Renouveler la simulation</button>
+              class="fr-btn fr-btn--secondary"
+              form="moulinette-form">Renouveler la simulation</button>
     </figure>
   </form>
   {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
@@ -159,6 +160,7 @@
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script defer src="{% static 'js/libs/leaflet-fullscreen.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_project_map.js' %}"></script>
   <script defer
