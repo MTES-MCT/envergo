@@ -37,7 +37,8 @@
       </div>
       <button id="map-refresh-button"
               type="submit"
-              class="fr-btn fr-btn--secondary">Renouveler la simulation</button>
+              class="fr-btn fr-btn--secondary"
+              form="moulinette-form">Renouveler la simulation</button>
     </figure>
   </form>
   {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
