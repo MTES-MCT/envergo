@@ -85,7 +85,7 @@ def validate_dn_file_size(value):
     size_limit = settings.DEMARCHE_NUMERIQUE["ARCHIVE_MAX_SIZE"]
     if value.size > size_limit:
         raise ValidationError(
-            "Le fichier excède la taille maximale autorisée de 20 Mo."
+            "Le fichier excède la taille maximale autorisée de 50 Mo."
         )
 
 
@@ -101,7 +101,7 @@ class PetitionProjectAdminForm(forms.ModelForm):
         label="Archive Démarche Numérique",
         required=False,
         help_text="""Format autorisé: zip.<br>
-        Taille maximale autorisée : 20 Mo.
+        Taille maximale autorisée : 50 Mo.
         """,
         validators=[validate_zip, validate_dn_file_size],
     )
