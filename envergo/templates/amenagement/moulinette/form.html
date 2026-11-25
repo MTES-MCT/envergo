@@ -27,9 +27,7 @@
             <div class="fr-mb-3w">
               <label class="step">
                 Localisation du projet
-                <span class="fr-hint-text">
-                  Double-cliquez ou déplacez le marqueur sur la carte pour ajuster l'emplacement du projet.
-                </span>
+                <span class="fr-hint-text">Recherchez ou double-cliquez sur la carte pour positionner un marqueur.</span>
               </label>
             </div>
             <figure class="fr-content-media">
@@ -42,11 +40,11 @@
                         Rechercher une commune ou une
                         adresse
                       </label>
-                      <input class="fr-input"
-                             aria-describedby="id_address-messages"
+                      <input class="fr-input autocomplete__input autocomplete__input--default"
                              placeholder="Rechercher une commune ou une adresse"
                              id="id_address"
                              type="search"
+                             value="{{ form.address.value|default_if_none:"" }}"
                              name="address">
                       <button title="Rechercher" type="button" class="fr-btn">Rechercher</button>
                     </div>
@@ -58,13 +56,13 @@
             {% if not form.lat.data and form.lat.errors or not form.lng.data and form.lng.errors %}
               <p class="fr-error-text">
                 ↑
-                Aucune localisation indiquée. Veuillez indiquer l’emplacement du projet sur la carte en double-cliquant.
+                Aucune localisation indiquée. Veuillez indiquer l’emplacement du projet sur la carte en saisissant l’adresse ou la commune la plus proche, ou en double-cliquant.
                 ↑
               </p>
             {% elif form.lat.errors or form.lng.errors %}
               <p class="fr-error-text">
                 ↑
-                Les coordonnées saisies sont incorrectes
+                Les coordonnées saisies sont incorrectes.
                 ↑
               </p>
             {% endif %}

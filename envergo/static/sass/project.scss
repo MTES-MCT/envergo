@@ -808,14 +808,14 @@ form#request-evaluation-form {
   flex-grow: 1;
 }
 
-.autocomplete__wrapper .autocomplete__input {
+.autocomplete__wrapper .autocomplete__input,
+.autocomplete__input.autocomplete__input--default {
   border: 0;
   border-radius: space(1v) space(1v) 0 0; /* stylelint-disable-line */
-  color: var(--text-label-grey);
 
   --blend: var(--background-contrast-grey-blend);
 
-  background-color: #fff;
+  background-color: var(--grey-1000-50);
   box-shadow: inset 0 -2px 0 0 var(--border-action-high-blue-france);
   border-radius: 0.25rem 0.25rem 0 0;
   font-size: 1rem;
@@ -824,12 +824,11 @@ form#request-evaluation-form {
   appearance: none;
   outline-offset: 2px;
   outline-width: 2px;
-}
 
-.autocomplete__wrapper .autocomplete__input::placeholder {
-  opacity: 1;
-  font-style: italic;
-  color: var(--text-mention-grey);
+  &::placeholder {
+    opacity: 1;
+    font-style: italic;
+  }
 }
 
 .autocomplete__wrapper .autocomplete__input--focused {
@@ -841,6 +840,11 @@ form#request-evaluation-form {
   border: 2px solid #0a76f6;
   border-top: none;
   left: -4px;
+}
+
+.autocomplete__wrapper .autocomplete__option {
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .fr-input-group--error .autocomplete__wrapper .autocomplete__input {
@@ -949,6 +953,7 @@ div.leaflet-container {
   width: 100%;
   height: 100%;
   position: relative;
+  font-family: Marianne, arial, sans-serif;
 
   &.with-address-search-bar {
     display: grid;
@@ -1078,7 +1083,7 @@ dialog.full-screen-map {
   }
 
   // fix display details on envergo result page
-  & .fr-mt-1w.fr-mb-1w.fr-content-media.full-screen-map-content,
+  & .fr-content-media.full-screen-map-content,
   & .ratio-4x3.ratio-sm-4x5.fr-mt-1w.fr-mb-2w.fr-raw-link {
     margin: 0 !important;
     height: 100%;
@@ -1442,6 +1447,11 @@ $content-max-width: 40rem;
 
     #moulinette-form figure.fr-content-media {
       position: relative;
+      margin: 0.5rem 0;
+
+      &:has(.submit-feedback-hint-text) {
+        margin-bottom: 2.5em;
+      }
     }
   }
 
@@ -1476,6 +1486,11 @@ $content-max-width: 40rem;
   right: 2em;
   bottom: 2em;
   background-color: var(--grey-1000-50);
+
+  & + .submit-feedback-hint-text {
+    position: absolute;
+    bottom: -1.5em;
+  }
 }
 
 #map-refresh-button.display {
