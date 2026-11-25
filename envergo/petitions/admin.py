@@ -63,7 +63,7 @@ class AuthorizationSwitchFilter(admin.SimpleListFilter):
         return [("yes", "Oui"), ("no", "Non")]
 
     def queryset(self, request, queryset):
-        # Only a switch to authorisation sets a refusal deadline.
+        # Only a switch to authorization sets a refusal deadline.
         switched = Q(status_history__refusal_deadline__isnull=False)
         if self.value() == "yes":
             return queryset.filter(switched).distinct()

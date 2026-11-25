@@ -337,7 +337,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @property
     def can_switch_to_authorization(self):
-        """An RU dossier still in its declaration phase can switch to authorisation."""
+        """An RU dossier still in its declaration phase can switch to authorization."""
         return self.is_regime_unique() and self.stage in (
             STAGES.to_be_processed,
             STAGES.instruction_d,
@@ -358,7 +358,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @property
     def refusal_deadline(self):
-        """Date after which silence means refusal, set by the latest switch to authorisation.
+        """Date after which silence means refusal, set by the latest switch to authorization.
 
         None when the dossier never switched.
         """
@@ -694,6 +694,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     def is_regime_unique(self):
         return self.category == HedgeCategory.ru
+
+    def is_declaration_instruction(self):
+        """The dossier is in the RU declaration procedure."""
+        return self.is_regime_unique() and self.stage == STAGES.instruction_d
+
+    def is_authorization_instruction(self):
+        """The dossier is in the RU authorization procedure."""
+        return self.is_regime_unique() and self.stage == STAGES.instruction_a
 
     def is_emergency(self):
         return (

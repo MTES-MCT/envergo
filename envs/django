@@ -2,3 +2,4 @@
 # ------------------------------------------------------------------------------
 USE_DOCKER=yes
 IPYTHONDIR=/app/.ipython
+HEALTH_CHECK_AUTH_TOKEN=UFs97KN9R4GLV-ZAwFcXubpKP62UQU3iGo4AvltrExA

@@ -367,16 +367,25 @@
   <script defer type="module" src="{% static 'hedge_input/app.js' %}"></script>
 
   {% if mode != "read_only" %}
+
     <script>
+      // This script runs while the page is parsed: neither event is dispatched yet.
+      const domReady = new Promise(function (resolve) {
+        document.addEventListener("DOMContentLoaded", resolve, { once: true });
+      });
       // dsfr(element) only returns a component once DSFR has started
-      document.documentElement.addEventListener("dsfr.start", function () {
+      const dsfrStarted = new Promise(function (resolve) {
+        document.documentElement.addEventListener("dsfr.start", resolve, { once: true });
+      });
+
+      Promise.all([domReady, dsfrStarted]).then(function () {
         if (!window.matchMedia("(min-width: 48em)").matches) {
           const warning = document.getElementById("hedge-input-small-screen-warning");
           if (warning) {
             dsfr(warning).modal.disclose();
           }
         }
-      }, { once: true });
+      });
     </script>
   {% endif %}
 {% endblock %}

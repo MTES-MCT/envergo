@@ -629,7 +629,7 @@ dédié](https://github.com/Scalingo/geo-buildpack), qui est tombé en désuétu
 
 À titre de solution temporaire, les actions suivantes ont été réalisées :
 
-1/ Forker le `heroku-geo-buildpack` et [modifier cette ligne](https://github.com/thibault/heroku-geo-buildpack/blob/master/bin/compile#L9) pour obtenir la bonne url.
+1/ Forker le `heroku-geo-buildpack` et [modifier cette ligne](https://github.com/thibault/heroku-geo-buildpack/blob/main/bin/compile#L31) pour obtenir la bonne url.
 
 2/ Remplacer le buildpack scalingo par l'url du buildpack clôné : https://github.com/MTES-MCT/envergo/blob/fix_geo_buildpack/.buildpacks#L3
 
@@ -642,6 +642,18 @@ dédié](https://github.com/Scalingo/geo-buildpack), qui est tombé en désuétu
 Le buildpack lit les versions dans les variables d'environnement `GDAL_VERSION`,
 `GEOS_VERSION` et `PROJ_VERSION`. Sans ces variables, il réutilise la version
 gardée dans son cache de build et ne la met jamais à jour.
+
+Heroku ne fournit pas GDAL au-delà de 3.12. `GEO_ARCHIVES_URL` fait donc
+télécharger les archives depuis les releases de notre fork du buildpack. Son
+README explique comment y ajouter une version.
+
+`PIP_NO_BINARY=fiona` fait compiler fiona contre ce GDAL. Le buildpack Python
+garde fiona dans son cache de build : après un changement de version de GDAL,
+vider ce cache avant de déployer.
+
+```
+$ scalingo --app envergo deployment-delete-cache
+```
 
 Les versions attendues sont déclarées dans le fichier `buildpacks.env`. Après
 chaque modification de ce fichier, appliquer les versions sur Scalingo :
@@ -718,6 +730,34 @@ Ajouter les `Repository secrets` :
 Pour récupérer les backups et les restaurer.
 
 Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](https://www.scaleway.com/en/docs/object-storage/how-to/restore-an-object-from-glacier/)
+
+## Monitoring
+
+### Page de contrôle
+
+Une page de statut technique existe à une adresse "secrète" (stockée en variable d'environnement),
+accessible aux utilisateurs is_staff connectés et protégée par un token le reste du temps.
+
+Les URL sont de la forme `<url_de_base>/<HEALTH_CHECK_URL>/[quick|full]/`
+
+Par exemple en dev :
+- http://envergo.local:8000/ht/quick
+- http://envergo.local:8000/ht/full
+
+Pour analyser la situation en ligne de commande avec le client scalingo :
+
+```
+scalingo --app nom_de_lapplication run "python manage.py health_check --no-http monitoring:check_full"
+scalingo --app nom_de_lapplication run "python manage.py health_check --no-http monitoring:check_quick"
+```
+
+Les variables d'env concernées sont respectivement `HEALTH_CHECK_URL` et `HEALTH_CHECK_AUTH_TOKEN`.
+
+### Workers
+
+Pour vérifier le bon fonctionnement des workers (Celery), la commande monitoring_send_pulse est
+programmée à intervalles réguliers. Elle planifie une tâche qui lance une requête http vers une
+URL définie dans le paramètre `HEALTH_CHECK_PULSE_URL` ou à défaut laisse une entrée de log.
 
 ## Glossaire
 

@@ -16,7 +16,7 @@
 
             <p>
               La demande de compléments interrompra le délai d'instruction.
-              {% if petition_project.category == 'ru' and petition_project.stage == 'instruction_d' %}
+              {% if petition_project.is_declaration_instruction %}
                 <br />
                 À la réception des compléments, le délai de 2 mois pour l'accord tacite repartira à zéro.
               {% endif %}
