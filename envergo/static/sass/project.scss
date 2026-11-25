@@ -1083,7 +1083,7 @@ dialog.full-screen-map {
   }
 
   // fix display details on envergo result page
-  & .fr-mt-1w.fr-mb-1w.fr-content-media.full-screen-map-content,
+  & .fr-content-media.full-screen-map-content,
   & .ratio-4x3.ratio-sm-4x5.fr-mt-1w.fr-mb-2w.fr-raw-link {
     margin: 0 !important;
     height: 100%;
@@ -1447,6 +1447,11 @@ $content-max-width: 40rem;
 
     #moulinette-form figure.fr-content-media {
       position: relative;
+      margin: 0.5rem 0;
+
+      &:has(.submit-feedback-hint-text) {
+        margin-bottom: 2.5em;
+      }
     }
   }
 
@@ -1481,6 +1486,11 @@ $content-max-width: 40rem;
   right: 2em;
   bottom: 2em;
   background-color: var(--grey-1000-50);
+
+  & + .submit-feedback-hint-text {
+    position: absolute;
+    bottom: -1.5em;
+  }
 }
 
 #map-refresh-button.display {
