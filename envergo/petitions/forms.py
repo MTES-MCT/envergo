@@ -699,6 +699,19 @@ class ResumeProcessingForm(forms.Form):
         if is_declaration_instruction or original_due_date is None:
             del self.fields["due_date"]
 
+    def clean_info_receipt_date(self):
+        """Refuse a receipt date after today."""
+        info_receipt_date = self.cleaned_data["info_receipt_date"]
+        today = timezone.localdate()
+
+        if info_receipt_date > today:
+            raise ValidationError(
+                "La date de réception des pièces ne peut pas être dans le futur.",
+                code="date_in_future",
+            )
+
+        return info_receipt_date
+
 
 USER_TYPE = (
     ("petitioner", "Demandeur"),

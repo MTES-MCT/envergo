@@ -63,6 +63,25 @@ class TestResumeProcessingFormDueDate:
         expected = (timezone.now().date() + relativedelta(months=2)).isoformat()
         assert form.fields["due_date"].initial() == expected
 
+
+class TestResumeProcessingFormReceiptDate:
+    """Compléments cannot be received in the future."""
+
+    def test_future_receipt_date_is_refused(self):
+        """A receipt date after today is refused."""
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        form = ResumeProcessingForm(data={"info_receipt_date": tomorrow.isoformat()})
+
+        assert not form.is_valid()
+        assert form.has_error("info_receipt_date", code="date_in_future")
+
+    def test_today_receipt_date_is_accepted(self):
+        """Today is the latest accepted receipt date."""
+        today = timezone.localdate()
+        form = ResumeProcessingForm(data={"info_receipt_date": today.isoformat()})
+
+        assert form.is_valid(), form.errors
+
     def test_valid_without_due_date_when_no_original_due_date(self):
         form = ResumeProcessingForm(
             data={"info_receipt_date": "2026-01-15"}, original_due_date=None
