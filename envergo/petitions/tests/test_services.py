@@ -1556,7 +1556,8 @@ class TestAttestationNonOpposition:
 
         assert "fixée par arrêté préfectoral, sauf cas particuliers" in html
 
-    def test_attestation_renders_as_a_pdf(self):
+    def test_attestation_renders_as_a_pdf(self, collected_fonts):
+        """The attestation renders with every font it loads."""
         pdf = attestation_non_opposition_pdf(self.make_project(), self.AGREEMENT_DATE)
 
         assert pdf.startswith(b"%PDF-")
