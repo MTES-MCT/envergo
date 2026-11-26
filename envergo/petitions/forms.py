@@ -322,8 +322,12 @@ class StateChangeForm(forms.ModelForm):
             ]
 
         # Under the régime unique, the tacit agreement is acquired at the end of the
-        # déclaration delay, never decided by an instructor.
-        if is_regime_unique:
+        # déclaration delay, never decided by an instructor. A dossier it already
+        # closed keeps the choice, so the form never swaps its decision unasked.
+        closed_by_tacit_agreement = (
+            self.initial.get("decision") == DECISIONS.tacit_agreement
+        )
+        if is_regime_unique and not closed_by_tacit_agreement:
             self.fields["decision"].choices = [
                 (value, label)
                 for value, label in self.fields["decision"].choices

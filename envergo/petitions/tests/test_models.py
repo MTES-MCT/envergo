@@ -721,6 +721,7 @@ class TestDemarcheNumeriqueSync:
 @pytest.mark.haie
 @patch("envergo.petitions.tasks.send_applicant_message_async")
 @patch("envergo.petitions.models.update_demarche_numerique_status")
+@pytest.mark.usefixtures("collected_fonts")
 class TestCloseByTacitAgreement:
     """Closing a déclaration once silence means agreement."""
 

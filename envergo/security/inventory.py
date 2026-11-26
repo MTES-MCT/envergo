@@ -251,7 +251,13 @@ def read_system_freetype_version():
 
     # FreeType only reports its version through an initialized library handle.
     handle = ctypes.c_void_p()
-    freetype.FT_Init_FreeType(ctypes.byref(handle))
+    error_code = freetype.FT_Init_FreeType(ctypes.byref(handle))
+    if error_code:
+        logger.warning(
+            "FreeType failed to initialize (error %d), so it is not scanned.",
+            error_code,
+        )
+        return None
 
     major, minor, patch = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
     freetype.FT_Library_Version(

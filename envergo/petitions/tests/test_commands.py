@@ -341,6 +341,20 @@ class TestCloseTacitAgreements:
         assert f"closing failed for dossier {failing.reference}" in caplog.text
         assert "1 dossiers closed, 1 failed" in caplog.text
 
+    @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+    def test_dry_run_lists_the_due_dossiers_without_closing_them(
+        self, mock_close, caplog
+    ):
+        """A dry run shows the dossiers the real run would close."""
+        yesterday = timezone.localdate() - timedelta(days=1)
+        due = DeclarationProjectFactory(declaration__agreement_deadline=yesterday)
+
+        call_command("close_tacit_agreements", "--dry-run")
+
+        assert not mock_close.called
+        assert f"dossier {due.reference} is due since {yesterday}" in caplog.text
+        assert "1 dossiers would be closed" in caplog.text
+
     @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
     def test_command_does_nothing_without_demarche_numerique(self, mock_close):
         """« Démarche numérique » must accept every closing. Without it, each one fails."""

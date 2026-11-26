@@ -478,13 +478,10 @@ def attestation_applicant(petition_project) -> str:
 def attestation_non_opposition_pdf(petition_project, agreement_date) -> bytes:
     """Render the attestation de non-opposition as a PDF document."""
     # Imported here: WeasyPrint loads native libraries that only this rendering needs.
-    from weasyprint import HTML
+    from envergo.petitions.pdf import render_pdf
 
     html = attestation_non_opposition_html(petition_project, agreement_date)
-    # The template loads its fonts from the collected static files.
-    static_root = f"{settings.STATIC_ROOT}/"
-    # PDF/A-2a: the archival format for official acts, with an accessible structure.
-    return HTML(string=html, base_url=static_root).write_pdf(pdf_variant="pdf/a-2a")
+    return render_pdf(html)
 
 
 def get_item_value_from_ds_champ(champ):
