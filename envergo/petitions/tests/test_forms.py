@@ -126,12 +126,13 @@ def make_state_change_form(
     data=None,
     files=None,
     previous_stage="preparing_decision",
+    previous_decision="unset",
     single_procedure=False,
     can_switch_to_authorization=False,
     is_regime_unique=False,
 ):
     """Build a StateChangeForm the way the procedure view does."""
-    initial = {"stage": previous_stage, "decision": "unset"}
+    initial = {"stage": previous_stage, "decision": previous_decision}
     return StateChangeForm(
         data=data,
         files=files,
@@ -492,6 +493,18 @@ def test_tacit_agreement_choice_is_removed_under_the_regime_unique(
 
     decisions = [choice[0] for choice in form.fields["decision"].choices]
     assert ("tacit_agreement" in decisions) is offers_tacit_agreement
+
+
+def test_dossier_closed_by_tacit_agreement_keeps_the_choice():
+    """The form shows the dossier's own decision instead of swapping it for another."""
+    form = make_state_change_form(
+        previous_stage="closed",
+        previous_decision="tacit_agreement",
+        is_regime_unique=True,
+    )
+
+    decisions = [choice[0] for choice in form.fields["decision"].choices]
+    assert "tacit_agreement" in decisions
 
 
 def test_posting_tacit_agreement_is_rejected_under_the_regime_unique():
