@@ -23,7 +23,7 @@ Pour développer en local, deux solutions :
 
 2/ [Utiliser l'image Docker](https://cookiecutter-django.readthedocs.io/en/latest/developing-locally-docker.html).
 
-Il est recommandé de se baser sur la version docker.
+Il est recommandé de se baser sur la version docker...
 
 #### Avec Docker
 
