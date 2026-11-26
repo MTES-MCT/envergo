@@ -718,6 +718,24 @@ class TestCloseByTacitAgreement:
         assert "a fait l'objet d'un accord tacite" in log.applicant_message
         mock_send_message.delay.assert_called_once_with(log.pk)
 
+    def test_failed_message_queuing_keeps_the_dossier_closed(
+        self,
+        mock_update_status,
+        mock_send_message,
+        django_capture_on_commit_callbacks,
+        caplog,
+    ):
+        """A message that cannot be queued is logged, and the closing stands."""
+        mock_send_message.delay.side_effect = RuntimeError
+        project = self.make_project()
+
+        with django_capture_on_commit_callbacks(execute=True):
+            project.close_by_tacit_agreement()
+
+        project.refresh_from_db()
+        assert project.stage == STAGES.closed
+        assert "in on_commit()" in caplog.text
+
 
 @pytest.mark.haie
 class TestDueForTacitAgreement:

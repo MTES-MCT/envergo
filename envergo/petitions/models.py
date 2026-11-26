@@ -473,12 +473,15 @@ class InstructionMixin:
         """Queue the log's applicant message for after commit.
 
         Sent asynchronously, so a DN messagerie failure never blocks the state
-        change. The task retry policy handles transient errors.
+        change. The task retry policy handles transient errors. A queuing
+        failure is logged and leaves the state change in place.
         """
         # Imported here: the tasks module imports this one.
         from envergo.petitions.tasks import send_applicant_message_async
 
-        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
+        transaction.on_commit(
+            lambda: send_applicant_message_async.delay(log.pk), robust=True
+        )
 
 
 class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
