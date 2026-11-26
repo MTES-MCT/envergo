@@ -15,12 +15,6 @@ Les outils principaux suivants sont utilisés :
 - le [système de design de l'état français](https://www.systeme-de-design.gouv.fr/)
 - le [projet Cookiecutter-Django pour l'initialisation du dépôt](https://cookiecutter-django.readthedocs.io/en/latest/).
 
-## Démarrage
-
-Cookiecutter-Django est un initialiseur de projet.
-
-Par conséquent, [on se référera à sa doc](https://cookiecutter-django.readthedocs.io/en/latest/index.html) pour en savoir plus sur l'organisation du projet et les différents outils mis en place.
-
 ### Développement local
 
 Pour développer en local, deux solutions :
