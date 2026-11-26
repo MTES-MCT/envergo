@@ -685,17 +685,18 @@ class ResumeProcessingForm(forms.Form):
     def __init__(
         self, *args, is_declaration_instruction=False, original_due_date=None, **kwargs
     ):
-        """Drop the due date field when the suspension has no original due date."""
+        """Drop the due date field when the server sets it or nothing is postponed."""
         super().__init__(*args, **kwargs)
 
+        # In déclaration, the agreement delay restarts on the receipt date.
         if is_declaration_instruction:
-            self.fields["due_date"].widget.attrs["readonly"] = True
-            self.fields["due_date"].label = mark_safe(
-                f"{self.fields['due_date'].label}"
-                '<span class="fr-hint-text">Le délai de 2 mois pour l\'accord tacite redémarre.<br/>'
+            self.fields["info_receipt_date"].label = mark_safe(
+                f"{self.fields['info_receipt_date'].label}"
+                '<span class="fr-hint-text">Le délai de 2 mois pour l\'accord tacite redémarre à cette date.<br/>'
                 "Le demandeur recevra un nouveau récépissé de déclaration.</span>"
             )
-        elif original_due_date is None:
+
+        if is_declaration_instruction or original_due_date is None:
             del self.fields["due_date"]
 
 

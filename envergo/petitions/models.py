@@ -241,12 +241,14 @@ class InstructionMixin:
     def receive_complements(self, *, received_on, due_date, author):
         """An instructor resumes the instruction on receiving the compléments.
 
-        For a déclaration, `due_date` is required. It ends the restarted agreement
-        delay, and the applicant gets a new récépissé stating it.
+        When silence means agreement, the delay restarts on `received_on`, and its
+        end becomes the due date in place of `due_date`. The applicant gets a new
+        récépissé stating it.
         """
         restarts_agreement_delay = self.silence_rule == SilenceRule.AGREEMENT
         if restarts_agreement_delay:
-            agreement_deadline = due_date
+            agreement_deadline = declaration_due_date(received_on)
+            due_date = agreement_deadline
             applicant_message = declaration_receipt_message(self, received_on, due_date)
         else:
             agreement_deadline = None

@@ -46,6 +46,17 @@ class TestResumeProcessingFormDueDate:
 
         assert "due_date" in form.fields
 
+    def test_due_date_removed_in_declaration(self):
+        """The receipt date sets the restarted deadline, so there is nothing to type."""
+        form = ResumeProcessingForm(
+            data={"info_receipt_date": "2026-01-15"},
+            original_due_date=date(2026, 1, 1),
+            is_declaration_instruction=True,
+        )
+
+        assert "due_date" not in form.fields
+        assert form.is_valid(), form.errors
+
     def test_due_date_initial_is_two_months_from_today(self):
         form = ResumeProcessingForm(original_due_date=date(2026, 1, 1))
 

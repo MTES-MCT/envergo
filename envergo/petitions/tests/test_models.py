@@ -820,7 +820,7 @@ class TestReceiveComplements:
     """The receipt of the compléments resumes the instruction."""
 
     RECEIVED_ON = date(2026, 11, 2)
-    DUE_DATE = date(2027, 1, 2)
+    DUE_DATE = date(2027, 3, 15)
 
     def suspend(self, project):
         """Suspend the instruction of the dossier, in its current stage."""
@@ -840,15 +840,17 @@ class TestReceiveComplements:
         )
 
     def test_receipt_restarts_the_agreement_delay_of_a_declaration(self, mock_send):
-        """The applicant gets a new récépissé stating the restarted deadline."""
+        """The delay ends two months after the receipt, whatever due date is given."""
         RUConfigHaieFactory()
         project = DeclarationProjectFactory()
         self.suspend(project)
 
         log = self.receive_complements(project)
 
-        assert log.agreement_deadline == self.DUE_DATE
-        assert project.silence_deadline == self.DUE_DATE
+        two_months_after_receipt = date(2027, 1, 2)
+        assert log.agreement_deadline == two_months_after_receipt
+        assert project.silence_deadline == two_months_after_receipt
+        assert project.due_date == two_months_after_receipt
         assert "2 janvier 2027" in log.applicant_message
 
     def test_receipt_restarts_no_agreement_delay_in_authorisation(self, mock_send):

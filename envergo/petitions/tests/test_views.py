@@ -53,6 +53,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    declaration_due_date,
 )
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.petitions.tests.factories import (
@@ -63,6 +64,7 @@ from envergo.petitions.tests.factories import (
     FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
+    DeclarationProjectFactory,
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
@@ -2769,6 +2771,39 @@ def test_resume_instruction_of_a_declaration_announces_the_receipt(
     content = res.content.decode()
     assert "L'instruction du dossier a repris." in content
     assert "Le message au demandeur sera envoyé" in content
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+def test_resume_instruction_of_a_declaration_restarts_the_delay_on_receipt(
+    mock_send_message, client, haie_coordinator_44, site
+):
+    """A late recording or a posted due date never extends the delay."""
+    client.force_login(haie_coordinator_44)
+    RUConfigHaieFactory()
+    project = DeclarationProjectFactory(is_additional_information_requested=True)
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage=STAGES.instruction_d,
+        due_date=date.today() + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    received_on = date.today() - timedelta(days=3)
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": received_on,
+        "due_date": date.today() + timedelta(days=365),
+    }
+    client.post(status_url, form_data)
+
+    project.refresh_from_db()
+    assert project.silence_deadline == declaration_due_date(received_on)
+    assert project.due_date == declaration_due_date(received_on)
 
 
 @pytest.mark.django_db(transaction=True)
