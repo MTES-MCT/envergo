@@ -1,9 +1,11 @@
 from datetime import date, timedelta
+from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from envergo.analytics.models import Event
 from envergo.contrib.sites.tests.factories import SiteFactory
@@ -32,6 +34,11 @@ from envergo.users.tests.factories import UserFactory
 from envergo.utils.urls import update_qs
 
 pytestmark = pytest.mark.django_db
+
+
+def stored_pdfs(media_root):
+    """The PDF files present in media storage."""
+    return list(Path(media_root).rglob("*.pdf"))
 
 
 def test_set_department_on_save():
@@ -736,6 +743,18 @@ class TestCloseByTacitAgreement:
         assert project.stage == STAGES.closed
         assert "in on_commit()" in caplog.text
 
+    def test_failed_closing_leaves_no_attestation_in_storage(
+        self, mock_update_status, mock_send_message, settings
+    ):
+        """A closing that « Démarche numérique » rejects keeps no attestation file."""
+        mock_update_status.side_effect = RuntimeError
+        project = self.make_project()
+
+        with pytest.raises(RuntimeError):
+            project.close_by_tacit_agreement()
+
+        assert not stored_pdfs(settings.MEDIA_ROOT)
+
 
 @pytest.mark.haie
 class TestDueForTacitAgreement:
@@ -1014,3 +1033,23 @@ class TestCloseByExpressDecision:
         assert project.prefectural_order_log is None
         assert project.silence_deadline is None
         assert project.silence_rule is None
+
+    def test_failed_closing_leaves_no_decision_document_in_storage(
+        self, mock_update, settings
+    ):
+        """A closing that « Démarche numérique » rejects keeps no arrêté file."""
+        mock_update.side_effect = RuntimeError
+        project = DeclarationProjectFactory()
+        arrete = SimpleUploadedFile("arrete.pdf", b"%PDF-1.4")
+
+        with pytest.raises(RuntimeError):
+            project.close_by_express_decision(
+                status_date=date(2026, 11, 2),
+                decision=DECISIONS.express_agreement,
+                prefectural_order=arrete,
+                applicant_message="Votre dossier est accepté.",
+                update_comment="",
+                author=None,
+            )
+
+        assert not stored_pdfs(settings.MEDIA_ROOT)

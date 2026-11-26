@@ -454,14 +454,28 @@ class InstructionMixin:
         return rule
 
     def _record_event(self, log):
-        """Save the event's log and the dossier, mirror them in « Démarche numérique », and return the log."""
-        with transaction.atomic():
-            log.save()
-            self.save()
-            self._sync_demarche_numerique_status(log)
-            if log.applicant_message:
-                self._schedule_applicant_message(log)
+        """Save the event's log and the dossier, mirror them in « Démarche numérique », and return the log.
+
+        On failure, nothing is saved and the uploaded decision document is deleted.
+        """
+        try:
+            with transaction.atomic():
+                log.save()
+                self.save()
+                self._sync_demarche_numerique_status(log)
+                if log.applicant_message:
+                    self._schedule_applicant_message(log)
+        except Exception:
+            self._delete_uploaded_decision_document(log)
+            raise
         return log
+
+    def _delete_uploaded_decision_document(self, log):
+        """Remove the log's decision document from storage, if the save uploaded it."""
+        document = log.prefectural_order
+        is_in_storage = document and document._committed
+        if is_in_storage:
+            document.delete(save=False)
 
     def _sync_demarche_numerique_status(self, log):
         """Update the « Démarche numérique » status to match the new log, when it differs."""
