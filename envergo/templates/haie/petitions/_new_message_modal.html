@@ -3,8 +3,7 @@
 <dialog id="modal-new-message"
         class="fr-modal"
         aria-labelledby="modal-new-message-title"
-        data-fr-concealing-backdrop="true"
-        {% if form.errors %}data-fr-opened="true"{% endif %}>
+        data-fr-concealing-backdrop="true">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
@@ -18,6 +17,21 @@
           </div>
           <div class="fr-modal__content">
             <h2 id="modal-new-message-title" class="fr-modal__title">Nouveau message</h2>
+
+            {% if message_send_failed %}
+              <div class="fr-alert fr-alert--error fr-alert--sm fr-mb-2w" role="alert">
+                <p>
+                  Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
+                  Si le problème persiste,
+                  <a href="{{ contact_url }}">contacter l'équipe du guichet unique de la haie</a>
+                  en indiquant l'identifiant du dossier.
+                </p>
+              </div>
+            {% elif form.errors %}
+              <div class="fr-alert fr-alert--error fr-alert--sm fr-mb-2w" role="alert">
+                <p>Le message n’a pas pu être envoyé car le formulaire contient des erreurs.</p>
+              </div>
+            {% endif %}
 
             <form method="post"
                   id="petition-new-message-form"
