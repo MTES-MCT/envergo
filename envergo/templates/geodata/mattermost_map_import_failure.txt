@@ -1,0 +1,8 @@
+{% autoescape off %}### Échec de l'import de la carte [{{ failed.id }}]({{ failed.url }})
+
+{{ error }}
+{% if skipped %}
+Cartes non importées, l'import a été interrompu : {% for map in skipped %}[{{ map.id }}]({{ map.url }}){% if not forloop.last %}, {% endif %}{% endfor %}
+{% endif %}{% if handlers %}
+ping {{ handlers|join:", " }}
+{% endif %}{% endautoescape %}
