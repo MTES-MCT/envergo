@@ -20,6 +20,7 @@ from scipy.interpolate import griddata
 
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
+from envergo.utils.validators import GPKG_MIME_TYPES, ZIP_MIME_TYPES
 
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
@@ -144,7 +145,7 @@ class CustomMapping(LayerMapping):
         return especes
 
 
-MAP_FILE_EXTENSIONS = (".gpkg", ".zip")
+MAP_FILE_ALLOWED_TYPES = {".gpkg": GPKG_MIME_TYPES, ".zip": ZIP_MIME_TYPES}
 
 
 class InvalidMapFile(Exception):
@@ -158,7 +159,7 @@ def open_map_file(file):
     `file` is any Django file.
     """
     extension = Path(file.name).suffix.lower()
-    if extension not in MAP_FILE_EXTENSIONS:
+    if extension not in MAP_FILE_ALLOWED_TYPES:
         raise InvalidMapFile("Format de fichier non supporté")
 
     # GDAL needs a local file with the format's extension

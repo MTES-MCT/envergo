@@ -19,8 +19,11 @@ from envergo.petitions.models import (
 )
 from envergo.petitions.services import get_demarche_numerique_dossier
 from envergo.users.models import User
-from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
+from envergo.utils.forms import AllowedFileTypesMixin
+from envergo.utils.validators import ZIP_MIME_TYPES
 from envergo.utils.widgets import JSONWidget
+
+DN_ARCHIVE_ALLOWED_TYPES = {".zip": ZIP_MIME_TYPES}
 
 logger = logging.getLogger(__name__)
 
@@ -77,10 +80,6 @@ class UserMultipleChoiceField(forms.ModelMultipleChoiceField):
         return obj.email
 
 
-def validate_zip(value):
-    validate_file_type(value, {".zip": ZIP_MIME_TYPES})
-
-
 def validate_dn_file_size(value):
     size_limit = settings.DEMARCHE_NUMERIQUE["ARCHIVE_MAX_SIZE"]
     if value.size > size_limit:
@@ -89,7 +88,9 @@ def validate_dn_file_size(value):
         )
 
 
-class PetitionProjectAdminForm(forms.ModelForm):
+class PetitionProjectAdminForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"dn_archive": DN_ARCHIVE_ALLOWED_TYPES}
+
     followed_by = UserMultipleChoiceField(
         label="Instructeurs suivant le projet",
         queryset=User.objects.all().order_by("email"),
@@ -103,7 +104,7 @@ class PetitionProjectAdminForm(forms.ModelForm):
         help_text="""Format autorisé: zip.<br>
         Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_zip, validate_dn_file_size],
+        validators=[validate_dn_file_size],
     )
 
     class Meta:

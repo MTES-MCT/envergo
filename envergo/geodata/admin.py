@@ -14,10 +14,13 @@ from localflavor.fr.fr_department import DEPARTMENT_CHOICES
 from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import Department, Line, Map, Zone
 from envergo.geodata.tasks import generate_map_preview, process_map
-from envergo.geodata.utils import InvalidMapFile, open_map_file
+from envergo.geodata.utils import MAP_FILE_ALLOWED_TYPES, InvalidMapFile, open_map_file
+from envergo.utils.forms import AllowedFileTypesMixin
 
 
-class MapForm(forms.ModelForm):
+class MapForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"file": MAP_FILE_ALLOWED_TYPES}
+
     def clean_file(self):
         """Check that a newly uploaded file is a readable map, and count its features.
 
