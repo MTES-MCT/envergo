@@ -17,6 +17,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
+    STAGES,
     PetitionProject,
     Simulation,
     StatusLog,
@@ -383,7 +384,7 @@ class StateChangeForm(forms.ModelForm):
                 ),
             )
 
-        if stage == "closed":
+        if self.is_closing:
             self.clean_closing_fields(cleaned_data)
         elif self.is_authorization_switch:
             self.clean_authorization_switch_fields(cleaned_data)
@@ -396,6 +397,14 @@ class StateChangeForm(forms.ModelForm):
             cleaned_data["refusal_deadline"] = None
 
         return cleaned_data
+
+    @property
+    def is_closing(self):
+        """Whether the dossier gets closed.
+
+        Only meaningful once the form is cleaned.
+        """
+        return self.cleaned_data.get("stage") == STAGES.closed
 
     @property
     def is_authorization_switch(self):
@@ -588,7 +597,7 @@ class RequestAdditionalInfoForm(forms.Form):
     def applicable_refusal_deadline(self):
         """The refusal deadline capping the due date, or None when it does not apply."""
         if self.petition_project.is_authorization_instruction():
-            return self.petition_project.refusal_deadline
+            return self.petition_project.silence_deadline
         return None
 
     def refusal_deadline_display(self):
@@ -672,18 +681,32 @@ class ResumeProcessingForm(forms.Form):
     def __init__(
         self, *args, is_declaration_instruction=False, original_due_date=None, **kwargs
     ):
-        """Drop the due date field when the suspension has no original due date."""
+        """Drop the due date field when the server sets it or nothing is postponed."""
         super().__init__(*args, **kwargs)
 
+        # In déclaration, the agreement delay restarts on the receipt date.
         if is_declaration_instruction:
-            self.fields["due_date"].widget.attrs["readonly"] = True
-            self.fields["due_date"].label = mark_safe(
-                f"{self.fields['due_date'].label}"
-                '<span class="fr-hint-text">Le délai de 2 mois pour l\'accord tacite redémarre.<br/>'
+            self.fields["info_receipt_date"].label = mark_safe(
+                f"{self.fields['info_receipt_date'].label}"
+                '<span class="fr-hint-text">Le délai de 2 mois pour l\'accord tacite redémarre à cette date.<br/>'
                 "Le demandeur recevra un nouveau récépissé de déclaration.</span>"
             )
-        elif original_due_date is None:
+
+        if is_declaration_instruction or original_due_date is None:
             del self.fields["due_date"]
+
+    def clean_info_receipt_date(self):
+        """Refuse a receipt date after today."""
+        info_receipt_date = self.cleaned_data["info_receipt_date"]
+        today = timezone.localdate()
+
+        if info_receipt_date > today:
+            raise ValidationError(
+                "La date de réception des pièces ne peut pas être dans le futur.",
+                code="date_in_future",
+            )
+
+        return info_receipt_date
 
 
 USER_TYPE = (

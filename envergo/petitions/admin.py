@@ -150,8 +150,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
     readonly_fields = [
         "last_result_snapshot",
         "silence_rule",
-        "agreement_deadline",
-        "refusal_deadline",
+        "silence_deadline",
     ]
     search_fields = ["reference"]
 
@@ -227,18 +226,16 @@ class PetitionProjectAdmin(admin.ModelAdmin):
     @admin.display(description="Règle du silence de l’administration")
     def silence_rule(self, obj):
         """The silence rule label, or NOT_APPLICABLE when no rule runs."""
-        rule = obj.silence_rule
-        return rule.label if rule else NOT_APPLICABLE
+        if obj.silence_rule:
+            label = obj.get_silence_rule_display()
+        else:
+            label = NOT_APPLICABLE
+        return label
 
-    @admin.display(description="Date à laquelle le silence vaut accord")
-    def agreement_deadline(self, obj):
-        """The agreement deadline in French format."""
-        return display_deadline(obj.agreement_deadline)
-
-    @admin.display(description="Date limite au-delà de laquelle le silence vaut refus")
-    def refusal_deadline(self, obj):
-        """The refusal deadline in French format."""
-        return display_deadline(obj.refusal_deadline)
+    @admin.display(description="Date à laquelle la règle du silence s’applique")
+    def silence_deadline(self, obj):
+        """The silence deadline in French format."""
+        return display_deadline(obj.silence_deadline)
 
     @admin.display(description="Dernier résultat de simulation")
     def last_result_snapshot(self, obj):

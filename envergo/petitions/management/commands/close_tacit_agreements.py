@@ -46,7 +46,7 @@ class Command(BaseCommand):
             logger.info(
                 "Dry run: dossier %s is due since %s.",
                 project.reference,
-                project.agreement_deadline,
+                project.silence_deadline,
             )
 
         logger.info("Dry run: %d dossiers would be closed.", len(due_projects))
