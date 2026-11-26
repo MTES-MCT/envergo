@@ -1482,6 +1482,7 @@ class TestAttestationNonOpposition:
         return re.sub(r"[ \n]+", " ", html)
 
     def test_attestation_names_the_dossier_the_applicant_and_the_department(self):
+        """The title and the opening name the dossier, its applicant and its préfet."""
         html = self.render(self.make_project())
 
         assert "Attestation n° 2105-9675 de non-opposition" in html
@@ -1489,6 +1490,7 @@ class TestAttestationNonOpposition:
         assert "Le Préfet du département Loire-Atlantique (44)" in html
 
     def test_attestation_names_the_commune_declared_in_the_dossier(self):
+        """The commune comes from the dossier field the département configured."""
         project = self.make_project(
             demarche_numerique_config__display_fields={
                 "project_url": "ABC123",
@@ -1501,6 +1503,7 @@ class TestAttestationNonOpposition:
         assert "destruction de haie située sur la commune de Laon (02000) lui" in html
 
     def test_attestation_omits_the_commune_when_the_dossier_does_not_carry_one(self):
+        """Without a commune, the sentence still reads correctly."""
         html = self.render(self.make_project())
 
         assert "destruction de haie lui donnant droit" in html
@@ -1522,6 +1525,7 @@ class TestAttestationNonOpposition:
         assert to_plant in html
 
     def test_attestation_omits_the_plantation_list_when_nothing_is_planted(self):
+        """A project without plantation shows no empty plantation list."""
         project = self.make_project(
             hedges=[make_hedge_factory(30, type_haie="arbustive", id="D1")]
         )
@@ -1531,12 +1535,14 @@ class TestAttestationNonOpposition:
         assert "Linéaires à planter en compensation" not in html
 
     def test_works_start_on_the_agreement_date_outside_the_prohibition_period(self):
+        """Works may start on the day the attestation is signed."""
         html = self.render(self.make_project())
 
         assert "à partir de la date du 5 décembre 2026" in html
         assert "<p>le 5 décembre 2026</p>" in html  # Signature date
 
     def test_works_start_after_the_prohibition_period_when_agreed_inside_it(self):
+        """Works may start once the prohibition period ends."""
         html = self.render(
             self.make_project(), agreement_date=datetime.date(2027, 7, 1)
         )
@@ -1545,6 +1551,7 @@ class TestAttestationNonOpposition:
         assert "<p>le 1er juillet 2027</p>" in html  # Signature date
 
     def test_attestation_names_the_prohibition_period_of_the_department(self):
+        """The reminder gives the département's prohibition dates."""
         html = self.render(self.make_project())
 
         assert (
@@ -1552,6 +1559,7 @@ class TestAttestationNonOpposition:
         )
 
     def test_attestation_cites_the_order_alone_without_a_prohibition_period(self):
+        """Without configured dates, the reminder cites the préfectoral order only."""
         html = self.render(self.make_project(prohibition_range=None))
 
         assert "fixée par arrêté préfectoral, sauf cas particuliers" in html

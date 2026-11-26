@@ -514,7 +514,7 @@ def test_posting_tacit_agreement_is_rejected_under_the_regime_unique():
     )
 
     assert not form.is_valid()
-    assert "choix valide" in form.errors["decision"][0]
+    assert form.has_error("decision", code="invalid_choice")
 
 
 @pytest.mark.parametrize("decision", ["express_agreement", "opposition"])

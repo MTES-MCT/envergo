@@ -79,23 +79,11 @@
     <p>Le projet répond aux caractéristiques suivantes :</p>
 
     <p>Linéaires à détruire :</p>
-    <ul>
-      {% for choice in hedge_types %}
-        {% with hedges_of_type=hedges_to_remove|get_attr:choice.value %}
-          {% if hedges_of_type %}<li>{{ choice.label }}, {{ hedges_of_type.length|floatformat:"0g" }} m</li>{% endif %}
-        {% endwith %}
-      {% endfor %}
-    </ul>
+    {% include "haie/petitions/_attestation_hedge_list.html" with hedges=hedges_to_remove %}
 
     {% if hedges_to_plant %}
       <p>Linéaires à planter en compensation :</p>
-      <ul>
-        {% for choice in hedge_types %}
-          {% with hedges_of_type=hedges_to_plant|get_attr:choice.value %}
-            {% if hedges_of_type %}<li>{{ choice.label }}, {{ hedges_of_type.length|floatformat:"0g" }} m</li>{% endif %}
-          {% endwith %}
-        {% endfor %}
-      </ul>
+      {% include "haie/petitions/_attestation_hedge_list.html" with hedges=hedges_to_plant %}
     {% endif %}
 
     <p>

@@ -1,0 +1,9 @@
+{% load utils %}
+
+<ul>
+  {% for choice in hedge_types %}
+    {% with hedges_of_type=hedges|get_attr:choice.value %}
+      {% if hedges_of_type %}<li>{{ choice.label }}, {{ hedges_of_type.length|floatformat:"0g" }} m</li>{% endif %}
+    {% endwith %}
+  {% endfor %}
+</ul>
