@@ -101,7 +101,7 @@ cligj==0.7.2
     # via
     #   -r base.txt
     #   fiona
-coverage==7.16.2
+coverage==7.17.0
     # via
     #   -r local.in
     #   django-coverage-plugin
