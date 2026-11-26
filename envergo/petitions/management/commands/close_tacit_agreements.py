@@ -19,8 +19,12 @@ class Command(BaseCommand):
             logger.warning("« Démarche numérique » is not enabled. Doing nothing.")
             return
 
+        # The URL configuration is set per thread and outlives the command.
         set_urlconf("config.urls_haie")
-        self.close_due_dossiers()
+        try:
+            self.close_due_dossiers()
+        finally:
+            set_urlconf(None)
 
     def close_due_dossiers(self):
         """Close each due dossier. A dossier that fails stays due for the next run."""
