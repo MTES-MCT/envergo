@@ -347,7 +347,7 @@ class TestCloseTacitAgreements:
     ):
         """A dry run shows the dossiers the real run would close."""
         yesterday = timezone.localdate() - timedelta(days=1)
-        due = DeclarationProjectFactory(declaration__agreement_deadline=yesterday)
+        due = DeclarationProjectFactory(silence_deadline=yesterday)
 
         call_command("close_tacit_agreements", "--dry-run")
 

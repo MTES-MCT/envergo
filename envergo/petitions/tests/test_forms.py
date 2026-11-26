@@ -608,8 +608,8 @@ def test_authorization_complement_due_date_may_equal_the_refusal_deadline():
     """During an authorization, the applicant may be given until the refusal deadline."""
     project = PetitionProjectFactory(
         underscore_category="ru",
-        status__stage="instruction_a",
-        status__refusal_deadline=date(2099, 9, 21),
+        stage="instruction_a",
+        silence_deadline=date(2099, 9, 21),
     )
     data = {"info_due_date": date(2099, 9, 21), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
@@ -621,8 +621,8 @@ def test_authorization_complement_due_date_is_capped_at_the_refusal_deadline():
     """The applicant cannot be given more time than the administration has to decide."""
     project = PetitionProjectFactory(
         underscore_category="ru",
-        status__stage="instruction_a",
-        status__refusal_deadline=date(2099, 9, 21),
+        stage="instruction_a",
+        silence_deadline=date(2099, 9, 21),
     )
     data = {"info_due_date": date(2099, 9, 22), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
@@ -636,9 +636,7 @@ def test_authorization_complement_due_date_is_capped_at_the_refusal_deadline():
 
 def test_authorization_complement_due_date_is_unbounded_without_refusal_deadline():
     """An authorization dossier without refusal deadline only needs a future date."""
-    project = PetitionProjectFactory(
-        underscore_category="ru", status__stage="instruction_a"
-    )
+    project = PetitionProjectFactory(underscore_category="ru", stage="instruction_a")
     data = {"info_due_date": date(2099, 9, 21), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
 
@@ -647,9 +645,7 @@ def test_authorization_complement_due_date_is_unbounded_without_refusal_deadline
 
 def test_non_ru_complement_due_date_is_unbounded():
     """Outside the régime unique, the due date only has to be in the future."""
-    project = PetitionProjectFactory(
-        underscore_category="hru", status__stage="instruction_h"
-    )
+    project = PetitionProjectFactory(underscore_category="hru", stage="instruction_h")
     data = {"info_due_date": date(2099, 9, 21), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
 

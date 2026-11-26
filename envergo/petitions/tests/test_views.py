@@ -2865,7 +2865,7 @@ def test_request_info_date_exceeds_refusal_deadline(client, haie_coordinator_44,
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        status__stage="instruction_a", status__refusal_deadline=date(2099, 9, 21)
+        stage="instruction_a", silence_deadline=date(2099, 9, 21)
     )
 
     url = reverse(

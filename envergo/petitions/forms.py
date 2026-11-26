@@ -18,6 +18,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
+    STAGES,
     PetitionProject,
     Simulation,
     StatusLog,
@@ -600,7 +601,7 @@ class RequestAdditionalInfoForm(forms.Form):
     def applicable_refusal_deadline(self):
         """The refusal deadline capping the due date, or None when it does not apply."""
         if self.petition_project.is_authorization_instruction():
-            return self.petition_project.refusal_deadline
+            return self.petition_project.silence_deadline
         return None
 
     def refusal_deadline_display(self):
