@@ -83,7 +83,7 @@ if [ "$restored_users" = "0" ]; then
     exit 1
 fi
 
-bash "$HOME/bin/anonymize_db.sh" "$SYNC_TARGET_URL"
+bash "$HOME/bin/anonymize_db.sh" --mode=anonymization "$SYNC_TARGET_URL"
 
 # Grant access to the newly created tables to the metabase read only user
 echo "Granting read access to metabase_ro..."

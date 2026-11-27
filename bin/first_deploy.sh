@@ -27,6 +27,6 @@ bash $HOME/bin/post_deploy.sh
 bash $HOME/bin/copy_maps.sh
 bash $HOME/bin/copy_polygons.sh
 bash $HOME/bin/copy_catchmentarea.sh
-PSQL_BIN=$HOME/bin/psql bash $HOME/bin/anonymize_db.sh "$DATABASE_URL"
+PSQL_BIN=$HOME/bin/psql bash $HOME/bin/anonymize_db.sh --mode=pseudonymization "$DATABASE_URL"
 
 echo ">>> Leaving the first_deploy hook"
