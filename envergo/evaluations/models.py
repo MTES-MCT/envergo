@@ -671,11 +671,6 @@ class EvaluationEmail:
         return sorted(list(set(bcc_recipients)))
 
 
-def additional_data_file_format(instance, filename):
-    _, extension = splitext(filename)
-    return f"requests/{instance.reference}{extension}"
-
-
 # Links already sent by email carry this query parameter. Renaming it breaks them.
 OBFUSCATION_KEY_PARAM = "clef"
 
@@ -705,13 +700,6 @@ class Request(models.Model):
     )
     project_description = models.TextField(
         _("Project description, comments"), blank=True
-    )
-    additional_data = models.FileField(
-        _("Additional data"),
-        upload_to=additional_data_file_format,
-        null=True,
-        blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=["pdf", "zip"])],
     )
 
     # Petitioner data

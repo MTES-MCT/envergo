@@ -5,7 +5,6 @@ from textwrap import dedent
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -26,8 +25,9 @@ from envergo.petitions.services import keep_line_breaks_on_demarche_numerique
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import EnrichedChoices, ProjectStageField
+from envergo.utils.forms import AllowedFileTypesMixin
 from envergo.utils.urls import remove_from_qs
-from envergo.utils.validators import validate_mime
+from envergo.utils.validators import ZIP_MIME_TYPES
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -104,23 +104,18 @@ def validate_file_size(value):
         )
 
 
-validate_extension = FileExtensionValidator(
-    allowed_extensions=["png", "jpg", "jpeg", "pdf", "zip"],
-)
-
-ALLOWED_MIME_TYPES = {
-    "image/png",
-    "image/jpeg",
-    "application/pdf",
-    "application/zip",
+ALLOWED_FILE_TYPES = {
+    ".png": {"image/png"},
+    ".jpg": {"image/jpeg"},
+    ".jpeg": {"image/jpeg"},
+    ".pdf": {"application/pdf"},
+    ".zip": ZIP_MIME_TYPES,
 }
 
 
-def validate_mime_type(value):
-    validate_mime(value, ALLOWED_MIME_TYPES)
+class PetitionProjectInstructorMessageForm(AllowedFileTypesMixin, forms.Form):
+    allowed_file_types = {"additional_file": ALLOWED_FILE_TYPES}
 
-
-class PetitionProjectInstructorMessageForm(forms.Form):
     """Form to send a message through Démarche numérique API."""
 
     message_body = forms.CharField(
@@ -138,7 +133,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_extension, validate_mime_type],
+        validators=[validate_file_size],
     )
 
     class Meta:
@@ -220,7 +215,7 @@ class SimulationCheckWidget(forms.CheckboxInput):
     field_template_name = "haie/petitions/forms/fields/simulation_check.html"
 
 
-class StateChangeForm(forms.ModelForm):
+class StateChangeForm(AllowedFileTypesMixin, forms.ModelForm):
     """Form for updating petition project's stage.
 
     When the dossier is being closed (stage = "closed"), three additional
@@ -239,6 +234,8 @@ class StateChangeForm(forms.ModelForm):
     appeal notice.
     """
 
+    allowed_file_types = {"prefectural_order": ALLOWED_FILE_TYPES}
+
     simulation_check = forms.BooleanField(
         label="J'ai vérifié que la simulation active correspond bien "
         "à la version définitive.",
@@ -253,7 +250,7 @@ class StateChangeForm(forms.ModelForm):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_extension, validate_mime_type],
+        validators=[validate_file_size],
     )
     applicant_message = forms.CharField(
         label="Message au demandeur",

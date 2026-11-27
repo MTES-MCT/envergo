@@ -3,14 +3,20 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib import messages
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
+from envergo.evaluations.admin import RequestFileAdminForm
 from envergo.evaluations.models import (
     Evaluation,
     RegulatoryNoticeLog,
     generate_reference,
 )
-from envergo.evaluations.tests.factories import EvaluationFactory, RequestFactory
+from envergo.evaluations.tests.factories import (
+    EvaluationFactory,
+    RequestFactory,
+    RequestFileFactory,
+)
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
@@ -382,3 +388,35 @@ def test_publish_view_handles_integrity_error(admin_client, admin_user, evaluati
 
     assert res.status_code == 200
     assert "Une erreur est survenue" in res.content.decode()
+
+
+def test_request_file_admin_form_accepts_matching_content():
+    pdf = SimpleUploadedFile("doc.pdf", b"%PDF-1.4\n%%EOF")
+    form = RequestFileAdminForm(data={}, files={"file": pdf})
+    form.is_valid()
+    assert "file" not in form.errors
+
+
+def test_request_file_admin_form_rejects_content_not_matching_extension():
+    pdf = SimpleUploadedFile("doc.png", b"%PDF-1.4\n%%EOF")
+    form = RequestFileAdminForm(data={}, files={"file": pdf})
+    form.is_valid()
+    assert "file" in form.errors
+
+
+def test_request_file_admin_form_rejects_disallowed_extension():
+    html = SimpleUploadedFile("doc.html", b"<!DOCTYPE html><html></html>")
+    form = RequestFileAdminForm(data={}, files={"file": html})
+    form.is_valid()
+    assert "file" in form.errors
+
+
+def test_request_file_admin_form_does_not_validate_an_unchanged_file():
+    """Editing other fields must not fail on an already stored file."""
+    request_file = RequestFileFactory()  # "Hello" stored as a .pdf
+    form = RequestFileAdminForm(
+        data={"request": request_file.request.pk, "name": "renamed"},
+        instance=request_file,
+    )
+    form.is_valid()
+    assert "file" not in form.errors

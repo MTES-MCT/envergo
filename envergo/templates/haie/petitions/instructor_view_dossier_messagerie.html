@@ -21,7 +21,7 @@
         </div>
         <div>
           <button aria-controls="modal-new-message"
-                  data-fr-opened="false"
+                  data-fr-opened="{% if form.errors or message_send_failed %}true{% else %}false{% endif %}"
                   type="button"
                   class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
         </div>

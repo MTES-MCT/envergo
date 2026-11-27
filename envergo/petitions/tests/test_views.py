@@ -1248,9 +1248,7 @@ def test_messagerie_empty_message_error(
 
     response = client.post(url, {"message_body": ""})
     content = response.content.decode()
-    assert "Message : Ce champ est obligatoire." in content
-    # Le champ fichier (optionnel) ne doit pas apparaître dans le message d'erreur
-    assert "Pièce jointe :" not in content
+    assert "Ce champ est obligatoire." in _new_message_modal(content)
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -1271,8 +1269,8 @@ def test_messagerie_invalid_extension_error(
         content.replace("\xa0", " ").replace("&#x27;", "'").replace("\u2019", "'")
     )
     assert (
-        "Pièce jointe : L'extension de fichier « odt » n'est pas autorisée. "
-        "Les extensions autorisées sont :  png, jpg, jpeg, pdf, zip."
+        "L'extension de fichier « odt » n'est pas autorisée. "
+        "Les extensions autorisées sont : png, jpg, jpeg, pdf, zip."
     ) in normalized
 
 
@@ -1306,13 +1304,15 @@ def test_messagerie_file_too_large_error(
     )
     response = client.post(url, {"message_body": "test", "additional_file": big_file})
     content = response.content.decode()
-    assert "Pièce jointe :" in content
-    assert "20 Mo" in content
+    assert "20 Mo" in _new_message_modal(content)
 
 
-def _new_message_modal_tag(content):
-    """Return the opening tag of the new message modal."""
-    match = re.search(r'<dialog[^>]*id="modal-new-message"[^>]*>', content)
+def _new_message_button_tag(content):
+    """Return the tag of the button opening the new message modal."""
+    match = re.search(
+        r'<button[^>]*aria-controls="modal-new-message"[^>]*data-fr-opened[^>]*>',
+        content,
+    )
     assert match
     return match.group(0)
 
@@ -1328,7 +1328,7 @@ def test_messagerie_modal_opens_on_error(
 
     response = client.post(url, {"message_body": ""})
     content = response.content.decode()
-    assert 'data-fr-opened="true"' in _new_message_modal_tag(content)
+    assert 'data-fr-opened="true"' in _new_message_button_tag(content)
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -1342,7 +1342,65 @@ def test_messagerie_modal_not_opened_on_success(
 
     response = client.post(url, {"message_body": "Bonjour"}, follow=True)
     content = response.content.decode()
-    assert 'data-fr-opened="true"' not in _new_message_modal_tag(content)
+    assert 'data-fr-opened="true"' not in _new_message_button_tag(content)
+
+
+def _new_message_modal(content):
+    """Return the whole new message modal."""
+    match = re.search(
+        r'<dialog[^>]*id="modal-new-message".*?</dialog>', content, re.DOTALL
+    )
+    assert match
+    return match.group(0)
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+@pytest.mark.parametrize("ds_response", [None, {"errors": [{"message": "Erreur DN"}]}])
+def test_messagerie_ds_send_error_is_shown_in_open_modal(
+    mock_ds_query_execute,
+    mock_send_message,
+    ds_response,
+    haie_coordinator_44,
+    client,
+    site,
+):
+    """Un échec d'envoi à DN rouvre la modale avec une erreur, sans perdre le message."""
+    url = _setup_messagerie(haie_coordinator_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    mock_send_message.return_value = ds_response
+
+    response = client.post(url, {"message_body": "Bonjour le demandeur"})
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    modal = _new_message_modal(content)
+    assert 'data-fr-opened="true"' in _new_message_button_tag(content)
+    assert "fr-alert--error" in modal
+    assert "Le message n'a pas pu être envoyé" in modal
+    assert "Bonjour le demandeur" in modal
+    assert "fr-alert--warning" not in content
+    assert not Event.objects.filter(category="message", event="envoi").exists()
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_messagerie_invalid_form_error_is_shown_in_open_modal(
+    mock_ds_query_execute, haie_coordinator_44, client, site
+):
+    """Une erreur de validation est affichée dans la modale, au niveau erreur."""
+    url = _setup_messagerie(haie_coordinator_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    response = client.post(url, {"message_body": ""})
+
+    content = response.content.decode()
+    modal = _new_message_modal(content)
+    assert "fr-alert--error" in modal
+    assert "le formulaire contient des erreurs" in modal
+    assert "Ce champ est obligatoire." in modal
+    assert "fr-alert--warning" not in content
 
 
 def test_petition_project_list(

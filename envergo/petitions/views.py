@@ -1377,26 +1377,7 @@ class PetitionProjectInstructorMessagerieView(
         return context
 
     def form_invalid(self, form):
-        """Avoid errors if forms is invalid"""
-
-        if form.errors:
-            error_list = format_html_join(
-                "",
-                "<li>{} : {}</li>",
-                (
-                    (form.fields[field].label, error)
-                    for field, errors in form.errors.items()
-                    for error in errors
-                ),
-            )
-            messages.warning(
-                self.request,
-                format_html(
-                    "Le message n’a pas pu être envoyé :<ul>{}</ul>",
-                    error_list,
-                ),
-            )
-
+        """Render the page with the new message modal open on the form errors."""
         self.object = self.get_object()
         return super().form_invalid(form)
 
@@ -1419,16 +1400,12 @@ class PetitionProjectInstructorMessagerieView(
         if ds_response is None or (
             "errors" in ds_response and ds_response["errors"] is not None
         ):
-            messages.warning(
-                self.request,
-                f"""Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
-                        Si le problème persiste,
-                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                            contacter l'équipe du guichet unique de la haie
-                        </a> en indiquant l'identifiant du dossier.""",
+            # Rendered without redirect, so the modal reopens on the typed message
+            return self.render_to_response(
+                self.get_context_data(form=form, message_send_failed=True)
             )
 
-        elif "message" in ds_response and ds_response["message"] is not None:
+        if "message" in ds_response and ds_response["message"] is not None:
             messages.success(
                 self.request,
                 """Le message a bien été envoyé au demandeur.""",

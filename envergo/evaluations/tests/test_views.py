@@ -584,6 +584,19 @@ def test_upload_api_upload_with_key_in_url(client):
     assert evalreq.additional_files.count() == 1
 
 
+def test_upload_api_rejects_content_not_matching_extension(client):
+    """A real pdf uploaded under another extension is not stored."""
+    evalreq = RequestFactory()
+    open_emailed_link(client, evalreq)
+    assert evalreq.additional_files.count() == 0
+
+    pdf = SimpleUploadedFile("doc.html", b"%PDF-1.4\n%%EOF")
+    res = client.post(upload_api_url(evalreq), {"additional_files": pdf})
+
+    assert res.status_code == 400
+    assert evalreq.additional_files.count() == 0
+
+
 def test_step_3_keys_of_several_requests(client):
     """One browser can manage several requests."""
     evalreq_1 = RequestFactory()
