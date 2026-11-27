@@ -126,15 +126,15 @@ def dn_archive_file_format(instance, filename):
 
 
 def prefectural_order_file_format(instance, filename):
-    """Build the upload path for a prefectural order file.
+    """Build the upload path for a decision document.
 
-    The random secret makes the public url impossible to guess, since the
-    file is stored on a public-read bucket. `instance` is a StatusLog.
+    The random secret keeps the path unguessable, a second safeguard behind
+    the private bucket. `instance` is a StatusLog.
     """
     _, extension = splitext(filename)
     secret = secrets.token_urlsafe(16)
     reference = instance.petition_project.reference
-    return f"arrete_prefectoral/{reference}_{secret}{extension}"
+    return f"decision/{reference}_{secret}{extension}"
 
 
 def read_submission_date(fetched_dossier: dict) -> date:

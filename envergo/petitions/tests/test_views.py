@@ -2183,7 +2183,7 @@ def test_petition_project_close_with_express_agreement(
     assert log.status_date == date.today()
     # The upload path contains a random secret to make the url unguessable
     assert re.fullmatch(
-        rf"arrete_prefectoral/{project.reference}_[A-Za-z0-9_-]+\.jpg",
+        rf"decision/{project.reference}_[A-Za-z0-9_-]+\.jpg",
         log.prefectural_order.name,
     )
 
