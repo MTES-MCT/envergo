@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html lang="fr" data-fr-js="true">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description"
           content="{% block email_description %}{% endblock %}">
@@ -12,11 +12,44 @@
 
     <title>Avis réglementaire Envergo – {{ evaluation.reference }}</title>
 
-    <link href="{% static '@gouvfr/dsfr/dist/dsfr.css' %}" rel="stylesheet">
-    <link href="{% static '@gouvfr/dsfr/dist/utility/utility.css' %}"
-          rel="stylesheet">
-
     <style>
+      :root {
+        font-size: 9pt;
+        --text-spacing: 0 0 0.5rem;
+        --title-spacing: 0 0 0.5rem;
+        --blue-france: #000091;
+      }
+
+      @font-face {
+        font-family: Marianne;
+        font-weight: normal;
+        src: url({% static "@gouvfr/dsfr/dist/fonts/Marianne-Regular.woff2" %});
+      }
+
+      @font-face {
+        font-family: Marianne;
+        font-weight: bold;
+        src: url({% static "@gouvfr/dsfr/dist/fonts/Marianne-Bold.woff2" %});
+      }
+
+      @font-face {
+        font-family: Marianne;
+        font-style: italic;
+        src: url({% static "@gouvfr/dsfr/dist/fonts/Marianne-Regular_Italic.woff2" %});
+      }
+
+      @page {
+        size: A4;
+        margin: 7.94mm 20.11mm 20.11mm 25.14mm;
+      }
+
+      body {
+        font-family: Marianne, Arial, sans-serif;
+        line-height: 1.35;
+        color: #000;
+        background: #fff;
+      }
+
       .highlight-obligation {
         background-color: #FFE8C5;
         padding: 2px 4px;
@@ -44,10 +77,13 @@
       dl.fr-raw-list dt,
       dl.fr-raw-list dd {
         display: inline;
+        margin: 0;
       }
 
       ul.fr-links-group.fr-raw-list {
         margin-top: 1rem;
+        padding-left: 1em;
+        list-style: none;
       }
 
       dl.fr-raw-list dt+dd+dt::before {
@@ -72,96 +108,126 @@
         --ul-start: 1rem;
       }
 
-      /* Print / PDF A4 */
-      @media print {
-        @page {
-          size: A4;
-          margin: 7.94mm 20.11mm 20.11mm 25.14mm;
-        }
+      .fr-py-6w {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+      }
 
-        :root {
-          font-size: 9pt;
-          --text-spacing: 0 0 0.5rem;
-          --title-spacing: 0 0 0.5rem;
-        }
+      .fr-mb-6w {
+        margin-bottom: 1rem !important;
+      }
 
-        * {
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
+      .fr-mt-6w {
+        margin-top: 1.5rem !important;
+      }
 
-        body {
-          font-family: Marianne, Arial, sans-serif;
-          line-height: 1.35;
-          color: #000;
-          background: #fff;
-        }
+      .fr-mb-5w {
+        margin-bottom: 0.75rem !important;
+      }
 
-        .fr-py-6w {
-          padding-top: 1.5rem !important;
-          padding-bottom: 1.5rem !important;
-        }
+      .fr-mt-4w {
+        margin-top: 1rem !important;
+      }
 
-        .fr-mb-6w {
-          margin-bottom: 1rem !important;
-        }
+      .fr-p-4w {
+        padding: 1rem !important;
+      }
 
-        .fr-mt-6w {
-          margin-top: 1.5rem !important;
-        }
+      .fr-mb-0 {
+        margin-bottom: 0 !important;
+      }
 
-        .fr-mb-5w {
-          margin-bottom: 0.75rem !important;
-        }
+      .fr-mb-1w {
+        margin-bottom: 0.5rem !important;
+      }
 
-        .fr-mt-4w {
-          margin-top: 1rem !important;
-        }
+      p {
+        widows: 3;
+        orphans: 3;
+        line-height: 1.5rem;
+        margin: var(--text-spacing);
+      }
 
-        .fr-p-4w {
-          padding: 1rem !important;
-        }
+      h2 {
+        break-after: avoid-page;
+        page-break-after: avoid;
+        break-inside: avoid;
+      }
 
-        p {
-          widows: 3;
-          orphans: 3;
-        }
+      .fr-container {
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
 
-        h2 {
-          break-after: avoid-page;
-          page-break-after: avoid;
-          break-inside: avoid;
-        }
+      .fr-background-alt--grey {
+        background-color: #f5f5f5 !important;
+      }
 
-        .fr-container {
-          max-width: 100% !important;
-          padding-left: 0 !important;
-          padding-right: 0 !important;
-        }
+      .pdf-keep-together {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        break-after: auto;
+      }
 
-        .fr-background-alt--grey {
-          background-color: #f5f5f5 !important;
-        }
+      #avis-informatif li {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
 
-        .pdf-keep-together {
-          break-inside: avoid;
-          page-break-inside: avoid;
-          break-after: auto;
-        }
+      .fr-text--xs {
+        font-size: 0.75rem !important;
+        line-height: 1.25rem !important;
+      }
 
-        #avis-informatif li {
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
+      .fr-mt-2w {
+        margin-top: 1rem !important;
+      }
 
-        .fr-text--xs {
-          font-size: 0.75rem !important;
-          line-height: 1.25rem !important;
-        }
+      [href] {
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1pt solid;
+      }
 
-        a[href]::after {
-          content: none;
-        }
+      a[href]::after {
+        content: none;
+      }
+
+      a.fr-link {
+        --text-spacing: 0;
+        --title-spacing: 0;
+        display: inline;
+        font-size: 1rem;
+        line-height: 1.5rem;
+        padding: 0 0;
+        color: var(--blue-france);
+        text-decoration: none;
+      }
+
+      .fr-btn {
+        display: inline-block;
+        font-weight: 500;
+        font-size: 1rem;
+        line-height: 1.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--blue-france);
+        border: none;
+        color: #fff;
+      }
+
+      h1,
+      h2 {
+        font-weight: bold;
+        font-size: 1rem;
+      }
+
+      .fr-text--bold {
+        font-weight: bold;
+      }
+
+      .icon {
+        vertical-align: middle;
       }
     </style>
   </head>
@@ -177,12 +243,12 @@
       </div>
 
       <!-- Objet / Référence -->
-      <p class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</p>
+      <h1 class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</h1>
       <p>Référence : {{ evaluation.reference }}</p>
       <p>Le {{ published_version.created_at|date:"j F Y" }}</p>
 
       <!-- Projet concerné -->
-      <p class="fr-text--bold fr-mb-1w">Projet concerné :</p>
+      <h2 class="fr-text--bold fr-mb-1w">Projet concerné :</h2>
       <dl class="fr-mb-0 fr-raw-list">
         <dt class="fr-text--bold">Adresse :</dt>
         <dd>
@@ -200,7 +266,9 @@
       {% if show_transmission_card %}
         <div class="fr-background-alt--grey pdf-keep-together fr-p-4w fr-mt-6w">
           <p>
-            <span aria-hidden="true">⚠️</span>
+            <img src="{% static "@gouvfr/dsfr/dist/icons/system/alert-fill.svg" %}"
+                 alt="Attention"
+                 class="icon">
             Le pétitionnaire a des obligations au titre d'une réglementation environnementale.
             <strong>Acceptez-vous que nous lui transmettions cet avis ?</strong>
             Cela nous permettra de l'accompagner dans ses démarches.
@@ -228,21 +296,30 @@
 
           <ul class="fr-links-group fr-raw-list">
             <li>
+              <img src="{% static "@gouvfr/dsfr/dist/icons/system/checkbox-line.svg" %}"
+                   alt=""
+                   class="icon">
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
                  href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&source=pdf-ar&reponse_transmission={{ "Oui, j'autorise la transmission de l'avis au pétitionnaire"|urlencode:""|iriencode }}">
-                <span aria-hidden="true">👌</span> Oui, j'autorise la transmission au pétitionnaire
+                Oui, j'autorise la transmission au pétitionnaire
               </a>
             </li>
             <li>
+              <img src="{% static "@gouvfr/dsfr/dist/icons/design/pencil-line.svg" %}"
+                   alt=""
+                   class="icon">
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
                  href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&source=pdf-ar&reponse_transmission={{ "J'autorise la transmission mais ce ne sont pas les bonnes coordonnées"|urlencode:""|iriencode }}">
-                <span aria-hidden="true">✏️</span> J'autorise la transmission mais ce ne sont pas les bonnes coordonnées
+                J'autorise la transmission mais ce ne sont pas les bonnes coordonnées
               </a>
             </li>
             <li>
+              <img src="{% static "@gouvfr/dsfr/dist/icons/system/close-circle-line.svg" %}"
+                   alt=""
+                   class="icon">
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
                  href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&source=pdf-ar&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo"|urlencode:""|iriencode }}">
-                <span aria-hidden="true">❌</span> Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo
+                Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo
               </a>
             </li>
           </ul>
@@ -401,7 +478,9 @@
 
         {% if is_icpe %}
           <p class="fr-mt-4w">
-            <span aria-hidden="true">⚠️</span>
+            <img src="{% static "@gouvfr/dsfr/dist/icons/system/alert-fill.svg" %}"
+                 alt="Attention"
+                 class="icon">
             Le projet semble être une <strong>Installation Classée pour la Protection de l'Environnement (ICPE)</strong>. Cela peut modifier les procédures à suivre indiquées dans cet avis.
           </p>
         {% endif %}
@@ -424,11 +503,21 @@
         <p>L'équipe Envergo, un service du Ministère de la Transition Écologique</p>
 
         <address>
-          <span aria-hidden="true">📞</span> 07 56 81 02 11
+          <img class="icon"
+               src="{% static "@gouvfr/dsfr/dist/icons/device/phone-fill.svg" %}"
+               alt="Téléphone">
+          07 56 81
+          02 11
           <br>
-          <span aria-hidden="true">📧</span> <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
+          <img class="icon"
+               src="{% static "@gouvfr/dsfr/dist/icons/business/mail-line.svg" %}"
+               alt="Courriel">
+          <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
           <br>
-          <span aria-hidden="true">🌐</span> <a href="https://envergo.beta.gouv.fr">envergo.beta.gouv.fr</a>
+          <img src="{% static "@gouvfr/dsfr/dist/icons/business/global-line.svg" %}"
+               alt="Site web"
+               class="icon">
+          <a href="https://envergo.beta.gouv.fr">envergo.beta.gouv.fr</a>
         </address>
       </section>
 
@@ -437,9 +526,5 @@
       </footer>
 
     </main>
-
-    <script src="{% static '@gouvfr/dsfr/dist/dsfr.module.min.js' %}"
-            type="module"></script>
-    <script src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}" nomodule></script>
   </body>
 </html>

@@ -87,6 +87,7 @@ django==5.2.18
     #   django-phonenumber-field
     #   django-redis
     #   django-storages
+    #   django-weasyprint
 django-allauth==65.20.1
     # via -r base.in
 django-anymail[sendinblue]==15.2
@@ -118,6 +119,8 @@ django-ratelimit==4.1.0
 django-redis==7.0.0
     # via -r base.in
 django-storages[boto3]==1.14.6
+    # via -r base.in
+django-weasyprint==2.6.0
     # via -r base.in
 dnspython==2.9.2
     # via django-health-check
@@ -261,7 +264,9 @@ vine==5.1.0
 wcwidth==0.9.3
     # via prompt-toolkit
 weasyprint==70.0
-    # via -r base.in
+    # via
+    #   -r base.in
+    #   django-weasyprint
 webencodings==0.6.1
     # via
     #   cssselect2

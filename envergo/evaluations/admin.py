@@ -491,6 +491,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
     def generate_pdf_view(self, request, object_id):
         """Render the evaluation as a standalone page for print-to-PDF."""
+        from django_weasyprint.views import WeasyTemplateResponse
 
         if not self.has_view_or_change_permission(request):
             raise PermissionDenied
@@ -500,7 +501,17 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         context = build_regulatory_notice_context(evaluation, moulinette, request)
 
-        return TemplateResponse(request, "evaluations/admin/generate_pdf.html", context)
+        if settings.DEBUG and request.GET.get("debug", ""):
+            return TemplateResponse(
+                request, "evaluations/admin/generate_pdf.html", context
+            )
+
+        return WeasyTemplateResponse(
+            request,
+            "evaluations/admin/generate_pdf.html",
+            context,
+            filename=f"Avis-envergo-{evaluation.reference}.pdf",
+        )
 
     @admin.display(description=_("Sent history"))
     def sent_history(self, obj):

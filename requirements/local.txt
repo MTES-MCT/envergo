@@ -148,6 +148,7 @@ django==5.2.18
     #   django-storages
     #   django-stubs
     #   django-stubs-ext
+    #   django-weasyprint
 django-allauth==65.20.1
     # via -r base.txt
 django-anymail[sendinblue]==15.2
@@ -192,6 +193,8 @@ django-stubs==6.1.2
     # via -r local.in
 django-stubs-ext==6.1.2
     # via django-stubs
+django-weasyprint==2.6.0
+    # via -r base.txt
 djhtml==3.0.11
     # via -r local.in
 djlint==1.46.6
@@ -544,7 +547,9 @@ wcwidth==0.9.3
     #   -r base.txt
     #   prompt-toolkit
 weasyprint==70.0
-    # via -r base.txt
+    # via
+    #   -r base.txt
+    #   django-weasyprint
 webencodings==0.6.1
     # via
     #   -r base.txt

@@ -37,4 +37,5 @@ python-magic
 django-storages[boto3]
 cvss
 weasyprint
+django-weasyprint
 django-health-check[redis,celery]
