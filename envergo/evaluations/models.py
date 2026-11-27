@@ -9,7 +9,6 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
-from django.core.validators import FileExtensionValidator
 from django.db import models, transaction
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
@@ -37,10 +36,6 @@ USER_TYPES = Choices(
     ("instructor", "Un service instruction urbanisme"),
     ("petitioner", "Un porteur de projet ou maître d'œuvre"),
 )
-
-
-def evaluation_file_format(instance, filename):
-    return f"evaluations/{instance.application_number}.pdf"
 
 
 def generate_reference():
@@ -223,13 +218,6 @@ class Evaluation(models.Model):
         max_length=15,
         validators=[application_number_validator],
         blank=True,
-    )
-    evaluation_file = models.FileField(
-        _("Evaluation file"),
-        upload_to=evaluation_file_format,
-        null=True,
-        blank=True,
-        validators=[FileExtensionValidator(allowed_extensions=["pdf"])],
     )
     project_description = models.TextField(
         _("Project description, comments"), blank=True

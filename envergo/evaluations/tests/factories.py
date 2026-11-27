@@ -17,7 +17,6 @@ class EvaluationFactory(DjangoModelFactory):
         skip_postgeneration_save = True
 
     application_number = factory.Sequence(lambda n: f"PC05112321D{n:04}")
-    evaluation_file = factory.django.FileField(filename="eval.pdf", data=b"Hello")
     request = factory.SubFactory("envergo.evaluations.tests.factories.RequestFactory")
 
     address = factory.Sequence(lambda n: f"{n} rue de l'example, Testville")
