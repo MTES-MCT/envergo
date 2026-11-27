@@ -12,6 +12,12 @@ logger = logging.getLogger(__name__)
 # structure on files with enough rows to sniff a consistent separator.
 CSV_MIME_TYPES = {"text/csv", "text/plain", "application/csv"}
 ZIP_MIME_TYPES = {"application/zip", "application/x-zip-compressed"}
+# Recent libmagic versions identify GeoPackage files, older ones only report a generic sqlite database.
+GPKG_MIME_TYPES = {
+    "application/geopackage+sqlite3",
+    "application/vnd.sqlite3",
+    "application/x-sqlite3",
+}
 
 
 class NoIdnEmailValidator(EmailValidator):

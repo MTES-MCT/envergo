@@ -14,7 +14,8 @@ from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.fields import MultipleFileField, NoIdnEmailField
-from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
+from envergo.utils.forms import AllowedFileTypesMixin
+from envergo.utils.validators import ZIP_MIME_TYPES
 
 
 class EvaluationFormMixin(forms.Form):
@@ -260,7 +261,9 @@ ALLOWED_FILE_TYPES = {
 }
 
 
-class WizardFilesForm(forms.ModelForm):
+class WizardFilesForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"additional_files": ALLOWED_FILE_TYPES}
+
     additional_files = MultipleFileField(
         label=_("Additional files you might deem useful for the evaluation"),
         required=False,
@@ -275,7 +278,6 @@ class WizardFilesForm(forms.ModelForm):
         files = self.cleaned_data.get("additional_files") or []
 
         for f in files:
-            validate_file_type(f, ALLOWED_FILE_TYPES)
             if f.size > settings.MAX_EVALREQ_FILESIZE * 1024 * 1024:
                 raise ValidationError(
                     f"Ce fichier est trop volumineux ({f.size / (1024 * 1024):.1f} Mo). "

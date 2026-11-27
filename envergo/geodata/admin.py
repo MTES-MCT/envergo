@@ -33,8 +33,9 @@ from envergo.geodata.tasks import (
     process_maps,
     start_batch_import,
 )
-from envergo.geodata.utils import InvalidMapFile, open_map_file
-from envergo.utils.validators import CSV_MIME_TYPES, detect_mime, validate_file_type
+from envergo.geodata.utils import MAP_FILE_ALLOWED_TYPES, InvalidMapFile, open_map_file
+from envergo.utils.forms import AllowedFileTypesMixin
+from envergo.utils.validators import CSV_MIME_TYPES, detect_mime
 
 # A geopackage is a sqlite database; the exact label depends on the libmagic
 # version. The extension drives how `open_map_file` reads the file, so each
@@ -51,7 +52,9 @@ BATCH_FILE_MIME_TYPES = {
 logger = logging.getLogger(__name__)
 
 
-class MapForm(forms.ModelForm):
+class MapForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"file": MAP_FILE_ALLOWED_TYPES}
+
     def clean_file(self):
         """Check that a newly uploaded file is a readable map, and count its features.
 
@@ -309,7 +312,10 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return response
 
 
-class MapImportBatchForm(forms.ModelForm):
+class MapImportBatchForm(AllowedFileTypesMixin, forms.ModelForm):
+
+    allowed_file_types = {"csv_file": {".csv": CSV_MIME_TYPES}}
+
     def clean_csv_file(self):
         file = self.cleaned_data["csv_file"]
 
@@ -318,12 +324,6 @@ class MapImportBatchForm(forms.ModelForm):
         # mean downloading it back from the bucket.
         if not isinstance(file, UploadedFile):
             return file
-
-        if not file.name.lower().endswith(".csv"):
-            raise ValidationError("Ce fichier doit être un fichier csv.")
-
-        # The extension is declarative; check the actual bytes too.
-        validate_file_type(file, {".csv": CSV_MIME_TYPES})
 
         errors = is_file_valid(file, check_files=False)
         if errors:

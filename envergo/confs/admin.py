@@ -6,7 +6,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from envergo.confs.models import SETTINGS_HELP, HostedFile, Setting, TopBar
-from envergo.utils.validators import CSV_MIME_TYPES, ZIP_MIME_TYPES, validate_file_type
+from envergo.utils.forms import AllowedFileTypesMixin
+from envergo.utils.validators import CSV_MIME_TYPES, ZIP_MIME_TYPES
 
 HOSTED_FILE_ALLOWED_TYPES = {
     ".html": {"text/html"},
@@ -67,16 +68,12 @@ class SettingAdmin(admin.ModelAdmin):
         return super().render_change_form(request, context, add, change, form_url, obj)
 
 
-class HostedFileAdminForm(forms.ModelForm):
+class HostedFileAdminForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"file": HOSTED_FILE_ALLOWED_TYPES}
+
     class Meta:
         model = HostedFile
         fields = "__all__"
-
-    def clean_file(self):
-        file = self.cleaned_data["file"]
-        if "file" in self.changed_data:
-            validate_file_type(file, HOSTED_FILE_ALLOWED_TYPES)
-        return file
 
 
 @admin.register(HostedFile)

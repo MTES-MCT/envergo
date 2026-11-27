@@ -1,3 +1,4 @@
+import mimetypes
 from urllib.parse import quote
 
 from botocore.utils import percent_encode
@@ -9,11 +10,24 @@ from django.views import View
 from django.views.static import serve
 
 from envergo.confs.models import HostedFile
+from envergo.utils.storages import PrivateUploadStorage
 
 # The nginx `internal` locations (nginx.conf.erb) that X-Accel-Redirect
 # targets: nginx fetches from S3, the S3 url never reaches the client.
 INTERNAL_S3_PUBLIC_PREFIX = "/internal-s3-public"
 INTERNAL_S3_PRIVATE_PREFIX = "/internal-s3-private"
+
+# Whitelist of types that can be open directly in the browser under our domain name.
+# Never add executable type here (e.g. html, svg)
+INLINE_SAFE_CONTENT_TYPES = {
+    "application/pdf",
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+}
+
+# Petitioner uploads are untrusted: always downloaded, whatever their type.
+UPLOAD_PREFIX = f"{PrivateUploadStorage.location}/"
 
 
 def reencode_s3_key(path):
@@ -35,7 +49,18 @@ def serve_local_file(request, file_path):
         raise Http404
 
 
-def x_accel_response(redirect_uri):
+def opens_inline(file_path):
+    """Whether the browser may render this file instead of downloading it.
+
+    The type is guessed from the name, as S3 stored it at upload.
+    """
+    if file_path.startswith(UPLOAD_PREFIX):
+        return False
+    content_type, encoding = mimetypes.guess_type(file_path)
+    return encoding is None and content_type in INLINE_SAFE_CONTENT_TYPES
+
+
+def x_accel_response(redirect_uri, file_path):
     """An empty response handing the download over to nginx.
 
     Content-Type is blanked so nginx applies the upstream's.
@@ -43,6 +68,8 @@ def x_accel_response(redirect_uri):
     response = HttpResponse()
     response["X-Accel-Redirect"] = redirect_uri
     response["Content-Type"] = ""
+    if not opens_inline(file_path):
+        response["Content-Disposition"] = "attachment"
     return response
 
 
@@ -60,7 +87,7 @@ class PublicFileDownloadView(View):
 
         # Percent-encode: headers are latin-1, non-ascii names would corrupt the key.
         redirect_uri = f"{INTERNAL_S3_PUBLIC_PREFIX}/{hosted_file.file.name}"
-        return x_accel_response(quote(redirect_uri))
+        return x_accel_response(quote(redirect_uri), hosted_file.file.name)
 
 
 class PrivateFileDownloadView(View):
@@ -86,4 +113,4 @@ class PrivateFileDownloadView(View):
             redirect_uri = f"{redirect_uri}?{query_string}"
 
         # Never quote() this value: '%25' escapes would break the signature.
-        return x_accel_response(redirect_uri)
+        return x_accel_response(redirect_uri, file_path)

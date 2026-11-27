@@ -40,7 +40,7 @@ from envergo.evaluations.models import (
 )
 from envergo.moulinette.utils import get_moulinette_class_from_url
 from envergo.utils.fields import NoIdnEmailField
-from envergo.utils.validators import validate_file_type
+from envergo.utils.forms import AllowedFileTypesMixin
 
 logger = logging.getLogger(__name__)
 
@@ -564,16 +564,12 @@ class EvaluationAdmin(admin.ModelAdmin):
         )
 
 
-class RequestFileAdminForm(forms.ModelForm):
+class RequestFileAdminForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"file": ALLOWED_FILE_TYPES}
+
     class Meta:
         model = RequestFile
         fields = "__all__"
-
-    def clean_file(self):
-        file = self.cleaned_data["file"]
-        if "file" in self.changed_data:
-            validate_file_type(file, ALLOWED_FILE_TYPES)
-        return file
 
 
 class RequestFileInline(admin.TabularInline):

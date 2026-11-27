@@ -20,7 +20,10 @@ from envergo.hedges.models import (
 )
 from envergo.hedges.tasks import process_species_habitat_file
 from envergo.moulinette.models import ConfigHaie
-from envergo.utils.validators import CSV_MIME_TYPES, validate_file_type
+from envergo.utils.forms import AllowedFileTypesMixin
+from envergo.utils.validators import CSV_MIME_TYPES
+
+SPECIES_HABITAT_FILE_ALLOWED_TYPES = {".csv": CSV_MIME_TYPES}
 
 
 @admin.register(HedgeData)
@@ -205,16 +208,12 @@ class SpeciesHabitatAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">{}</a>', url, label)
 
 
-class SpeciesHabitatFileAdminForm(forms.ModelForm):
+class SpeciesHabitatFileAdminForm(AllowedFileTypesMixin, forms.ModelForm):
+    allowed_file_types = {"file": SPECIES_HABITAT_FILE_ALLOWED_TYPES}
+
     class Meta:
         model = SpeciesHabitatFile
         fields = "__all__"
-
-    def clean_file(self):
-        file = self.cleaned_data["file"]
-        if "file" in self.changed_data:
-            validate_file_type(file, {".csv": CSV_MIME_TYPES})
-        return file
 
 
 @admin.register(SpeciesHabitatFile)

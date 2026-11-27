@@ -26,8 +26,9 @@ from envergo.petitions.services import keep_line_breaks_on_demarche_numerique
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import EnrichedChoices, ProjectStageField
+from envergo.utils.forms import AllowedFileTypesMixin
 from envergo.utils.urls import remove_from_qs
-from envergo.utils.validators import ZIP_MIME_TYPES, validate_file_type
+from envergo.utils.validators import ZIP_MIME_TYPES
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -113,11 +114,9 @@ ALLOWED_FILE_TYPES = {
 }
 
 
-def validate_file_content(value):
-    validate_file_type(value, ALLOWED_FILE_TYPES)
+class PetitionProjectInstructorMessageForm(AllowedFileTypesMixin, forms.Form):
+    allowed_file_types = {"additional_file": ALLOWED_FILE_TYPES}
 
-
-class PetitionProjectInstructorMessageForm(forms.Form):
     """Form to send a message through Démarche numérique API."""
 
     message_body = forms.CharField(
@@ -135,7 +134,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_file_content],
+        validators=[validate_file_size],
     )
 
     class Meta:
@@ -217,7 +216,7 @@ class SimulationCheckWidget(forms.CheckboxInput):
     field_template_name = "haie/petitions/forms/fields/simulation_check.html"
 
 
-class StateChangeForm(forms.ModelForm):
+class StateChangeForm(AllowedFileTypesMixin, forms.ModelForm):
     """Form for updating petition project's stage.
 
     When the dossier is being closed (stage = "closed"), three additional
@@ -236,6 +235,8 @@ class StateChangeForm(forms.ModelForm):
     appeal notice.
     """
 
+    allowed_file_types = {"prefectural_order": ALLOWED_FILE_TYPES}
+
     simulation_check = forms.BooleanField(
         label="J'ai vérifié que la simulation active correspond bien "
         "à la version définitive.",
@@ -250,7 +251,7 @@ class StateChangeForm(forms.ModelForm):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_file_content],
+        validators=[validate_file_size],
     )
     applicant_message = forms.CharField(
         label="Message au demandeur",
