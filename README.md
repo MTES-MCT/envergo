@@ -690,14 +690,27 @@ $ docker compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
 $ docker compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
 $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 $ docker compose run --rm django python manage.py migrate
-$ . envs/postgres && bash bin/anonymize_db.sh "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB"
+$ . envs/postgres && bash bin/anonymize_db.sh --mode=pseudonymization "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB"
 ```
 
 ## Anonymisation
 
-`bin/anonymize_db.sh <database-url>` remplace les données personnelles d'une
-base par des valeurs anonymes. Opération irréversible, réservée aux copies
-jetables (review apps, copie statistiques, dev local).
+`bin/anonymize_db.sh --mode=pseudonymization|anonymization <database-url>`
+supprime ou remplace les données personnelles d'une base. Opération
+irréversible, réservée aux copies jetables (review apps, copie statistiques,
+dev local).
+
+Le mode est obligatoire :
+
+- `pseudonymization` : remplace les coordonnées (emails, noms, téléphones,
+  entreprises), supprime les secrets (mots de passe, sessions, clés OTP,
+  jetons) et conserve les données métier. Utilisé pour les review apps et le
+  dev local. Aucun compte ne peut se connecter avec son mot de passe d'origine.
+- `anonymization` : `pseudonymization`, plus la suppression des données
+  personnelles, sensibles ou géolocalisées inutiles aux statistiques (textes
+  libres, adresses, coordonnées dans les URLs, géométries des haies,
+  références, fichiers). Utilisé pour la copie statistiques
+  (`bin/sync_stats_db.sh`).
 
 ## Base statistiques (metabase)
 
