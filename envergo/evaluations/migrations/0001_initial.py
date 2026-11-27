@@ -249,7 +249,7 @@ class Migration(migrations.Migration):
                     models.FileField(
                         blank=True,
                         null=True,
-                        upload_to=envergo.evaluations.models.evaluation_file_format,
+                        upload_to="evaluations/",
                         validators=[
                             django.core.validators.FileExtensionValidator(
                                 allowed_extensions=["pdf"]
