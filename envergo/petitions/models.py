@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.db import models, transaction
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -30,6 +30,7 @@ from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.services import (
     DEMARCHE_NUMERIQUE_STATUS_MAPPING,
     attestation_non_opposition_pdf,
+    declaration_receipt_message,
     dossier_state_changed_outside_guh_alert,
     dossier_submission_alert,
     log_dossier_submission_event,
@@ -179,37 +180,325 @@ class PetitionProjectQuerySet(models.QuerySet):
 
     def due_for_tacit_agreement(self, today: date):
         """The dossiers whose silence became agreement on or before `today`."""
-
-        # Latest logs subquery
-        project_logs = StatusLog.objects.filter(petition_project=OuterRef("pk"))
-        newest_first = project_logs.order_by("-created_at")
-
-        # Select latest deadline
-        deadline_logs = newest_first.filter(agreement_deadline__isnull=False)
-        latest_deadline = deadline_logs.values("agreement_deadline")[:1]
-
-        # Select latest instruction stage
-        instruction_logs = newest_first.filter(stage__in=INSTRUCTION_STAGES)
-        latest_instruction_stage = instruction_logs.values("stage")[:1]
-
         return (
             self.regime_unique()
             .decision_pending()
             .not_suspended()
-            .alias(
-                agreement_deadline=Subquery(latest_deadline),
-                latest_instruction_stage=Subquery(latest_instruction_stage),
-            )
-            .filter(
-                latest_instruction_stage=STAGES.instruction_d,
-                agreement_deadline__lte=today,
-            )
+            .filter(silence_rule=SilenceRule.AGREEMENT, silence_deadline__lte=today)
             .select_related("department", "hedge_data")
             .defer("department__geometry")
         )
 
 
-class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
+class InstructionMixin:
+    """The instruction events of a dossier.
+
+    Each action builds its status log before changing the dossier. The log reads
+    the dossier's previous state.
+    """
+
+    def start_instruction(self, *, submission_date):
+        """On dépôt, move the dossier into its instruction stage."""
+        instruction_stage = self._first_instruction_stage()
+        agreement_deadline = self._agreement_deadline_on_entering(
+            instruction_stage, submission_date
+        )
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=instruction_stage,
+            decision=DECISIONS.unset,
+            # The instruction is due when silence turns into an agreement.
+            due_date=agreement_deadline,
+            agreement_deadline=agreement_deadline,
+            update_comment="Dépôt du dossier : passage automatique en instruction.",
+        )
+        self.stage = instruction_stage
+        self.decision = DECISIONS.unset
+        self.due_date = agreement_deadline
+        self.silence_rule = self.silence_rule_in(instruction_stage)
+        self.silence_deadline = agreement_deadline
+        return self._record_event(log)
+
+    def request_complements(self, *, complements_due_date, applicant_message, author):
+        """An instructor suspends the instruction until the applicant sends compléments."""
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.suspension,
+            stage=self.stage,
+            decision=self.decision,
+            due_date=complements_due_date,
+            original_due_date=self.due_date,
+            applicant_message=applicant_message,
+            update_comment="Suspension de l’instruction, message envoyé au demandeur.",
+            created_by=author,
+        )
+        self.is_additional_information_requested = True
+        self.due_date = complements_due_date
+        return self._record_event(log)
+
+    def receive_complements(self, *, received_on, due_date, author):
+        """An instructor resumes the instruction on receiving the compléments.
+
+        When silence means agreement, the delay restarts on `received_on`, and its
+        end becomes the due date in place of `due_date`. The applicant gets a new
+        récépissé stating it.
+        """
+        restarts_agreement_delay = self.silence_rule == SilenceRule.AGREEMENT
+        if restarts_agreement_delay:
+            agreement_deadline = declaration_due_date(received_on)
+            due_date = agreement_deadline
+            applicant_message = declaration_receipt_message(self, received_on, due_date)
+        else:
+            agreement_deadline = None
+            applicant_message = ""
+
+        if due_date:
+            update_comment = "Reprise de l’instruction, date d'échéance ajustée."
+        else:
+            update_comment = "Reprise de l’instruction."
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.resumption,
+            stage=self.stage,
+            decision=self.decision,
+            info_receipt_date=received_on,
+            due_date=due_date,
+            agreement_deadline=agreement_deadline,
+            applicant_message=applicant_message,
+            update_comment=update_comment,
+            created_by=author,
+        )
+        self.is_additional_information_requested = False
+        self.due_date = due_date
+        if restarts_agreement_delay:
+            self.silence_deadline = agreement_deadline
+        return self._record_event(log)
+
+    def switch_to_authorization(
+        self,
+        *,
+        status_date,
+        refusal_deadline,
+        applicant_message,
+        update_comment,
+        author,
+    ):
+        """An instructor moves a déclaration into authorisation.
+
+        Silence then means refusal at `refusal_deadline`.
+        """
+        notice = "Message envoyé au demandeur."
+        if update_comment:
+            log_comment = f"{update_comment}\n{notice}"
+        else:
+            log_comment = notice
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=STAGES.instruction_a,
+            decision=self.decision,
+            status_date=status_date,
+            due_date=refusal_deadline,
+            refusal_deadline=refusal_deadline,
+            applicant_message=applicant_message,
+            update_comment=log_comment,
+            created_by=author,
+        )
+        self.stage = STAGES.instruction_a
+        self.due_date = refusal_deadline
+        self.silence_rule = SilenceRule.REFUSAL
+        self.silence_deadline = refusal_deadline
+        return self._record_event(log)
+
+    def close_by_express_decision(
+        self,
+        *,
+        status_date,
+        decision,
+        prefectural_order,
+        applicant_message,
+        update_comment,
+        author,
+    ):
+        """An instructor closes the dossier with an express decision.
+
+        `prefectural_order` is the decision document, or None when the decision has none.
+        """
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=STAGES.closed,
+            status_date=status_date,
+            decision=decision,
+            due_date=None,
+            prefectural_order=prefectural_order,
+            applicant_message=applicant_message,
+            update_comment=update_comment,
+            created_by=author,
+        )
+        self.stage = STAGES.closed
+        self.decision = decision
+        self.due_date = None
+        self.silence_rule = None
+        self.silence_deadline = None
+        return self._record_event(log)
+
+    def close_by_tacit_agreement(self):
+        """The nightly job closes the dossier by tacit agreement, with the attestation de non-opposition."""
+        agreement_date = self.silence_deadline
+        attestation = ContentFile(
+            attestation_non_opposition_pdf(self, agreement_date),
+            name="attestation_non_opposition.pdf",
+        )
+        applicant_message = render_to_string(
+            "haie/petitions/tacit_agreement_message.txt"
+        )
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            stage=STAGES.closed,
+            status_date=agreement_date,
+            decision=DECISIONS.tacit_agreement,
+            due_date=None,
+            prefectural_order=attestation,
+            applicant_message=applicant_message,
+            update_comment=(
+                "Clôture automatique : silence vaut accord. "
+                "Message envoyé au demandeur avec l’attestation de non-opposition."
+            ),
+        )
+        self.stage = STAGES.closed
+        self.decision = DECISIONS.tacit_agreement
+        self.due_date = None
+        self.silence_rule = None
+        self.silence_deadline = None
+        return self._record_event(log)
+
+    # Note: This method only exists because the current UI allows for any transition
+    # stage transition, even ones that should not be possible.
+    # UI is being redesigned right now, so this method is meant to be removed in the end.
+    def change_status_manually(
+        self, *, status_date, stage, decision, due_date, update_comment, author
+    ):
+        """An instructor sets the stage, decision and due date freely, outside the named actions.
+
+        Entering a stage where silence means agreement starts the agreement delay on `status_date`.
+        The silence deadline stays only while the silence rule stays.
+        """
+        started_agreement_deadline = self._agreement_deadline_on_entering(
+            stage, status_date
+        )
+
+        silence_rule_in_new_stage = self._silence_rule_after_entering(stage)
+        if started_agreement_deadline:
+            silence_deadline = started_agreement_deadline
+        elif silence_rule_in_new_stage == self.silence_rule:
+            silence_deadline = self.silence_deadline
+        else:
+            silence_deadline = None
+
+        log = StatusLog(
+            petition_project=self,
+            type=LOG_TYPES.status_change,
+            status_date=status_date,
+            stage=stage,
+            decision=decision,
+            due_date=due_date,
+            agreement_deadline=started_agreement_deadline,
+            update_comment=update_comment,
+            created_by=author,
+        )
+        self.stage = stage
+        self.decision = decision
+        self.due_date = due_date
+        self.silence_rule = silence_rule_in_new_stage
+        self.silence_deadline = silence_deadline
+        return self._record_event(log)
+
+    def _first_instruction_stage(self):
+        """The stage a dossier enters when its instruction starts."""
+        if self.is_regime_unique():
+            stage = STAGES.instruction_d
+        else:
+            stage = STAGES.instruction_h
+        return stage
+
+    def _agreement_deadline_on_entering(self, stage, start_date: date) -> date | None:
+        """When silence turns into agreement, for a dossier entering `stage` on `start_date`.
+
+        None when silence in `stage` means no agreement, or when the dossier is already there.
+        """
+        starts_agreement_delay = (
+            self.silence_rule_in(stage) == SilenceRule.AGREEMENT and self.stage != stage
+        )
+
+        deadline = None
+        if starts_agreement_delay:
+            deadline = declaration_due_date(start_date)
+        return deadline
+
+    def _silence_rule_after_entering(self, stage) -> SilenceRule | None:
+        """What silence will mean once the dossier enters `stage`."""
+        if stage in INSTRUCTION_STAGES:
+            rule = self.silence_rule_in(stage)
+        elif stage in PENDING_DECISION_STAGES:
+            # Outside instruction, a pending dossier keeps its current rule.
+            rule = self.silence_rule
+        else:
+            rule = None
+        return rule
+
+    def _record_event(self, log):
+        """Save the event's log and the dossier, mirror them in « Démarche numérique », and return the log.
+
+        On failure, nothing is saved and the uploaded decision document is deleted.
+        """
+        try:
+            with transaction.atomic():
+                log.save()
+                self.save()
+                self._sync_demarche_numerique_status(log)
+                if log.applicant_message:
+                    self._schedule_applicant_message(log)
+        except Exception:
+            self._delete_uploaded_decision_document(log)
+            raise
+        return log
+
+    def _delete_uploaded_decision_document(self, log):
+        """Remove the log's decision document from storage, if the save uploaded it."""
+        document = log.prefectural_order
+        is_in_storage = document and document._committed
+        if is_in_storage:
+            document.delete(save=False)
+
+    def _sync_demarche_numerique_status(self, log):
+        """Update the « Démarche numérique » status to match the new log, when it differs."""
+        new_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
+        if self.demarche_numerique_state != new_status:
+            update_demarche_numerique_status(self, new_status)
+
+    def _schedule_applicant_message(self, log):
+        """Queue the log's applicant message for after commit.
+
+        Sent asynchronously, so a DN messagerie failure never blocks the state
+        change. The task retry policy handles transient errors. A queuing
+        failure is logged and leaves the state change in place.
+        """
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_applicant_message_async
+
+        transaction.on_commit(
+            lambda: send_applicant_message_async.delay(log.pk), robust=True
+        )
+
+
+class PetitionProject(InstructionMixin, MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
     A petition project will store any data needed to follow up a request concerning a hedge.
@@ -348,13 +637,27 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     is_additional_information_requested = models.BooleanField(
         "En attente d'informations complémentaires ?",
-        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        help_text="Mis à jour par les étapes de l'instruction.",
         default=False,
     )
 
     due_date = models.DateField(
         "Date de prochaine échéance",
-        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        help_text="Mis à jour par les étapes de l'instruction.",
+        null=True,
+        blank=True,
+    )
+    silence_rule = models.CharField(
+        "Règle du silence de l’administration",
+        help_text="Règle en vigueur uniquement. Mise à jour par les étapes de l'instruction.",
+        max_length=16,
+        choices=SilenceRule.choices,
+        null=True,
+        blank=True,
+    )
+    silence_deadline = models.DateField(
+        "Date à laquelle la règle du silence s’applique",
+        help_text="Délai en cours uniquement. Mis à jour par les étapes de l'instruction.",
         null=True,
         blank=True,
     )
@@ -435,53 +738,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             .first()
         )
 
-    @cached_property
-    def refusal_deadline(self):
-        """Date after which silence means refusal, set by the latest switch to authorization.
+    def silence_rule_in(self, stage) -> SilenceRule | None:
+        """What the administration's silence means for this dossier in `stage`.
 
-        None when the dossier never switched.
+        None outside the régime unique, or for a stage without a silence rule.
         """
-        return (
-            self.status_history.filter(refusal_deadline__isnull=False)
-            .order_by("-created_at")
-            .values_list("refusal_deadline", flat=True)
-            .first()
-        )
-
-    @cached_property
-    def agreement_deadline(self):
-        """Date at which silence means agreement, or None when the dossier was not deposited in déclaration."""
-        return (
-            self.status_history.filter(agreement_deadline__isnull=False)
-            .order_by("-created_at")
-            .values_list("agreement_deadline", flat=True)
-            .first()
-        )
-
-    @cached_property
-    def latest_instruction_stage(self):
-        """The latest instruction stage the dossier went through.
-
-        None when the dossier never entered instruction.
-        """
-        return (
-            self.status_history.filter(stage__in=INSTRUCTION_STAGES)
-            .order_by("-created_at")
-            .values_list("stage", flat=True)
-            .first()
-        )
-
-    @property
-    def silence_rule(self) -> SilenceRule | None:
-        """What the administration's silence means for this dossier.
-
-        None when no decision is pending under the régime unique.
-        """
-        decision_pending = self.stage in PENDING_DECISION_STAGES
-
         rule = None
-        if self.is_regime_unique() and decision_pending:
-            rule = SILENCE_RULE_BY_INSTRUCTION_STAGE.get(self.latest_instruction_stage)
+        if self.is_regime_unique():
+            rule = SILENCE_RULE_BY_INSTRUCTION_STAGE.get(stage)
         return rule
 
     @cached_property
@@ -524,12 +788,17 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 )
                 return
 
-            if not self.is_dossier_submitted:
+            is_submission = not self.is_dossier_submitted
+            changed_outside = fetched_dossier["state"] != self.demarche_numerique_state
+
+            # The dépôt's instruction events mirror the state « Démarche numérique » already holds.
+            self.update_demarche_numerique_cache(fetched_dossier)
+
+            if is_submission:
                 self.record_submission(fetched_dossier)
-            elif fetched_dossier["state"] != self.demarche_numerique_state:
+            elif changed_outside:
                 self.schedule_outside_change_alert(fetched_dossier)
 
-            self.update_demarche_numerique_cache(fetched_dossier)
             self.save()
 
     def reload_with_lock(self):
@@ -559,7 +828,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             fetched_dossier["state"] == DOSSIER_STATES.en_instruction
             and self.stage == STAGES.to_be_processed
         ):
-            self.start_instruction_on_submission(submission_date)
+            self.start_instruction(submission_date=submission_date)
 
         log_dossier_submission_event(self)
         self.schedule_submission_alert(fetched_dossier)
@@ -608,55 +877,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             simulation.moulinette_url = update_qs(simulation.moulinette_url, date_param)
         Simulation.objects.bulk_update(simulations, ["moulinette_url"])
 
-    def start_instruction_on_submission(self, submission_date: date):
-        """Move the project into instruction, as « Démarche numérique » did on dépôt."""
-        if self.is_regime_unique():
-            instruction_stage = STAGES.instruction_d
-            agreement_deadline = declaration_due_date(submission_date)
-        else:
-            instruction_stage = STAGES.instruction_h
-            agreement_deadline = None
-
-        StatusLog.objects.create(
-            petition_project=self,
-            type=LOG_TYPES.status_change,
-            stage=instruction_stage,
-            update_comment="Dépôt du dossier : passage automatique en instruction.",
-            agreement_deadline=agreement_deadline,
-            # The instruction is due when silence turns into an agreement.
-            due_date=agreement_deadline,
-        )
-
-    def close_by_tacit_agreement(self):
-        """Close the dossier on its agreement deadline and send the applicant the attestation.
-
-        Raises DemarcheNumeriqueError when « Démarche numérique » rejects the closing.
-        Nothing is recorded then.
-        """
-        agreement_date = self.agreement_deadline
-        attestation = ContentFile(
-            attestation_non_opposition_pdf(self, agreement_date),
-            name="attestation_non_opposition.pdf",
-        )
-        applicant_message = render_to_string(
-            "haie/petitions/tacit_agreement_message.txt"
-        )
-
-        log = StatusLog(
-            petition_project=self,
-            type=LOG_TYPES.status_change,
-            stage=STAGES.closed,
-            decision=DECISIONS.tacit_agreement,
-            status_date=agreement_date,
-            update_comment=(
-                "Clôture automatique : silence vaut accord. "
-                "Message envoyé au demandeur avec l’attestation de non-opposition."
-            ),
-            prefectural_order=attestation,
-            applicant_message=applicant_message,
-        )
-        self.record_status_change(log)
-
     def schedule_submission_alert(self, fetched_dossier: dict):
         """Queue the team alert announcing the dépôt, for after commit."""
         # Imported here: the tasks module imports this one.
@@ -696,42 +916,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             ),
             robust=True,
         )
-
-    def record_status_change(self, log):
-        """Save a status log of this dossier and mirror it in « Démarche numérique »."""
-
-        # Entering déclaration starts a new agreement delay.
-        if self.enters_declaration(log):
-            log.agreement_deadline = declaration_due_date(log.status_date)
-
-        with transaction.atomic():
-            log.save()
-            self.sync_demarche_numerique_status(log)
-            if log.applicant_message:
-                self.schedule_applicant_message(log)
-
-    def enters_declaration(self, log):
-        """Whether the log moves this régime unique dossier into déclaration from another stage."""
-        is_declaration = log.stage == STAGES.instruction_d
-        was_declaration = self.stage == STAGES.instruction_d
-        return self.is_regime_unique() and is_declaration and not was_declaration
-
-    def sync_demarche_numerique_status(self, log):
-        """Update the « Démarche numérique » status to match the new log, when it differs."""
-        new_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
-        if self.demarche_numerique_state != new_status:
-            update_demarche_numerique_status(self, new_status)
-
-    def schedule_applicant_message(self, log):
-        """Queue the log's applicant message for after commit.
-
-        Sent asynchronously, so a DN messagerie failure never blocks the state
-        change. The task retry policy handles transient errors.
-        """
-        # Imported here: the tasks module imports this one.
-        from envergo.petitions.tasks import send_applicant_message_async
-
-        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
@@ -845,19 +1029,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             and self.latest_access < self.latest_petitioner_msg
         )
         return has_unread_messages
-
-    def update_status(self, status_log):
-        """Update the project status when a new status log is created"""
-        if status_log.type == LOG_TYPES.status_change:
-            self.stage = status_log.stage
-            self.decision = status_log.decision
-        elif status_log.type == LOG_TYPES.suspension:
-            self.is_additional_information_requested = True
-        elif status_log.type == LOG_TYPES.resumption:
-            self.is_additional_information_requested = False
-
-        self.due_date = status_log.due_date
-        self.save()
 
     def get_available_regulations(self):
         return Regulation.objects.filter(

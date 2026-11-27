@@ -206,6 +206,8 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
+        # Each PDF rendering logs every step at INFO.
+        "weasyprint.progress": {"level": "WARNING"},
     },
 }
 

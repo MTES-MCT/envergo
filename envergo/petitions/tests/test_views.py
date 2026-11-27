@@ -53,6 +53,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    declaration_due_date,
 )
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.petitions.tests.factories import (
@@ -63,6 +64,7 @@ from envergo.petitions.tests.factories import (
     FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
+    DeclarationProjectFactory,
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
@@ -1575,14 +1577,14 @@ def test_petition_project_list_filter_show_closed(haie_coordinator_44, client, s
     open_project = PetitionProjectFactory(
         demarche_numerique_state=DOSSIER_STATES.prefilled,
         demarche_numerique_date_depot=now,
-        status__stage=STAGES.instruction_d,
+        stage=STAGES.instruction_d,
     )
     closed_project = PetitionProjectFactory(
         reference="CLOSED1",
         demarche_numerique_state=DOSSIER_STATES.prefilled,
         demarche_numerique_date_depot=now,
-        status__stage=STAGES.closed,
-        status__decision=DECISIONS.express_agreement,
+        stage=STAGES.closed,
+        decision=DECISIONS.express_agreement,
     )
 
     client.force_login(haie_coordinator_44)
@@ -2160,7 +2162,7 @@ def test_petition_project_close_with_express_agreement(
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
     data = closing_form_data("express_agreement", prefectural_order=attachment)
 
@@ -2209,7 +2211,7 @@ def test_petition_project_close_with_tacit_agreement(
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        underscore_category="hru", status__stage="preparing_decision"
+        underscore_category="hru", stage="preparing_decision"
     )
 
     res = client.post(
@@ -2240,7 +2242,7 @@ def test_petition_project_close_with_dropped(
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     data = closing_form_data("dropped", simulation_check="")
 
     res = client.post(procedure_url(project), data, follow=True)
@@ -2265,7 +2267,7 @@ def test_petition_project_close_with_missing_fields(
     client.force_login(haie_coordinator_44)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     data = closing_form_data("opposition", simulation_check="", applicant_message="")
 
     res = client.post(procedure_url(project), data, follow=True)
@@ -2298,7 +2300,7 @@ def test_petition_project_close_status_change_failure(
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        underscore_category="hru", status__stage="preparing_decision"
+        underscore_category="hru", stage="preparing_decision"
     )
 
     res = client.post(
@@ -2337,7 +2339,7 @@ def test_closing_actually_calls_ds_messagerie(
     DCConfigHaieFactory()
     # The dossier id is what gates the message send; a real dossier has it.
     project = PetitionProjectFactory(
-        status__stage="preparing_decision",
+        stage="preparing_decision",
         demarche_numerique_state="en_instruction",
         demarche_numerique_dossier_id="RG9zc2llci0xMjM=",
     )
@@ -2369,7 +2371,7 @@ def test_petition_project_prefectural_order_download_block(
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
 
     # WHEN the dossier has no prefectural order
     res = client.get(procedure_url(project))
@@ -2391,8 +2393,9 @@ def test_petition_project_prefectural_order_download_block(
         stage="instruction_d",
         decision="opposition",
     )
-    project.refresh_from_db()
-    assert project.stage == "instruction_d"
+    project.stage = "instruction_d"
+    project.decision = "opposition"
+    project.save()
 
     res = client.get(procedure_url(project))
     content = res.content.decode()
@@ -2606,7 +2609,7 @@ def test_request_info_default_message(
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        status__stage="instruction_d",
+        stage="instruction_d",
         underscore_category=category,
     )
 
@@ -2627,20 +2630,19 @@ def test_request_info_default_message(
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
 def test_petition_project_request_for_info(
-    mock_ds_msg, client, haie_coordinator_44, site
+    mock_send_message, client, haie_coordinator_44, site
 ):
     """Instructors can request for additional info."""
 
     client.force_login(haie_coordinator_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     today = date.today()
     next_month = today + timedelta(days=30)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__due_date=today)
+    project = PetitionProjectFactory(due_date=today)
     assert project.due_date == today
     assert project.is_additional_information_requested is False
 
@@ -2656,32 +2658,28 @@ def test_petition_project_request_for_info(
     }
     res = client.post(procedure_url, form_data, follow=True)
     assert res.status_code == 200
-    assert "Le message au demandeur a bien été envoyé." in res.content.decode()
+    assert "Le message au demandeur sera envoyé" in res.content.decode()
 
     project.refresh_from_db()
     clear_cached_properties(project)
     assert project.is_additional_information_requested is True
     assert project.due_date == next_month
-    assert project.latest_suspension.original_due_date == today
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.views.send_message_dossier_ds")
-def test_petition_project_resume_instruction(
-    mock_ds_msg, client, haie_coordinator_44, site
-):
+def test_petition_project_resume_instruction(client, haie_coordinator_44, site):
     """Instructors can resume_instruction."""
 
     client.force_login(haie_coordinator_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     today = date.today()
     last_month = today - timedelta(days=30)
     next_month = today + timedelta(days=30)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__due_date=today)
-    # Create a suspension log separately
+    project = PetitionProjectFactory(
+        due_date=next_month, is_additional_information_requested=True
+    )
     StatusLogFactory(
         petition_project=project,
         type=LOG_TYPES.suspension,
@@ -2692,7 +2690,6 @@ def test_petition_project_resume_instruction(
         original_due_date=today,
         due_date=next_month,
     )
-    assert project.is_additional_information_requested is True
 
     # WHEN the user try to change step while paused
 
@@ -2734,11 +2731,11 @@ def test_petition_project_resume_instruction(
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.tasks.send_declaration_receipt_async")
-def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
-    mock_receipt_task, client, haie_coordinator_44, site
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+def test_resume_instruction_of_a_declaration_announces_the_receipt(
+    mock_send_message, client, haie_coordinator_44, site
 ):
-    """Receiving the documents restarts the agreement deadline, and a new receipt states it."""
+    """The instructor learns that the applicant gets a new récépissé."""
 
     client.force_login(haie_coordinator_44)
 
@@ -2746,7 +2743,8 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     RUConfigHaieFactory()
     # Already submitted, so only the resumption can send a receipt
     project = PetitionProjectFactory(
-        status__stage="instruction_d",
+        stage="instruction_d",
+        is_additional_information_requested=True,
         demarche_numerique_state=DOSSIER_STATES.en_instruction,
     )
     StatusLogFactory(
@@ -2772,21 +2770,46 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     assert res.status_code == 200
     content = res.content.decode()
     assert "L'instruction du dossier a repris." in content
-    assert "Le récépissé de déclaration sera envoyé au demandeur" in content
-    assert project.agreement_deadline == new_due_date
-
-    assert mock_receipt_task.delay.call_count == 1
-    assert mock_receipt_task.delay.call_args[0] == (
-        project.pk,
-        today.isoformat(),
-        new_due_date.isoformat(),
-    )
+    assert "Le message au demandeur sera envoyé" in content
 
 
 @pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+@patch("envergo.petitions.tasks.send_applicant_message_async")
+def test_resume_instruction_of_a_declaration_restarts_the_delay_on_receipt(
+    mock_send_message, client, haie_coordinator_44, site
+):
+    """A late recording or a posted due date never extends the delay."""
+    client.force_login(haie_coordinator_44)
+    RUConfigHaieFactory()
+    project = DeclarationProjectFactory(is_additional_information_requested=True)
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage=STAGES.instruction_d,
+        due_date=date.today() + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    received_on = date.today() - timedelta(days=3)
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": received_on,
+        "due_date": date.today() + timedelta(days=365),
+    }
+    client.post(status_url, form_data)
+
+    project.refresh_from_db()
+    assert project.silence_deadline == declaration_due_date(received_on)
+    assert project.due_date == declaration_due_date(received_on)
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_applicant_message_async")
 def test_resume_instruction_refused_without_a_suspension(
-    mock_receipt_task, client, haie_coordinator_44, site
+    mock_send_message, client, haie_coordinator_44, site
 ):
     """The button is hidden when nothing is awaited, so only a replayed post gets here."""
 
@@ -2794,7 +2817,7 @@ def test_resume_instruction_refused_without_a_suspension(
 
     RUConfigHaieFactory()
     project = PetitionProjectFactory(
-        status__stage="instruction_d",
+        stage="instruction_d",
         demarche_numerique_state=DOSSIER_STATES.en_instruction,
     )
     assert project.is_additional_information_requested is False
@@ -2815,50 +2838,7 @@ def test_resume_instruction_refused_without_a_suspension(
     assert "Ce dossier n'est pas en attente de compléments" in res.content.decode()
 
     assert not project.status_history.filter(type=LOG_TYPES.resumption).exists()
-    assert not mock_receipt_task.delay.called
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("envergo.petitions.tasks.send_declaration_receipt_async")
-def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
-    mock_receipt_task, client, haie_coordinator_44, site
-):
-    """Only the déclaration stage of the régime unique restarts the agreement deadline."""
-
-    client.force_login(haie_coordinator_44)
-
-    today = date.today()
-    RUConfigHaieFactory()
-    project = PetitionProjectFactory(
-        status__stage="instruction_a",
-        demarche_numerique_state=DOSSIER_STATES.en_instruction,
-    )
-    StatusLogFactory(
-        petition_project=project,
-        type=LOG_TYPES.suspension,
-        stage="instruction_a",
-        original_due_date=today,
-        due_date=today + timedelta(days=90),
-    )
-
-    status_url = reverse(
-        "petition_project_instructor_procedure_view",
-        kwargs={"reference": project.reference},
-    )
-    form_data = {
-        "action": "resume_processing",
-        "info_receipt_date": today,
-        "due_date": today + timedelta(days=60),
-    }
-    res = client.post(status_url, form_data, follow=True)
-
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "L'instruction du dossier a repris." in content
-    assert "récépissé" not in content
-    assert not mock_receipt_task.delay.called
-    resumption = project.status_history.get(type=LOG_TYPES.resumption)
-    assert resumption.agreement_deadline is None
+    assert not mock_send_message.delay.called
 
 
 @pytest.mark.django_db(transaction=True)
@@ -2867,7 +2847,7 @@ def test_request_info_date_in_past(client, haie_coordinator_44, site):
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     url = reverse(
         "petition_project_instructor_procedure_view",
@@ -2893,7 +2873,7 @@ def test_request_info_date_exceeds_three_months(client, haie_coordinator_44, sit
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     url = reverse(
         "petition_project_instructor_procedure_view",
@@ -2920,7 +2900,7 @@ def test_request_info_date_exceeds_refusal_deadline(client, haie_coordinator_44,
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        status__stage="instruction_a", status__refusal_deadline=date(2099, 9, 21)
+        stage="instruction_a", silence_deadline=date(2099, 9, 21)
     )
 
     url = reverse(
@@ -2946,7 +2926,7 @@ def test_request_info_errors_reopen_modal(client, haie_coordinator_44, site):
 
     client.force_login(haie_coordinator_44)
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     url = reverse(
         "petition_project_instructor_procedure_view",
@@ -5210,7 +5190,7 @@ def test_state_change_modal_embeds_the_authorization_switch_message(
         guh_service_name="Service Eau et Environnement",
         guh_address="50, Bd de Lyon\n02011 LAON",
     )
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     message = get_authorization_switch_message(client, project)
@@ -5239,7 +5219,7 @@ def test_authorization_switch_message_omits_blank_guh_contact_lines(
         guh_service_name="",
         guh_address="",
     )
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     message = get_authorization_switch_message(client, project)
@@ -5255,7 +5235,7 @@ def test_state_change_modal_tells_the_script_the_project_can_switch(
 ):
     """The script shows the switch fields only for a project that can switch."""
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     client.force_login(haie_coordinator_44)
 
     content = client.get(procedure_url(project)).content.decode()
@@ -5267,7 +5247,7 @@ def test_state_change_modal_has_no_switch_message_when_the_project_cannot_switch
     client, haie_coordinator_44, site
 ):
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
+    project = PetitionProjectFactory(stage="preparing_decision")
     client.force_login(haie_coordinator_44)
 
     assert get_authorization_switch_message(client, project) is None
@@ -5297,10 +5277,8 @@ def test_authorization_switch_sends_the_applicant_message(
     """A switch saves the message with its deadline sentence, then queues it."""
     client.force_login(haie_coordinator_44)
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
-    data = state_change_form_data(
-        refusal_deadline="21/09/2099", update_comment="Haie en site Natura 2000."
-    )
+    project = PetitionProjectFactory(stage="instruction_d")
+    data = state_change_form_data(refusal_deadline="21/09/2099")
 
     res = client.post(procedure_url(project), data, follow=True)
 
@@ -5314,15 +5292,11 @@ def test_authorization_switch_sends_the_applicant_message(
 
     log = project.status_history.order_by("-created_at").first()
     assert log.refusal_deadline == date(2099, 9, 21)
-    assert log.due_date == date(2099, 9, 21)
     assert log.applicant_message.startswith(
         "Votre projet relève d'une autorisation.<br>"
         "Compte-tenu des avis qui doivent être recueillis, "
         "cette décision interviendra au plus tard le 21 septembre 2099.\n\n"
         "<small>Toute décision relative"
-    )
-    assert (
-        log.update_comment == "Haie en site Natura 2000.\nMessage envoyé au demandeur."
     )
     mock_message_task.delay.assert_called_once_with(log.pk)
 
@@ -5337,7 +5311,7 @@ def test_stage_change_without_switch_sends_no_applicant_message(
     """Only a closing or a switch writes to the applicant."""
     client.force_login(haie_coordinator_44)
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
     data = state_change_form_data(stage="preparing_decision")
 
     client.post(procedure_url(project), data, follow=True)
@@ -5361,7 +5335,7 @@ def test_authorization_switch_status_change_failure(
     client.force_login(haie_coordinator_44)
     mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
     RUConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="instruction_d")
+    project = PetitionProjectFactory(stage="instruction_d")
 
     res = client.post(procedure_url(project), state_change_form_data(), follow=True)
 

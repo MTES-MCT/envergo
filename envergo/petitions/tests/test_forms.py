@@ -46,11 +46,41 @@ class TestResumeProcessingFormDueDate:
 
         assert "due_date" in form.fields
 
+    def test_due_date_removed_in_declaration(self):
+        """The receipt date sets the restarted deadline, so there is nothing to type."""
+        form = ResumeProcessingForm(
+            data={"info_receipt_date": "2026-01-15"},
+            original_due_date=date(2026, 1, 1),
+            is_declaration_instruction=True,
+        )
+
+        assert "due_date" not in form.fields
+        assert form.is_valid(), form.errors
+
     def test_due_date_initial_is_two_months_from_today(self):
         form = ResumeProcessingForm(original_due_date=date(2026, 1, 1))
 
         expected = (timezone.now().date() + relativedelta(months=2)).isoformat()
         assert form.fields["due_date"].initial() == expected
+
+
+class TestResumeProcessingFormReceiptDate:
+    """Compléments cannot be received in the future."""
+
+    def test_future_receipt_date_is_refused(self):
+        """A receipt date after today is refused."""
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        form = ResumeProcessingForm(data={"info_receipt_date": tomorrow.isoformat()})
+
+        assert not form.is_valid()
+        assert form.has_error("info_receipt_date", code="date_in_future")
+
+    def test_today_receipt_date_is_accepted(self):
+        """Today is the latest accepted receipt date."""
+        today = timezone.localdate()
+        form = ResumeProcessingForm(data={"info_receipt_date": today.isoformat()})
+
+        assert form.is_valid(), form.errors
 
     def test_valid_without_due_date_when_no_original_due_date(self):
         form = ResumeProcessingForm(
@@ -608,8 +638,8 @@ def test_authorization_complement_due_date_may_equal_the_refusal_deadline():
     """During an authorization, the applicant may be given until the refusal deadline."""
     project = PetitionProjectFactory(
         underscore_category="ru",
-        status__stage="instruction_a",
-        status__refusal_deadline=date(2099, 9, 21),
+        stage="instruction_a",
+        silence_deadline=date(2099, 9, 21),
     )
     data = {"info_due_date": date(2099, 9, 21), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
@@ -621,8 +651,8 @@ def test_authorization_complement_due_date_is_capped_at_the_refusal_deadline():
     """The applicant cannot be given more time than the administration has to decide."""
     project = PetitionProjectFactory(
         underscore_category="ru",
-        status__stage="instruction_a",
-        status__refusal_deadline=date(2099, 9, 21),
+        stage="instruction_a",
+        silence_deadline=date(2099, 9, 21),
     )
     data = {"info_due_date": date(2099, 9, 22), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
@@ -636,9 +666,7 @@ def test_authorization_complement_due_date_is_capped_at_the_refusal_deadline():
 
 def test_authorization_complement_due_date_is_unbounded_without_refusal_deadline():
     """An authorization dossier without refusal deadline only needs a future date."""
-    project = PetitionProjectFactory(
-        underscore_category="ru", status__stage="instruction_a"
-    )
+    project = PetitionProjectFactory(underscore_category="ru", stage="instruction_a")
     data = {"info_due_date": date(2099, 9, 21), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
 
@@ -647,9 +675,7 @@ def test_authorization_complement_due_date_is_unbounded_without_refusal_deadline
 
 def test_non_ru_complement_due_date_is_unbounded():
     """Outside the régime unique, the due date only has to be in the future."""
-    project = PetitionProjectFactory(
-        underscore_category="hru", status__stage="instruction_h"
-    )
+    project = PetitionProjectFactory(underscore_category="hru", stage="instruction_h")
     data = {"info_due_date": date(2099, 9, 21), "request_message": "Test"}
     form = RequestAdditionalInfoForm(data, petition_project=project)
 

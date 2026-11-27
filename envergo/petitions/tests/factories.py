@@ -14,6 +14,7 @@ from envergo.petitions.demarche_numerique.client import (
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
+    SILENCE_RULE_BY_INSTRUCTION_STAGE,
     STAGES,
     InvitationToken,
     PetitionProject,
@@ -102,9 +103,32 @@ class PetitionProjectFactory(DjangoModelFactory):
     demarche_numerique_dossier_number = 21059675
     demarche_numerique_prefill_url = "https://exemple.com/commencer/21059675/token?1234"
     demarche_numerique_state = DOSSIER_STATES.draft
+    stage = STAGES.to_be_processed
+    # A closed dossier always carries a final decision.
+    decision = factory.LazyAttribute(
+        lambda project: (
+            DECISIONS.express_agreement
+            if project.stage == STAGES.closed
+            else DECISIONS.unset
+        )
+    )
+    due_date = None
+    # A régime unique dossier in instruction carries its stage's silence rule.
+    silence_rule = factory.LazyAttribute(
+        lambda project: (
+            SILENCE_RULE_BY_INSTRUCTION_STAGE.get(project.stage)
+            if project.underscore_category == "ru"
+            else None
+        )
+    )
+    silence_deadline = None
+    # The history starts with a log of the dossier's state.
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
         factory_related_name="petition_project",
+        stage=factory.SelfAttribute("petition_project.stage"),
+        decision=factory.SelfAttribute("petition_project.decision"),
+        due_date=factory.SelfAttribute("petition_project.due_date"),
     )
     simulation = factory.RelatedFactory(
         "envergo.petitions.tests.factories.SimulationFactory",
@@ -147,20 +171,19 @@ class StatusLogFactory(DjangoModelFactory):
     )
 
 
-class DeclarationStatusLogFactory(StatusLogFactory):
-    """The log moving a dossier into déclaration, which starts the agreement delay."""
-
-    stage = STAGES.instruction_d
-    agreement_deadline = factory.LazyFunction(
-        lambda: declaration_due_date(timezone.localdate())
-    )
-
-
 class DeclarationProjectFactory(PetitionProjectFactory):
     """A régime unique dossier in déclaration, waiting for its agreement deadline."""
 
+    stage = STAGES.instruction_d
+    silence_deadline = factory.LazyFunction(
+        lambda: declaration_due_date(timezone.localdate())
+    )
+    # The log moving the dossier into déclaration, which started the agreement delay.
     declaration = factory.RelatedFactory(
-        DeclarationStatusLogFactory, factory_related_name="petition_project"
+        StatusLogFactory,
+        factory_related_name="petition_project",
+        stage=STAGES.instruction_d,
+        agreement_deadline=factory.SelfAttribute("petition_project.silence_deadline"),
     )
 
 
