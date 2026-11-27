@@ -80,6 +80,31 @@ class TestPublicFileDownloadView:
             "/internal-s3-public/documents/formulaire-simplifi%C3%A9.pdf"
         )
 
+    @pytest.mark.parametrize(
+        "filename, disposition",
+        [
+            ("guide.pdf", None),
+            ("carte.png", None),
+            ("photo.JPG", None),
+            ("photo.webp", None),
+            ("carte.svg", "attachment"),
+            ("page.html", "attachment"),
+            ("data.xml", "attachment"),
+            ("archive.zip", "attachment"),
+            ("guide.pdf.gz", "attachment"),
+            ("sans-extension", "attachment"),
+        ],
+    )
+    def test_nginx_mode_downloads_unsafe_types(
+        self, client, settings, filename, disposition
+    ):
+        settings.SERVE_FILES_LOCALLY = False
+        hosted_file = self.make_hosted_file(filename)
+        response = client.get(
+            reverse("public_file_download", kwargs={"file_path": hosted_file.file.name})
+        )
+        assert response.get("Content-Disposition") == disposition
+
 
 class TestPrivateFileDownloadViewLocal:
     """The /fichiers-prives/ view serves from MEDIA_ROOT in local mode."""
@@ -189,3 +214,20 @@ class TestPrivateFileDownloadViewNginx:
                 continue
             assert "scw.cloud" not in value
             assert self.BUCKET not in value
+
+    @pytest.mark.parametrize(
+        "path, disposition",
+        [
+            ("media/evaluations/avis.pdf", None),
+            ("media/maps/carte.png", None),
+            ("media/maps/photo.webp", None),
+            ("media/maps/carte.svg", "attachment"),
+            ("media/petitions/arrete.html", "attachment"),
+            # Petitioner uploads are downloaded even when their type is safe.
+            ("upload/requests/REF/plan.pdf", "attachment"),
+            ("upload/requests/REF/photo.jpg", "attachment"),
+        ],
+    )
+    def test_downloads_unsafe_types_and_uploads(self, client, path, disposition):
+        response = client.get(f"/fichiers-prives/{path}?{SIGNED_QUERY}")
+        assert response.get("Content-Disposition") == disposition
