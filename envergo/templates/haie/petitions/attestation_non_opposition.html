@@ -1,0 +1,108 @@
+{% load petitions utils %}
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="description"
+          content="Attestation de non-opposition à déclaration d’un projet de destruction de haie">
+    <meta name="keywords" content="haie, déclaration, non-opposition">
+    <title>Attestation de non-opposition n° {{ dossier_number|format_ds_number }}</title>
+    <style>
+      @font-face {
+        font-family: Marianne;
+        font-weight: normal;
+        src: url("@gouvfr/dsfr/dist/fonts/Marianne-Regular.woff2");
+      }
+
+      @font-face {
+        font-family: Marianne;
+        font-weight: bold;
+        src: url("@gouvfr/dsfr/dist/fonts/Marianne-Bold.woff2");
+      }
+
+      @font-face {
+        font-family: Marianne;
+        font-style: italic;
+        src: url("@gouvfr/dsfr/dist/fonts/Marianne-Regular_Italic.woff2");
+      }
+
+      @page {
+        size: A4;
+        margin: 2.5cm 2cm;
+      }
+
+      body {
+        font-family: Marianne, sans-serif;
+        font-size: 11pt;
+        line-height: 1.4;
+        text-align: justify;
+      }
+
+      .prefecture {
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 12pt;
+        text-align: center;
+      }
+
+      .signature {
+        margin: 2em 0 6em;
+        text-align: right;
+      }
+
+      .appeal {
+        font-size: 9pt;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="prefecture">Préfecture − {{ department }}</p>
+
+    <h1>
+      Attestation n° {{ dossier_number|format_ds_number }} de non-opposition à déclaration d’un projet de destruction de haie présenté par {{ applicant }} au titre des articles L. 412-21 et suivants du code de l’environnement
+    </h1>
+
+    <p>Le Préfet du département {{ department }}</p>
+
+    <p>Atteste :</p>
+
+    <p>
+      Le pétitionnaire {{ applicant }} bénéficie, à condition de respecter les obligations de replantation prévues par l’article L. 412-25 du code de l’environnement, d’une absence d’opposition à sa demande de destruction de haie
+      {% if commune %}située sur la commune de {{ commune }}{% endif %}
+      lui donnant droit d’engager ses travaux à partir de la date du {{ work_start_date|official_date }}, en application de l’article R. 412-62 du code de l’environnement.
+    </p>
+
+    <p>Le projet répond aux caractéristiques suivantes :</p>
+
+    <p>Linéaires à détruire :</p>
+    {% include "haie/petitions/_attestation_hedge_list.html" with hedges=hedges_to_remove %}
+
+    {% if hedges_to_plant %}
+      <p>Linéaires à planter en compensation :</p>
+      {% include "haie/petitions/_attestation_hedge_list.html" with hedges=hedges_to_plant %}
+    {% endif %}
+
+    <p>
+      Pour rappel, le projet ne peut pas être réalisé pendant la période d’interdiction de travaux sur les haies dans le département fixée par arrêté préfectoral,
+      {% if prohibition_range_display %}soit {{ prohibition_range_display }},{% endif %}
+      sauf cas particuliers prévus par l’article R. 412-51 du code de l’environnement.
+    </p>
+
+    <p>
+      La présente attestation est valable 18 mois. Elle est publiée au recueil des actes administratifs de la préfecture et mise à disposition sur son site internet pour une durée de 4 mois à compter de sa notification au pétitionnaire.
+    </p>
+
+    <div class="signature">
+      <p>le {{ signed_on|official_date }}</p>
+      <p>Le préfet</p>
+    </div>
+
+    <p class="appeal">
+      Toute décision relative à une destruction de haie est susceptible de recours dans un délai de deux mois devant le tribunal administratif territorialement compétent au moyen de l’application Télérecours (<a href="https://www.telerecours.fr/">https://www.telerecours.fr/</a>), sauf pour les décisions qui conditionnent la construction, la réalisation, la mise en service, l’exploitation, la modification ou l’extension des projets listés au I de l’article R. 311-5 du code de l’environnement, auquel cas la cour administrative d’appel territorialement compétente pourra connaitre des litiges en premier et dernier ressort.
+    </p>
+  </body>
+</html>

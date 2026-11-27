@@ -36,4 +36,5 @@ dacite
 python-magic
 django-storages[boto3]
 cvss
+weasyprint
 django-health-check[redis,celery]

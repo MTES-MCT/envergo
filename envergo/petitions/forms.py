@@ -306,6 +306,7 @@ class StateChangeForm(forms.ModelForm):
         single_procedure=False,
         is_paused=False,
         can_switch_to_authorization=False,
+        is_regime_unique=False,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -319,9 +320,22 @@ class StateChangeForm(forms.ModelForm):
         # so it shouldn't even be selectable.
         if single_procedure:
             self.fields["stage"].choices = [
-                choice
-                for choice in self.fields["stage"].choices
-                if choice[0] != "to_be_processed"
+                (value, label)
+                for value, label in self.fields["stage"].choices
+                if value != "to_be_processed"
+            ]
+
+        # Under the régime unique, the tacit agreement is acquired at the end of the
+        # déclaration delay, never decided by an instructor. A dossier it already
+        # closed keeps the choice, so the form never swaps its decision unasked.
+        closed_by_tacit_agreement = (
+            self.initial.get("decision") == DECISIONS.tacit_agreement
+        )
+        if is_regime_unique and not closed_by_tacit_agreement:
+            self.fields["decision"].choices = [
+                (value, label)
+                for value, label in self.fields["decision"].choices
+                if value != DECISIONS.tacit_agreement
             ]
 
         # Pass field errors to the widget after validation

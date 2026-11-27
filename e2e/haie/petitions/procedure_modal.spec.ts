@@ -62,10 +62,13 @@ test.describe('Procedure modal — dynamic form', () => {
     await expect(prefecturalOrder).toBeHidden();
     await expect(applicantMessage).toBeVisible();
 
-    // "Accord tacite": simulation check + message, no order.
-    await decision.selectOption('tacit_agreement');
+    // "Accord tacite": régime unique dossiers only get it from the nightly closing.
+    await expect(decision.locator('option[value="tacit_agreement"]')).toHaveCount(0);
+
+    // "Accord exprès": all three.
+    await decision.selectOption('express_agreement');
     await expect(simulationCheck).toBeVisible();
-    await expect(prefecturalOrder).toBeHidden();
+    await expect(prefecturalOrder).toBeVisible();
     await expect(applicantMessage).toBeVisible();
 
     // The simulation check is a full content block, with a checklist and a
@@ -76,12 +79,6 @@ test.describe('Procedure modal — dynamic form', () => {
     });
     await expect(simulationsLink).toHaveAttribute('target', '_blank');
     await expect(simulationsLink).toHaveAttribute('href', /\/alternatives\/$/);
-
-    // "Accord exprès": all three.
-    await decision.selectOption('express_agreement');
-    await expect(simulationCheck).toBeVisible();
-    await expect(prefecturalOrder).toBeVisible();
-    await expect(applicantMessage).toBeVisible();
 
     // "Opposition": all three.
     await decision.selectOption('opposition');

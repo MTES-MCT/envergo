@@ -10,7 +10,7 @@ from django.urls import reverse
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.pages.templatetags.pages import config_menu_link
-from envergo.pages.templatetags.utils import urlize_html
+from envergo.pages.templatetags.utils import official_date, urlize_html
 
 pytestmark = pytest.mark.django_db
 
@@ -632,3 +632,15 @@ class TestSidemenuItem:
         """A decoration screen readers cannot name is a template error."""
         with pytest.raises(TemplateSyntaxError):
             self.render("/", '{% sidemenu_item "Messagerie" "faq_news" marker="●" %}')
+
+
+@pytest.mark.parametrize(
+    "day, expected",
+    [
+        (date(2027, 9, 1), "1er septembre 2027"),
+        (date(2027, 9, 16), "16 septembre 2027"),
+    ],
+)
+def test_official_date_writes_the_first_day_of_the_month_as_1er(day, expected):
+    """French official documents write the first day of a month "1er"."""
+    assert official_date(day) == expected

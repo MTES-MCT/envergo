@@ -431,6 +431,59 @@ def declaration_receipt_message(petition_project, received_on, due_date):
     )
 
 
+def attestation_non_opposition_html(petition_project, agreement_date):
+    """Render the attestation de non-opposition granted by tacit agreement.
+
+    `agreement_date` is the day silence became agreement. The attestation is dated
+    that day, and works may start then, or once the prohibition period ends.
+    """
+    config = petition_project.config
+    hedge_data = petition_project.hedge_data
+    work_start_date = config.first_allowed_work_date(agreement_date) or agreement_date
+
+    return render_to_string(
+        "haie/petitions/attestation_non_opposition.html",
+        context={
+            "department": petition_project.department,
+            "dossier_number": petition_project.demarche_numerique_dossier_number,
+            "applicant": attestation_applicant(petition_project),
+            "commune": declared_commune(petition_project),
+            "work_start_date": work_start_date,
+            "hedges_to_remove": hedge_data.hedges_to_remove(),
+            "hedges_to_plant": hedge_data.hedges_to_plant(),
+            "hedge_types": petition_project.hedge_types,
+            "prohibition_range_display": config.prohibition_range_display,
+            "signed_on": agreement_date,
+        },
+    )
+
+
+def attestation_applicant(petition_project) -> str:
+    """The applicant name the attestation shows. An official act must name its applicant."""
+    dossier = petition_project.prefetched_dossier
+    if dossier is None:
+        raise ValueError(
+            f"Dossier {petition_project.reference}: no cached « Démarche numérique » "
+            "dossier to read the applicant from."
+        )
+
+    applicant_name = dossier.applicant_name
+    if applicant_name is None:
+        raise ValueError(
+            f"Dossier {petition_project.reference}: the applicant has no name."
+        )
+    return applicant_name
+
+
+def attestation_non_opposition_pdf(petition_project, agreement_date) -> bytes:
+    """Render the attestation de non-opposition as a PDF document."""
+    # Imported here: WeasyPrint loads native libraries that only this rendering needs.
+    from envergo.petitions.pdf import render_pdf
+
+    html = attestation_non_opposition_html(petition_project, agreement_date)
+    return render_pdf(html)
+
+
 def get_item_value_from_ds_champ(champ):
     """get item value from a dossier champ
     Ok better to do with yesno filter…

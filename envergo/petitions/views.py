@@ -93,6 +93,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    SilenceRule,
     Simulation,
     StatusLog,
 )
@@ -108,9 +109,7 @@ from envergo.petitions.services import (
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
-    update_demarche_numerique_status,
 )
-from envergo.petitions.tasks import send_applicant_message_async
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
@@ -1907,6 +1906,7 @@ class PetitionProjectInstructorProcedureView(
                 ),
                 is_paused=self.object.is_additional_information_requested,
                 can_switch_to_authorization=self.object.can_switch_to_authorization,
+                is_regime_unique=self.object.is_regime_unique(),
             )
         if action == "request_info":
             return RequestAdditionalInfoForm(
@@ -1959,6 +1959,7 @@ class PetitionProjectInstructorProcedureView(
                     self.object.config and self.object.config.single_procedure
                 ),
                 can_switch_to_authorization=self.object.can_switch_to_authorization,
+                is_regime_unique=self.object.is_regime_unique(),
             ),
         )
         if self.object.can_switch_to_authorization:
@@ -2002,9 +2003,7 @@ class PetitionProjectInstructorProcedureView(
             self.append_applicant_message_notice(log)
 
         try:
-            with transaction.atomic():
-                log.save()
-                self.update_ds_status(log)
+            self.object.record_status_change(log)
         except DemarcheNumeriqueError as e:
             logger.error(e)
             # The status log signal changed the in-memory project before the rollback.
@@ -2024,26 +2023,12 @@ class PetitionProjectInstructorProcedureView(
             )
 
         if is_closing:
-            self.schedule_applicant_message(log)
             self.notify_closing_succeeded(form)
         elif form.is_authorization_switch:
-            self.schedule_applicant_message(log)
             self.notify_authorization_switch_succeeded()
 
         self.schedule_state_change_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
-
-    def update_ds_status(self, log):
-        """Update the « Démarche numérique » status to match the new log.
-
-        Skipped when the status is already up to date. Raises
-        DemarcheNumeriqueError on failure so the enclosing transaction
-        rolls the log back.
-        """
-        previous_ds_status = self.object.demarche_numerique_state
-        new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
-        if previous_ds_status != new_ds_status:
-            update_demarche_numerique_status(self.object, new_ds_status)
 
     def append_applicant_message_notice(self, log):
         """Append to the log's internal comment that the applicant gets a message."""
@@ -2052,14 +2037,6 @@ class PetitionProjectInstructorProcedureView(
             log.update_comment = f"{log.update_comment}\n{notice}"
         else:
             log.update_comment = notice
-
-    def schedule_applicant_message(self, log):
-        """Queue the log's applicant message for after commit.
-
-        Sent asynchronously, so a DN messagerie failure never blocks the state
-        change. The task retry policy handles transient errors.
-        """
-        transaction.on_commit(lambda: send_applicant_message_async.delay(log.pk))
 
     def notify_closing_succeeded(self, form):
         attachment_phrase = (
@@ -2251,11 +2228,17 @@ class PetitionProjectInstructorProcedureView(
         info_receipt_date = form.cleaned_data["info_receipt_date"]
         new_due_date = form.cleaned_data.get("due_date")
 
+        # Receiving the documents restarts the déclaration delay.
+        # ResumeProcessingForm requires the due date here, so it is never None.
+        restarts_declaration_delay = project.silence_rule == SilenceRule.AGREEMENT
+        agreement_deadline = new_due_date if restarts_declaration_delay else None
+
         StatusLog.objects.create(
             petition_project=project,
             type=LOG_TYPES.resumption,
             info_receipt_date=info_receipt_date,
             due_date=new_due_date,
+            agreement_deadline=agreement_deadline,
             created_by=self.request.user,
             update_comment=(
                 "Reprise de l’instruction, date d'échéance ajustée."
@@ -2266,10 +2249,8 @@ class PetitionProjectInstructorProcedureView(
             decision=project.decision,
         )
 
-        # Receiving the documents restarts the delay, so a new receipt goes out.
-        # ResumeProcessingForm requires the due date here, so it is never None.
-        sends_receipt = project.is_declaration_instruction()
-        if sends_receipt:
+        # The applicant gets a new receipt stating the restarted deadline.
+        if restarts_declaration_delay:
             project.schedule_declaration_receipt(info_receipt_date, new_due_date)
 
         self.notify_resume_processing(project)
@@ -2283,7 +2264,7 @@ class PetitionProjectInstructorProcedureView(
             **get_matomo_tags(self.request),
         )
 
-        self.notify_resume_succeeded(sends_receipt)
+        self.notify_resume_succeeded(restarts_declaration_delay)
         return HttpResponseRedirect(self.get_success_url())
 
     def notify_resume_succeeded(self, sends_receipt):
